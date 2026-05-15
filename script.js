@@ -24,5 +24,8 @@ document.addEventListener("DOMContentLoaded", () => { // Getting JS Ready
         $('.worshipper').on('click', function() {
           sound.play();
         });
+        $('.goose').on('click', function() {
+          sound.play();
+        });
     });
 });
