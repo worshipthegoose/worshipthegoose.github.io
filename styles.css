@@ -100,3 +100,37 @@ smalltext{
     flex-direction:row;
     justify-content:center;
 }
+.youtube{
+    font-family: 'Comic Sans MS';
+    background-color:green;
+    border:0px solid transparent !important;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bolder;
+    transition: transform 0.3s ease;
+    font-size:21px;
+    padding:7px;
+}
+.youtube:hover{
+    background-color: darkgreen;
+    transform: scale(1.1);
+    color:white;
+    -webkit-text-stroke:0 !important;
+}
+.slides{
+    font-family: 'Comic Sans MS';
+    background-color:dodgerblue;
+    border:0px solid transparent !important;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bolder;
+    transition: transform 0.3s ease;
+    font-size:21px;
+    padding:7px;
+}
+.slides:hover{
+    background-color: royalblue;
+    transform: scale(1.1);
+    color:white;
+    -webkit-text-stroke:0 !important;
+}
