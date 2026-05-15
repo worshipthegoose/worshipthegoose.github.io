@@ -110,7 +110,7 @@ smalltext{
     text-align:center;
     font-weight:bolder;
     transition: transform 0.3s ease;
-    font-size:21px;
+    font-size:16px;
     padding:7px;
 }
 .youtube:hover{
@@ -128,7 +128,7 @@ smalltext{
     text-align:center;
     font-weight:bolder;
     transition: transform 0.3s ease;
-    font-size:21px;
+    font-size:16px;
     padding:7px;
 }
 .slides:hover{
