@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => { // Getting JS Ready
             $(".aftertext").append("<p>Great! You are now free of your <span class=\"goose\">goos</span>ins!</p>")
         });
         $(".youtube").click(async () => {
-            window.location.href = "https://www.youtube.com/@worshiptheholygoose";
+            window.location.href = "./youtube";
         });
         $(".slides").click(async () => {
             window.location.href = "./powerpoint";
