@@ -11,11 +11,14 @@ document.addEventListener("DOMContentLoaded", () => { // Getting JS Ready
             return new Promise(resolve => setTimeout(resolve, ms)); //
         }
         $("#repent").click(async () => {
+            goosound2.play(); 
+            goosound2.pause();
+            goosound2.currentTime = 0;
             $("smalltext").fadeOut(1000);
             $("#repent").fadeOut(1000);
             await delay(1000);
             $(".aftertext").append("<p>Great! You are now free of your <span class=\"goose\">goos</span>ins!</p>");
-            goosound2.play();
+            goosound.play();
         });
         $(".youtube").click(async () => {
             window.location.href = "./youtube";
