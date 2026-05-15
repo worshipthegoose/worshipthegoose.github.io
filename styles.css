@@ -131,6 +131,10 @@ smalltext{
     font-size:16px;
     padding:7px;
 }
+.worshipper:hover{
+    cursor:pointer;
+    border:2.5px solid black !important;
+}
 .slides:hover{
     cursor:pointer;
     background-color: royalblue;
