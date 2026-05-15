@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => { // Getting JS Ready
         $(".slides").click(async () => {
             window.location.href = "./powerpoint";
         });
-        $('.click-target').on('click', function() {
+        $('.worshipper').on('click', function() {
           sound.play();
         });
     });
