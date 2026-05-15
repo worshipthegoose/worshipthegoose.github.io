@@ -91,3 +91,12 @@ smalltext{
     color:white;
     -webkit-text-stroke:0 !important;
 }
+.format{
+    max-width:45vh;
+    display:block;
+}
+.slidevideo{
+    display:flex;
+    flex-direction:row;
+    justify-content:center;
+}
