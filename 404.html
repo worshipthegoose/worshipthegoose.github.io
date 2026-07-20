@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>301 Rerouting...</title>
+</head>
+<body>
+  <script>
+    //This is a 301 Reroutation server built in Github pages 
+    const target = "https://thegoosesite.github.io";
+    const pathname = window.location.pathname;
+    const redirect = target + "" + pathname
+    window.location.replace(redirect);
+  </script>
+</body>
+</html>
