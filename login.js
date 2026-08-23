@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (igloo) {
       igloo.href = "https://thegoosesite.github.io/legacy/search";
       igloo.title = "Back to the search page...";
-      igloo.textContent = "The Goose Search";
+      igloo.innerHTML = `The Goose Site <span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
     }
   }
   if (localStorage.getItem("fontGlobal") !== null){
