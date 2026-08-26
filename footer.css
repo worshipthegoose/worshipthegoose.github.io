@@ -1,11 +1,13 @@
 footer {
     background-color: orange;
     padding: 5px;
-    margin-top: auto; /* Works perfectly for sticky footers if parent is flex */
+    margin-top: auto; 
     border-top: 2px dashed white;
     display: flex;
-    flex-direction: column; /* Stacks text and list vertically */
-    align-items: flex-start; /* Aligns everything to the left */
+    flex-direction: column; 
+    align-items: center; /* CHANGED: Centers the text and the UL horizontally */
+    justify-content: center; /* ADDED: Centers content vertically if footer has height */
+    text-align: center; /* ADDED: Ensures inner text alignments default to center */
 }
 
 .link-bottom-ul { 
@@ -13,17 +15,19 @@ footer {
     -moz-user-select: none; 
     user-select: none; 
     display: flex; 
-    flex-direction: column; /* CHANGED: Forces list items to stack vertically under text */
+    flex-direction: column; 
     gap: 10px; 
     margin: 0; 
-    padding: 0; /* Clears default browser indent */
+    padding: 0; 
+    align-items: center; /* ADDED: Centers the individual list items/links */
 }
 
 .link-bottom-ul li a {
     text-decoration: none;
     color: white !important;
-    margin: 5px 0; /* Adjusted: Vertical spacing only */
+    margin: 5px 0; 
     display: inline-block;
+    text-align: center;
 }
 
 .link-bottom-ul li a:hover {
@@ -33,7 +37,8 @@ footer {
 .f1 {
     color: white !important;
     text-decoration: 1px wavy underline;
-    margin-bottom: 8px; /* Creates space above the list */
+    margin-bottom: 8px; 
+    display: inline-block; /* ADDED: Ensures the element respects text-align rules */
 }
 
 body::selection {
