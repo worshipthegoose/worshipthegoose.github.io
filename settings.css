@@ -45,6 +45,15 @@ footer center ul {
     text-decoration: underline;
     cursor: pointer;
 }
+.link-bottom-ul { list-style-type:none; list-style:none; -moz-user-select:none; user-select: none; display:flex; gap:10px; justify-content:center; align-items:center; margin:0 auto; }
+.link-bottom-ul li a {
+    text-decoration: none;
+    color:white !important;
+    margin:5px;
+}
+.link-bottom-ul li a:hover {
+    text-decoration: underline;
+}
 .gooset h1, h2, h3, h4, h5, h6, p, i, strong, em, u, mark {
     color:white !important;
     padding: 0;
