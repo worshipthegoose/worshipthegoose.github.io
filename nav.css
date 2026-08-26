@@ -13,7 +13,15 @@
 .dad {
     display: block;
 }
-
+.link-bottom-ul { list-style-type:none; list-style:none; -moz-user-select:none; user-select: none; display:flex; gap:10px; justify-content:center; align-items:center; margin:0 auto; }
+.link-bottom-ul li a {
+    text-decoration: none;
+    color:white !important;
+    margin:5px;
+}
+.link-bottom-ul li a:hover {
+    text-decoration: underline;
+}
 .son {
     color: white;
     text-align: center;
