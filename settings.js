@@ -42,7 +42,7 @@
 
     // 3. Inject Link into Footer
     if (footer && !document.querySelector(".eyecare")) {
-        footer.insertAdjacentHTML("beforeend", "<center><ul><li><a style='user-select:none;text-decoration:underline;cursor:pointer;' title='Toggle goosettings' class='eyecare'>Open Goosettings</a></li><li><a style='user-select:none;text-decoration:underline;cursor:pointer;' href='https://thegoosesite.github.io'>Open New Site</a></li></ul></center>");
+        footer.insertAdjacentHTML("beforeend", "<center><ul style='list-style-type:none;list-style:none;user-select:none;display:flex;flex-direction:row;><li><a style='user-select:none;text-decoration:underline;cursor:pointer;' title='Toggle goosettings' class='eyecare'>Open Goosettings</a></li><li><a style='user-select:none;text-decoration:underline;color:white;cursor:pointer;' title='Visit the new site...' href='https://thegoosesite.github.io'>Open New Site</a></li></ul></center>");
     }
 
     const state = {
