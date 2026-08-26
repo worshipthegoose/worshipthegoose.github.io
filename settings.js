@@ -74,6 +74,7 @@
             } else {
                 if (style) style.disabled = false;
                 gooset.style.display = "flex";
+                toggle.parentElement.style.display = "none";
                 toggle.style.display = "none";
                 if (getCookie("duck_mode") === "on"){
                     state.duckMode = true;
