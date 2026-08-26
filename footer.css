@@ -16,7 +16,7 @@ footer {
     user-select: none; 
     display: flex; 
     flex-direction: column; 
-    gap: 10px; 
+    gap: 5px; 
     margin: 0; 
     padding: 0; 
     align-items: center; /* ADDED: Centers the individual list items/links */
@@ -37,7 +37,7 @@ footer {
 .f1 {
     color: white !important;
     text-decoration: 1px wavy underline;
-    margin-bottom: 8px; 
+    margin-bottom: 5px; 
     display: inline-block; /* ADDED: Ensures the element respects text-align rules */
 }
 
