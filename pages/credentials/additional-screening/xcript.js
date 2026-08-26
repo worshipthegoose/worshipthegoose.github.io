@@ -6,14 +6,14 @@ document.addEventListener("DOMContentLoaded", function() {
     return null;
   }
   if (localStorage.getItem("homepage") !== null){
-    homepage = "https://thegoosesite.github.io/legacy/search";
+    homepage = "/search";
   }else{
-    homepage = "https://thegoosesite.github.io/legacy";
+    homepage = "";
   }
   console.log(homepage)
   
   if ((getCookie('site_access') === 'granted' && window.location.pathname !== '/') || getCookie('need_additional_screening') !== 'true') {
-    window.location.href = 'https://thegoosesite.github.io/legacy/pages/welcome'; 
+    window.location.href = '/pages/welcome'; 
   }
   const BUTTON = document.querySelector(".sq-btn");
   if (BUTTON) {

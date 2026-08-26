@@ -17,13 +17,13 @@ function togglePopup(show) {
 document.addEventListener("DOMContentLoaded", function() {
   // Inject settings.js properly via script element
   const settingsScript = document.createElement("script");
-  settingsScript.src = "https://thegoosesite.github.io/legacy/settings.js";
+  settingsScript.src = "/settings.js";
   document.head.appendChild(settingsScript);
-  document.head.insertAdjacentHTML("beforeend", "<link class='settings-css' rel='stylesheet' href='https://thegoosesite.github.io/legacy/settings.css'>");
+  document.head.insertAdjacentHTML("beforeend", "<link class='settings-css' rel='stylesheet' href='/settings.css'>");
   
 
   const html = document.documentElement;
-  const loginPage = 'https://thegoosesite.github.io/legacy/pages/welcome/';
+  const loginPage = '/pages/welcome/';
 
   function getCookie(name) {
     let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -39,14 +39,14 @@ document.addEventListener("DOMContentLoaded", function() {
   if (localStorage.getItem("homepage") !== null){
     const igloo = document.querySelector(".logo");
     if (igloo) {
-      igloo.href = "https://thegoosesite.github.io/legacy/search";
+      igloo.href = "/search";
       igloo.title = "Back to the search page...";
       igloo.innerHTML = `The Goose Site<span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
     }
   }
   if (localStorage.getItem("fontGlobal") !== null){
     if (!document.querySelector("link[href*='global.css']")) {
-      document.head.insertAdjacentHTML("beforeend", "<link rel='stylesheet' href='https://thegoosesite.github.io/legacy/global.css'>");
+      document.head.insertAdjacentHTML("beforeend", "<link rel='stylesheet' href='/global.css'>");
     }
   }
 
