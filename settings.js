@@ -5,10 +5,7 @@
         return match ? match[2] : null;
     }
 
-    // 1. Inject Stylesheet
-    if (!document.querySelector(".settings-css")) {
-        document.head.insertAdjacentHTML("beforeend", "<link class='settings-css' rel='stylesheet' href='https://thegoosesite.github.io/legacy/settings.css'>");
-    }
+    // 1. <removed>
 
     // 2. Inject missing HTML container elements if they don't exist
     let gooset = document.querySelector(".gooset");

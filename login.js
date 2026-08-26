@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", function() {
   const settingsScript = document.createElement("script");
   settingsScript.src = "https://thegoosesite.github.io/legacy/settings.js";
   document.head.appendChild(settingsScript);
+  if (!document.querySelector(".settings-css")) {
+    document.head.insertAdjacentHTML("beforeend", "<link class='settings-css' rel='stylesheet' href='https://thegoosesite.github.io/legacy/settings.css'>");
+  }
 
   const html = document.documentElement;
   const loginPage = 'https://thegoosesite.github.io/legacy/pages/welcome/';
