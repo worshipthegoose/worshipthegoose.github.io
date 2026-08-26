@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   
   if (getCookie('site_access') === 'granted' && window.location.pathname !== '/') {
-    window.location.href = 'https://thegoosesite.github.io/legacy'; 
+    window.location.href = '/'; 
   }
 });
 // 3. Main Login and Input Management
@@ -46,9 +46,9 @@ document.addEventListener("DOMContentLoaded", function() {
   let homepage;
   // disclaimer()
   if (localStorage.getItem("homepage") !== null){
-    homepage = "https://thegoosesite.github.io/legacy/search";
+    homepage = "/search";
   }else{
-    homepage = "https://thegoosesite.github.io/legacy";
+    homepage = "";
   }
   console.log(homepage);
   
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
       indicator.className = "indicator screening"
       setTimeout(() => {
         document.cookie = "need_additional_screening=true; max-age=" + (60 * 60 * 24 * 7) + "; path=/; SameSite=Strict";
-        window.location.replace('https://thegoosesite.github.io/legacy/pages/credentials/additional-screening');
+        window.location.replace('/pages/credentials/additional-screening');
       }, 300);
       ex.style.display = "none";
     

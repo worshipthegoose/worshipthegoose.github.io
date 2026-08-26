@@ -46,23 +46,30 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   if (localStorage.getItem("fontGlobal") !== null){
     if (!document.querySelector("link[href*='global.css']")) {
-      document.head.insertAdjacentHTML("beforeend", "<link rel='stylesheet' href='/global.css'>");
+      document.head.insertAdjacentHTML("beforeend", "<link rel='stylesheet' href='https://thegoosesite.github.io/legacy/global.css'>");
     }
   }
-
+  
+  const loginRunning = false;
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('access_token');
   const hasAccessCookie = getCookie('site_access') === 'granted';
 
   // 1. Access Verification Logic
-  if (!hasAccessCookie) {
-    if (token) {
-      verifyToken(token);
-    } else {
-      window.location.replace(loginPage);
-      return;
+  if (loginRunning) {
+    if (!hasAccessCookie) {
+      if (token) {
+        verifyToken(token);
+      } else {
+        window.location.replace(loginPage);
+        return;
+      }
     }
+  } else {
+    document.cookie = "site_access=granted; path=/"
+    document.querySelector("#logout").style.display = "none";
   }
+  
 
   // 2. Handle 'servermove' Banner Notice
   if (urlParams.has('servermove')) {
