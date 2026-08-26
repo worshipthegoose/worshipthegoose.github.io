@@ -32,7 +32,7 @@ input {
 .gooset div .settings strong, b {
     font-size:22px;
 }
-footer ul {
+footer center ul {
     list-style: none;
     list-style-type: none;
     display: flex;
