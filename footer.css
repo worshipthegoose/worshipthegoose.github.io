@@ -4,10 +4,25 @@ footer{
     float:bottom;
     margin-top: auto;
     border-top:2px dashed white;
+    display: flex;
+    flex-direction: column; /* Forces vertical stacking */
+    align-items: flex-start;
+}
+.link-bottom-ul { text-align:center; list-style-type:none; list-style:none; -moz-user-select:none; user-select: none; display:flex; gap:10px; flex-direction:row; /*justify-content:center; align-items:center; */ margin:0; }
+.link-bottom-ul li a {
+    text-decoration: none;
+    color:white !important;
+    margin:5px;
+    display: inline-block;
+    text-align: center;
+}
+.link-bottom-ul li a:hover {
+    text-decoration: underline;
 }
 .f1{
     color:white !important;
     text-decoration: 1px wavy underline;
+    margin-bottom:8px;
 }
 
 body::selection{
