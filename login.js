@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }
   } else {
-    document.cookie = "site_access=granted; path=/"
+    if (!hasAccessCookie) document.cookie = "site_access=granted; path=/"
     document.querySelector("#logout").style.display = "none";
   }
   
