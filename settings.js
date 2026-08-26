@@ -42,7 +42,7 @@
 
     // 3. Inject Link into Footer
     if (footer && !document.querySelector(".eyecare")) {
-        footer.insertAdjacentHTML("beforeend", "<ul style='list-style-type:none;list-style:none;user-select:none;display:flex;justify-content:center;align-items:center;margin:0 auto;'><li><a onmouseover = 'this.style.textDecoration = \'underline\'' style='user-select:none;text-decoration:none;cursor:pointer;' title='Toggle goosettings' class='eyecare'>Open Goosettings</a></li><li><a onmouseover = 'this.style.textDecoration = \'underline\'' style='user-select:none;text-decoration:none;color:white;cursor:pointer;' title='Visit the new site...' href='https://thegoosesite.github.io'>Open New Site</a></li></ul>");
+        footer.insertAdjacentHTML("beforeend", "<ul style='list-style-type:none;list-style:none;user-select:none;display:flex;gap:10px;justify-content:center;align-items:center;margin:0 auto;'><li><a onmouseover = 'this.style.textDecoration = \'underline\'' style='user-select:none;text-decoration:none;cursor:pointer;' title='Toggle goosettings' class='eyecare'>Open Goosettings</a></li><li><a onmouseover = 'this.style.textDecoration = \'underline\'' style='user-select:none;text-decoration:none;color:white;cursor:pointer;' title='Visit the new site...' href='https://thegoosesite.github.io'>Open New Site</a></li></ul>");
     }
 
     const state = {
