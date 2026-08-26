@@ -32,6 +32,12 @@ input {
 .gooset div .settings strong, b {
     font-size:22px;
 }
+footer ul {
+    list-style: none;
+    list-style-type: none;
+    display: flex;
+    flex-direction: row;
+}
 .gooset div .settings h2 {
     font-size:26px;
 }
