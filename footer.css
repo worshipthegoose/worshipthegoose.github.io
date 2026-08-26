@@ -1,35 +1,47 @@
-footer{
-    background-color:orange;
-    padding:5px;
-    float:bottom;
-    margin-top: auto;
-    border-top:2px dashed white;
+footer {
+    background-color: orange;
+    padding: 5px;
+    margin-top: auto; /* Works perfectly for sticky footers if parent is flex */
+    border-top: 2px dashed white;
     display: flex;
-    flex-direction: column; /* Forces vertical stacking */
-    align-items: flex-start;
+    flex-direction: column; /* Stacks text and list vertically */
+    align-items: flex-start; /* Aligns everything to the left */
 }
-.link-bottom-ul { text-align:center; list-style-type:none; list-style:none; -moz-user-select:none; user-select: none; display:flex; gap:10px; flex-direction:row; /*justify-content:center; align-items:center; */ margin:0; }
+
+.link-bottom-ul { 
+    list-style-type: none; 
+    -moz-user-select: none; 
+    user-select: none; 
+    display: flex; 
+    flex-direction: column; /* CHANGED: Forces list items to stack vertically under text */
+    gap: 10px; 
+    margin: 0; 
+    padding: 0; /* Clears default browser indent */
+}
+
 .link-bottom-ul li a {
     text-decoration: none;
-    color:white !important;
-    margin:5px;
+    color: white !important;
+    margin: 5px 0; /* Adjusted: Vertical spacing only */
     display: inline-block;
-    text-align: center;
 }
+
 .link-bottom-ul li a:hover {
     text-decoration: underline;
 }
-.f1{
-    color:white !important;
+
+.f1 {
+    color: white !important;
     text-decoration: 1px wavy underline;
-    margin-bottom:8px;
+    margin-bottom: 8px; /* Creates space above the list */
 }
 
-body::selection{
-    background-color:yellow !important;
-    color:black !important;
+body::selection {
+    background-color: yellow !important;
+    color: black !important;
 }
-body::-moz-selection{
-    background-color:yellow !important;
-    color:black !important;
+
+body::-moz-selection {
+    background-color: yellow !important;
+    color: black !important;
 }
