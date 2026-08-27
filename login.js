@@ -2,11 +2,6 @@
 function togglePopup(show) {
   const overlay = document.getElementById('popupOverlay');
   const popup = document.getElementById('bottomPopup');
-
-  // Title fallbacks
-  const title = document.querySelector('title');
-  const newTitle = title.textContent.replace(" Legacy", "");
-  title.textContent = newTitle; 
   
   if (!overlay || !popup) return;
 
@@ -20,6 +15,12 @@ function togglePopup(show) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  // Title stuff
+  const title = document.querySelector('title');
+  if (title) {
+    const newTitle = title.textContent.replace(" Legacy", "");
+    title.textContent = newTitle; 
+  }
   // Inject settings.js properly via script element
   const settingsScript = document.createElement("script");
   settingsScript.src = "/settings.js";
@@ -41,15 +42,15 @@ document.addEventListener("DOMContentLoaded", function() {
   if (getCookie("high_contrast") === "on"){
     html.style.filter = "contrast(150%) saturate(200%)";
   }
+  const igloo = document.querySelector(".logo");
   if (localStorage.getItem("homepage") !== null){
-    const igloo = document.querySelector(".logo");
     if (igloo) {
       igloo.href = "/search";
       igloo.title = "Back to the search page...";
       igloo.innerHTML = `The Goose Site Legacy<span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
     }
   } else {
-      igloo.innerHTML = `The Goose Site <span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
+    igloo.innerHTML = `The Goose Site <span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
   }
   if (localStorage.getItem("fontGlobal") !== null){
     if (!document.querySelector("link[href*='global.css']")) {
