@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function(){
   const codeNormal = `    <nav>
     <ul class='grandpa'>
         <li class='dad'>
-            <a class='logo son' href='/' title='Back to the homepage.'>The Goose Site</a>
+            <a class='logo son' href='/' title='Back to the homepage.'>The Goose Site Legacy</a>
         </li>
         <li class="dad">
             <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
@@ -31,12 +31,12 @@ document.addEventListener("DOMContentLoaded", function(){
         </div>
     </main>
     <footer>
-        <h1 class='f1'>The Goose Site</h1>
+        <h1 class='f1'>The Goose Site Legacy</h1>
     </footer>`;
 
 const codeNSI = `
       <nav style='background-color:darkorange !important; color:white !important;'>
-            <h1 class="f1">The Goose Site</h1>
+            <h1 class="f1">The Goose Site Legacy</h1>
       <p><i>"May the goose be with you..." - St. Duck, 32 CE</i></p>
       <div class="login-div">
       <ul class="login-ul">
@@ -64,7 +64,7 @@ const codeNSI = `
         </div>
     </main>
     <footer>
-        <h1 class='f1'>The Goose Site</h1>
+        <h1 class='f1'>The Goose Site Legacy</h1>
     </footer>
   `;
   
