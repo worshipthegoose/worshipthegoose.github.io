@@ -47,10 +47,10 @@ document.addEventListener("DOMContentLoaded", function() {
     if (igloo) {
       igloo.href = "/search";
       igloo.title = "Back to the search page...";
-      igloo.innerHTML = `The Goose Site Legacy<span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
+      igloo.innerHTML = `The Goose Site<span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
     }
   } else {
-    igloo.innerHTML = `The Goose Site <span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
+    igloo.innerHTML = `The Goose Site<span style="font-weight:normal !important;font-size:13px;margin-left:5px;">Search</span>`;
   }
   if (localStorage.getItem("fontGlobal") !== null){
     if (!document.querySelector("link[href*='global.css']")) {
