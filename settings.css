@@ -1,10 +1,13 @@
-body > :not(main .gooset) {
-    filter: blur(2.2px);
-    opacity: 0.5;
+/* Blur and dim only the main content area */
+main {
+    filter: blur(1.2px);
 }
+
 input {
     height: auto;
 }
+
+/* Gooset Modal Styles */
 .gooset {
     background-color: darkorange;
     box-shadow: 0 0 20px 5px rgba(51, 51, 51, 0.5), 0 0 40px 10px rgba(52, 52, 52, 0.7);
@@ -14,10 +17,10 @@ input {
     border-radius: 5px;
     user-select: none;
     position: fixed;
-    top:50%;
-    left:50%;
+    top: 50%;
+    left: 50%;
     translate: -50% -50%;
-    margin:10px !important;
+    margin: 10px !important;
     width: 560px;
     height: 300px;
     display: flex !important;
@@ -25,98 +28,144 @@ input {
     cursor: url(/assets/cursors/cursor.png), default;
     cursor: url(/assets/cursors/pointer.png), pointer;
 }
-.click-tigre:hover{
+
+.click-tigre:hover {
     text-decoration: underline;
 }
-.gooset div .settings p{
-    font-size:20px;
-}
-.gooset div .settings strong, b {
-    font-size:22px;
-}
-footer center ul {
-    list-style: none;
-    list-style-type: none;
-    display: flex;
-    flex-direction: row;
-}
-.gooset div .settings h2 {
-    font-size:26px;
-}
-.gooset h4 .textex:hover {
-    text-decoration: underline;
-    cursor: pointer;
-}
-.link-bottom-ul { list-style-type:none; list-style:none; -moz-user-select:none; user-select: none; display:flex; gap:10px; justify-content:center; align-items:center; margin:0 auto; }
-.link-bottom-ul li a {
-    text-decoration: none;
-    color:white !important;
-    margin:5px;
-}
-.link-bottom-ul li a:hover {
-    text-decoration: underline;
-}
-.gooset h1, h2, h3, h4, h5, h6, p, i, strong, em, u, mark {
-    color:white !important;
+
+/* Typography resets inside Gooset */
+.gooset h1, 
+.gooset h2, 
+.gooset h3, 
+.gooset h4, 
+.gooset h5, 
+.gooset h6, 
+.gooset p, 
+.gooset i, 
+.gooset strong, 
+.gooset em, 
+.gooset u, 
+.gooset mark {
+    color: white !important;
     padding: 0;
     margin: 0;
 }
+
 .gooset h4 {
     top: 0;
     left: 0;
     position: relative;
 }
+
 .gooset h4 span {
     font-size: 15px;
 }
+
+.gooset h4 .textex:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Gooset Lists */
 .gooset ul {
     list-style-type: none;
     padding: 0;
-    margin:7px
+    margin: 7px;
 }
+
 .gooset ul li {
     width: 101%;
-    font-size:25px;
+    font-size: 25px;
+    transition: background-color 0.3s ease-in-out;
 }
+
 .gooset ul li span {
     padding-left: 5px;
     cursor: pointer;
 }
+
 .gooset ul li:hover {
     background-color: orangered;
     cursor: pointer;
 }
+
+/* Layout Containers */
 .gooset div {
     display: flex;
     flex-direction: row;
 }
+
+.settings {
+    display: flex;
+    flex-direction: column;
+}
+
 .gooset div .settings {
     font-size: 20px !important;
     display: flex;
     flex-direction: column !important;
     padding-left: 16px;
     color: white !important;
-    margin:15px !important;
+    margin: 15px !important;
 }
+
+.gooset div .settings p {
+    font-size: 20px;
+}
+
+.gooset div .settings strong, 
+.gooset div .settings b {
+    font-size: 22px;
+}
+
+.gooset div .settings h2 {
+    font-size: 26px;
+}
+
+.gooset div .settings span {
+    font-size: 12px;
+}
+
+/* Helper & Footer Links */
 .textex {
     position: absolute;
     top: 0;
     right: 0;
-    background-color: none;
-    border:none;
-    color:white !important;
+    background-color: transparent;
+    border: none;
+    color: white !important;
     font-family: 'Comic Sans MS', sans-serif;
-
-
 }
 
-.textex:hover{
+.textex:hover {
     text-decoration: underline !important;
 }
-.settings {
+
+footer center ul {
+    list-style: none;
+    list-style-type: none;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 }
-.gooset div .settings span {
-    font-size: 12px;
+
+.link-bottom-ul {
+    list-style-type: none;
+    list-style: none;
+    -moz-user-select: none;
+    user-select: none;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+}
+
+.link-bottom-ul li a {
+    text-decoration: none;
+    color: white !important;
+    margin: 5px;
+}
+
+.link-bottom-ul li a:hover {
+    text-decoration: underline;
 }
