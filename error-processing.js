@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function(){
   const codeNormal = `    <nav>
     <ul class='grandpa'>
         <li class='dad'>
-            <a class='logo son' href='/' title='Back to the homepage.'>The Goose Site Legacy</a>
+            <a class='logo son' href='/' title='Back to the homepage.'>The Goose Site</a>
         </li>
         <li class="dad">
             <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
