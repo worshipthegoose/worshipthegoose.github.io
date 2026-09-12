@@ -1,4 +1,4 @@
-html > :not(.gooset) {
+body > :not(main .gooset) {
     filter: blur(2.2px);
     opacity: 0.5;
 }
