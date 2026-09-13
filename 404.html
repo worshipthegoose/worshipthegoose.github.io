@@ -23,11 +23,11 @@
             const textElement = document.getElementById("update");
 
             // Update the countdown text every 1 second
-            const interval = setInterval(() => {
+            const intervalId = setInterval(() => {
                 seconds--; // Decreases seconds
 
-                if (secondsLeft <= 0) {
-                    clearInterval(interval);
+                if (seconds <= 0) {
+                    clearInterval(intervalId);
                     window.location.replace(getSrc); // Perform the redirect
                 } else {
                     textElement.textContent = `${seconds}`;
