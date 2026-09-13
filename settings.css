@@ -2,10 +2,11 @@
 body:has(.gooset) main {
     filter: blur(2px);
     z-index:-999999;
-    margin-top:none !important
+    margin-top:none !important;
 }
 body:has(.gooset) nav{
     position:static !important;
+    margin-bottom:50px;
 }
 input {
     height: auto;
@@ -115,6 +116,7 @@ input {
 
 .gooset div .settings p {
     font-size: 20px;
+    margin-right:5px;
 }
 
 .gooset div .settings strong, 
