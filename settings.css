@@ -1,6 +1,7 @@
 /* Blur and dim only the main content area */
 body:has(.gooset) main {
     filter: blur(2px);
+    position:relative;
     z-index:-999999;
     margin-top:none !important;
 }
