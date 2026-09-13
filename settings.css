@@ -1,8 +1,12 @@
 /* Blur and dim only the main content area */
-main {
-    filter: blur(1.2px);
+body:has(.gooset) main {
+    filter: blur(2px);
+    z-index:-999999;
+    margin-top:none !important
 }
-
+body:has(.gooset) nav{
+    position:static !important;
+}
 input {
     height: auto;
 }
