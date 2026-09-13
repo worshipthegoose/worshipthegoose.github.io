@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="refresh" content="2.5; url=/">
     <link rel="stylesheet" href="/nav.css">
     <link rel="stylesheet" href="/footer.css">
     <link rel="stylesheet" href="/powerpoint/styles.css">
@@ -16,6 +15,26 @@
             opacity:0;
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const getParent = document.querySelector("nav ul li a.logo");
+            const getSrc = getParent.href;
+            let seconds = 5;
+            const textElement = document.getElementById("update");
+
+            // Update the countdown text every 1 second
+            const interval = setInterval(() => {
+                seconds--; // Decreases seconds
+
+                if (secondsLeft <= 0) {
+                    clearInterval(interval);
+                    window.location.replace(getSrc); // Perform the redirect
+                } else {
+                    textElement.textContent = `${seconds}`;
+                }
+            }, 1000);
+        });
+    </script>
     <!-- Mandatory Script: Required by Goose Development Studios --><script src="/services.js"></script><!---->
     <script src="/login.js"></script>
     <title>404 Not Found - The Goose Site</title>
@@ -48,7 +67,7 @@
         <div class='welcome' style='text-align:center !important;'>
             <img src='https://u.cubeupload.com/coolsnake0008/57185294148a9c54d5ef.jpg' style='border-radius:15px;width:168px;height:154px;'>
             <h1 style='-webkit-text-stroke:1px black;color:green'>404. That isn't goselike</h1>
-            <p>404 not found. Redirect you to the <s>goose</s> homepage.</p>
+            <p>404 not found. Redirecting you to the <s>goose</s> homepage in <span id="update">5</span> second(s)</p>
         </div>
     </main>
     <footer>
