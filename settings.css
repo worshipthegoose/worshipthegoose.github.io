@@ -3,11 +3,10 @@ body:has(.gooset) main {
     filter: blur(2px);
     position:relative;
     z-index:-999999;
-    margin-top:none !important;
+    margin-top:0px !important;
 }
 body:has(.gooset) nav{
     position:static !important;
-    margin-bottom:50px;
 }
 input {
     height: auto;
