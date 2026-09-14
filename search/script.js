@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const PAGES = [
         {
-            title: "Home Page",
+            title: "Front Page",
             url: "/",
             content: "Welcome to everyone except Saam! Repent your goosins at St. Duck's Church, view our great bulletin board, and gooseling.",
             keywords: "home, welcome, main, index, goose, goosism, repent, worship"
