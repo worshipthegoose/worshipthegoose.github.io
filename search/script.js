@@ -42,6 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
             content: "The great Youtube channel.... subscribe or die.",
             keywords: "unity, youtube, channel, videos"
         }
+        {
+            title: "Gooseling-only Page",
+            url: "https://thegoosesite.github.io/developer",
+            content: "Sacred GOOSE page for gooselings and gosedevs only...",
+            keywords: "secret, gooseling, goose, sacredpage, gooselingonly, developer, gosedev, goosedev, goosedevs, gosedevs"
+        }
     ];
 
     

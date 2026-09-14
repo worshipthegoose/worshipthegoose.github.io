@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="/cookie-management.js"></script>
+    <script type="module" src="/login.js"></script>
+    <script src="/developer/login/script.js"></script>
+    <link rel="stylesheet" href="/nav.css">
+    <link rel="stylesheet" href="/footer.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/developer/styles.css">
+    <link rel="stylesheet" href="/powerpoint/styles.css">
+    <link rel="stylesheet" href="/cursor.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <!-- Mandatory Script: Required by Goose Development Studios --><script src="/services.js"></script><!---->
+    <title>Login - The Goose Site</title>
+</head>
+<body>
+    <nav>
+    <ul class="grandpa">
+        <li class="dad">
+            <a class="logo son"href="/"title="Back to the homepage.">The Goose Site Legacy</a>
+        </li>
+        <li class="dad">
+            <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
+        </li>
+        <li class="dad">
+            <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
+        </li>
+        <li style="cursor:pointer;" class="dad dropdown">
+            <a class="son" title="The unity videos...">Videos</a>
+            <ul class="dropdown-content">
+                <li class="space"><a title="Subscribe or die..." href="/youtube">Youtube Channel</a></li>
+                <li><a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a></li>
+            </ul>
+        </li>
+        <li class="dad">
+            <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
+        </li>
+        <li class="dad" id="logout"><a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/;';"><img src="/assets/images/signin.png" /><u>Sign Out</u></a></li>
+    </ul>
+    </nav>
+    <main>
+        <div class="panel">
+            <h1>Gooseling & Developer Login</h1>
+            <p>This holy goose page is mainly for the gosedevs only and is unlisted from the main site. 
+            <br>If you are a gosedev or have an account, authenticate below.
+            <br>If not, please <a href="/">exit this page</a> as there is absolutely nothing to see here.</p>
+        <form class="authentication" id="auth" onsubmit="return false;">
+            <h2>Authentication</h2>
+            <p>Please verify your identity.</p>
+            
+            <label>Username: 
+                <input name="username" id="username" autocomplete="username" class="input-username" type="text" required>
+                <img src="/pages/welcome/icons/eyebrow.png" id="eye-1" style="display:none;"></img>
+            </label>
+            
+            <label>Password: 
+                <input name="passcode" id="passcode" class="input-passcode" autocomplete="current-password" type="password" required>
+                <img src="/pages/welcome/icons/eyebrow.png" id="eye-2"></img>
+            </label>
+
+            <button type="submit">Sign In</button>
+        </form>
+
+        </div>
+    </main>
+    <footer>
+        <h1 class="f1">The Goose Site Legacy</h1>
+    </footer>
+</body>
+</html>
