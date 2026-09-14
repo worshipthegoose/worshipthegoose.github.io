@@ -2,49 +2,49 @@ document.addEventListener("DOMContentLoaded", function () {
     const PAGES = [
         {
             title: "Home Page",
-            url: "https://thegoosesite.github.io/legacy",
+            url: "/",
             content: "Welcome to everyone except Saam! Repent your goosins at St. Duck's Church, view our great bulletin board, and gooseling.",
             keywords: "home, welcome, main, index, goose, goosism, repent, worship"
         },
         {
             title: "The Unity Videos",
-            url: "https://thegoosesite.github.io/legacy/videos",
+            url: "/videos",
             content: "Worship, pray, and repent with the unity videos.",
             keywords: "goosevideos, quiteholy, channel, videos, unity"
         },
         {
             title: "The Trinity Slideshows",
-            url: "https://thegoosesite.github.io/legacy/powerpoint",
+            url: "/powerpoint",
             content: "Pray with the trinity slideshows...",
             keywords: "slides, powerpoint, microsoft, trinity, slideshow, slideshows"
         },
         {
             title: "The Holy Goose Bible",
-            url: "https://thegoosesite.github.io/legacy/bible",
+            url: "/bible",
             content: "Read the holy goose bible and cherish it for dear life.",
             keywords: "quran, bible, book, gooseling, holy"
         },
         {
             title: "Dancing Monster",
-            url: "https://thegoosesite.github.io/legacy/saint-rainbowhairs",
+            url: "/saint-rainbowhairs",
             content: "A goose page dedicated to Saint Duck's nephew *twice removed*.",
             keywords: "canon, dancingmonster, monster, rainbowhairs"
         },
         {
             title: "Interactives",
-            url: "https://thegoosesite.github.io/legacy/interactives",
+            url: "/interactives",
             content: "Goose games coded in HTML5!",
             keywords: "interactives, games, goosegames, breakout, brickbreaker, pong"
         },
         {
             title: "Youtube Channel",
-            url: "https://thegoosesite.github.io/legacy/youtube",
+            url: "/youtube",
             content: "The great Youtube channel.... subscribe or die.",
             keywords: "unity, youtube, channel, videos"
         },
         {
             title: "Gooseling-only Page",
-            url: "https://thegoosesite.github.io/developer",
+            url: "/developer",
             content: "Sacred GOOSE page for gooselings and gosedevs only...",
             keywords: "secret, gooseling, goose, sacredpage, gooselingonly, developer, gosedev, goosedev, goosedevs, gosedevs"
         }
