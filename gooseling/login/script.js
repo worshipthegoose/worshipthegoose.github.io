@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const authForm = document.querySelector("#auth");
     
     if (getCookie('is-developer') === 'true') {
-        window.location.replace('/developer');
+        window.location.replace('/gooseling');
     }
 
     const eye1 = document.querySelector('#eye-1');
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function(){
         if (userIndex !== -1 && passwords[userIndex] === enteredPass) {
             document.cookie = `is-developer=true; path=/`;
             document.cookie = `dev-username=${encodeURIComponent(usernames[userIndex])}; path=/`;
-            window.location.replace('/developer');
+            window.location.replace('/gooseling');
         } else {
             if (errorMessage) {
                 errorMessage.textContent = "Incorrect username or password";

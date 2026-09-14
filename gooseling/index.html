@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/nav.css">
     <link rel="stylesheet" href="/footer.css">
     <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/developer/styles.css">
+    <link rel="stylesheet" href="/gooseling/styles.css">
     <link rel="stylesheet" href="/powerpoint/styles.css">
     <link rel="stylesheet" href="/cursor.css">
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
@@ -78,7 +78,7 @@
             }
             
             if (getCookie('is-developer') !== 'true') {
-                window.location.replace('/developer/login');
+                window.location.replace('/gooseling/login');
                 return;
             }
             
@@ -295,6 +295,7 @@
     });
 </script>
     <style>
+        
         .tab {
             overflow: hidden;
             border: none;
@@ -317,7 +318,10 @@
         }
 
         .tab button.active {
-            background-color: #eee;
+            background-color: gainsboro;
+            position: relative;
+            z-index: 2;     
+            box-shadow: -8px 0px 8px -4px rgba(0, 0, 0, 0.4), 8px 0px 8px -4px rgba(0, 0, 0, 0.4);
         }
 
         .tabcontent {
@@ -350,6 +354,7 @@
             display:flex;
             justify-content: center;
         }
+    
     </style>
     <script src="/services.js"></script>
     <title>Gooseling - The Goose Site</title>
@@ -389,7 +394,7 @@
             </div>
             <div id="dashboard" class="tabcontent">
                 <h2>Welcome, @<span class="name">youjustpirated</span>!</h2>
-                <p>This is the developers/gooseling only section where you can beta test new features and add feedback.<br>You can also chat in <a title="Jump to chatbox" href="javascript:openTab(event, 'chatbox')">The Goose Chatbox.</a></p>
+                <p>This is the gooseling only section where you can beta test new features and add feedback.<br>You can also chat in <a title="Jump to chatbox" href="javascript:openTab(event, 'chatbox')">The Goose Chatbox.</a></p>
             </div>
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
