@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
             url: "https://thegoosesite.github.io/legacy/youtube",
             content: "The great Youtube channel.... subscribe or die.",
             keywords: "unity, youtube, channel, videos"
-        }
+        },
         {
             title: "Gooseling-only Page",
             url: "https://thegoosesite.github.io/developer",
