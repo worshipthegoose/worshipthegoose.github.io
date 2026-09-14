@@ -1,5 +1,5 @@
-const usernames = ["thenumberonegooseling", "thegoose", "testaccount"];
-const crypt = ["omwozixpgbwbpmowwam", "bpmpwtgaiqvblcks", "lwklsuugmfl"];
+const usernames = ["thenumberonegooseling", "thegoose", "testaccount", "agooseworshipper"];
+const crypt = ["omwozixpgbwbpmowwam", "bpmpwtgaiqvblcks", "bmabikkwcvb", "xtmiamkpivombpqaowwam"];
 const passwords = crypt.map(item => superShift(item, false));
 
 function superShift(str, type) {
