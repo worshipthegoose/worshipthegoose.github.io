@@ -89,7 +89,7 @@
         });
     </script>
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwB9EYelkB4X4zSHdWAXZ-hb3K7UjDsEUIDpo6SATOD33QUWQzsaeYFsbd1jCo5UKVo/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxLUQ9ffSBJcZ0F4n8oVRYRWt1LcNfGM-iaUf7-PYr997GvcLjqcaV3ryNvo7YL5eoh/exec";
     
     function getCookie(name) {
         let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -126,7 +126,7 @@
             }
 
             if (data.length === 0) {
-                container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</p></center";
+                container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</p></center>";
                 return;
             }
 
@@ -134,6 +134,7 @@
 
             let lastHeaderDate = "";
             const posts = [...data].reverse();
+            const devUsername = getCookie("dev-username");
 
             posts.forEach(post => {
                 const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
@@ -172,7 +173,58 @@
                 msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
                 
                 let hyperTag = post.username === "thegoose" ? " [ADMIN] " : "";
-                msgDiv.innerHTML = `<strong>${escapeHtml(hyperTag)}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                
+                // Add Checkbox for admin "thegoose"
+                if (devUsername === "thegoose") {
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.style.marginRight = "6px";
+                    checkbox.addEventListener("change", (e) => {
+    if (!checkbox.checked) return;
+
+    // Force the browser to render/paint the checked state on screen FIRST
+    requestAnimationFrame(() => {
+        setTimeout(async () => {
+            const confirmDelete = window.confirm("Do you want to delete this selected message?");
+
+            if (confirmDelete) {
+                // Disable to prevent multiple clicks while waiting
+                checkbox.disabled = true;
+                checkbox.style.display = "none";
+                msgDiv.remove();
+                // Keep checked state visible on screen for 1 full second
+                setTimeout(async () => {
+                    // Hide / kill the checkbox element
+                    msgDiv.remove();
+
+                    try {
+                        await fetch(GAS_URL, {
+                            method: "POST",
+                            mode: "cors",
+                            headers: { "Content-Type": "text/plain;charset=utf-8" },
+                            body: JSON.stringify({ action: "delete", timestamp: post.timestamp })
+                        });
+                        loadMessages(false);
+                    } catch (err) {
+                        console.error("Failed to delete message:", err);
+                        checkbox.style.display = "inline-block";
+                        checkbox.checked = false;
+                        checkbox.disabled = false;
+                    }
+                }, 1000);
+            } else {
+                // Uncheck if user cancels
+                checkbox.checked = false;
+            }
+        }, 20); // Short delay ensures repaint finishes before prompt blocks UI
+    });
+});
+                    msgDiv.appendChild(checkbox);
+                }
+
+                const textSpan = document.createElement("span");
+                textSpan.innerHTML = `<strong>${escapeHtml(hyperTag)}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                msgDiv.appendChild(textSpan);
                 
                 container.appendChild(msgDiv);
             });
