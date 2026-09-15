@@ -29,7 +29,7 @@ div.panel {
     display: grid; 
     grid-template-columns: 110px 200px 30px; 
     align-items: center; 
-    gap: 10px;
+    gap: 7px;
     font-size: 21px;
     font-weight: bold;
     text-align: left; 
