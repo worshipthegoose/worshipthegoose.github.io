@@ -60,7 +60,7 @@ div.panel {
     justify-self: center;
 }
 
-#auth button{
+#auth button, #account button{
     width:fit-content;
     text-align: center;
     margin:0 auto;
