@@ -10,8 +10,12 @@
 div.panel {
     background-color: gainsboro;
     width:700px;
+    padding-bottom:25px !important;
 }
-
+div.panel .tab .tablinks{
+    position:relative;
+    z-index: 1 !important;
+}
 #auth {
     margin: 9px auto;
     margin-bottom:20px;
