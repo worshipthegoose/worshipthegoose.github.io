@@ -6,7 +6,7 @@
 body{
     background-image:linear-gradient(to left, #9a9a9a, #aaa, #bbb, #ccc, #ddd,#eeee, #eee, #fff) !important
 }
-.hello, .welcome{
+.hello, .welcome, .search-box{
     background-color: rgb(89, 62, 36) !important;
     
 }
