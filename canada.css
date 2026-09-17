@@ -1,0 +1,90 @@
+/* Canada Goose Mod in Goosettings */
+*, :root {
+    font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif !important;
+
+}
+body{
+    background-image:linear-gradient(to left, #9a9a9a, #aaa, #bbb, #ccc, #ddd,#eeee, #eee, #fff) !important
+}
+.hello, .welcome{
+    background-color: rgb(89, 62, 36) !important;
+    
+}
+.hello p,
+.hello h1,
+.hello h2,
+.hello h3,
+.hello h4,
+.hello h5,
+.hello h6,
+.hello b,
+.hello u,
+.hello i,
+.hello strong,
+.hello em,
+.hello mark,
+.hello span,
+.hello center,
+.welcome p,
+.welcome h1,
+.welcome h2,
+.welcome h3,
+.welcome h4,
+.welcome h5,
+.welcome h6,
+.welcome b,
+.welcome u,
+.welcome i,
+.welcome strong,
+.welcome em,
+.welcome mark,
+.welcome span,
+.welcome center
+{
+    color:white;
+}
+span.goose {
+    pointer-events: none;
+    color:inherit;
+    -webkit-text-stroke: inherit;
+    font-weight: inherit;
+    cursor:auto !important
+}
+.hello, .welcome{
+    box-shadow: 0px 4px 10px black;
+}
+nav, nav ul {
+    background-color: #222 !important;
+}
+nav ul li a:hover, nav ul li:hover{
+    background-color: rgb(36, 49, 36) !important;
+}
+footer {
+    background-color: #444;
+}
+img:hover{
+    transition:none !important;
+    transform: none !important;
+    pointer-events: none;
+}
+.worshipper{
+    background-image: url('/assets/images/goosecanada.png') !important;
+    content: url('/assets/images/goosecanada.png') !important;
+    width:200px;
+}
+.gooset-container{
+    background-color: rgb(89, 62, 36);
+}
+.gooset-container h1 {
+    background-color: rgb(89, 62, 36);
+}
+.gooset-container .gooset .settings input[type='checkbox'] {
+    accent-color:rgb(26, 79, 26);
+}
+.gooset-container .gooset ul li:hover, .gooset-container .gooset ul li a:hover{
+    background-color: rgb(65, 52, 42);
+}
+button {
+    transform: none !important;
+    transition: none !important;
+}

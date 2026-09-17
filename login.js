@@ -39,9 +39,29 @@ document.addEventListener("DOMContentLoaded", function() {
   if (getCookie("duck_mode") === "on") {
     html.style.filter = "grayscale(67%)";
   }
+  if (getCookie("canada_goose") === "true") {
+    document.head.insertAdjacentHTML("beforeend", "<link class='settings-css' rel='stylesheet' href='/canada.css'>");
+    
+  }
   if (getCookie("high_contrast") === "on"){
     html.style.filter = "contrast(150%) saturate(200%)";
   }
+  if (window.location.search !== "") {
+    console.log("s");
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("/settings")){
+      // Defer the click slightly to allow scripts/styles to bind
+      setTimeout(() => {
+        const link = document.querySelector("a.eyecare");
+        if (link) {
+          link.click();
+        } else {
+          console.warn("a.eyecare not found in DOM yet.");
+        }
+      }, 100); 
+    }
+  }
+
   const igloo = document.querySelector(".logo");
   if (localStorage.getItem("homepage") !== null){
     if (igloo) {

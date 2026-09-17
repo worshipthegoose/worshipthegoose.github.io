@@ -1,25 +1,23 @@
 (function initSettings() {
-    // Helper: getCookie
     function getCookie(name) {
         let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
     }
 
-    // 1. <removed>
-
-    // 2. Inject missing HTML container elements if they don't exist
     let gooset = document.querySelector(".gooset");
     if (!gooset) {
         document.body.insertAdjacentHTML("beforeend", `
-            <div class="gooset" style="display:none;flex-direction:row !important;margin:7px !important;">
-                <a class="textex" style="position:absolute;top:0;right:0;margin-right:6px;margin-top:5px;font-weight:bold;font-size:25px;cursor:pointer;">X</a>
-                <ul>
-                    <li class="gooset-general-li">General</li>
-                    <li class="gooset-accessibility-li">Accessibility</li>
-                    <li class="gooset-themes-li">Themes</li>
-                    <li class="gooset-about-li">About</li>
-                </ul>
-                <div class="settings" style="display:flex;flex-direction:column !important; margin:10px !important"></div>
+            <div class="gooset-container" style="display:none;flex-direction:column;">
+                <h1 style="color:white;text-align:left !important;margin-bottom:7px;border-bottom:1.5px solid white;">Goosettings <span style="font-size:17px;font-weight:normal;">for legacy</span><a class="textex">Apply Changes</a></h1>
+                <div class="gooset" style="display:none;flex-direction:row !important;margin:7px !important;">
+                    <ul>
+                        <li class="gooset-general-li">General</li>
+                        <li class="gooset-accessibility-li">Accessibility</li>
+                        <li class="gooset-themes-li">Themes</li>
+                        <li class="gooset-about-li">About</li>
+                    </ul>
+                    <div class="settings" style="display:flex;flex-direction:column !important; margin:10px !important"></div>
+                </div>
             </div>
         `);
         gooset = document.querySelector(".gooset");
@@ -27,7 +25,6 @@
     const style = document.querySelector(".settings-css");
     const footer = document.querySelector("footer");
 
-    // Scoped Elements
     const genEl = document.querySelector('.gooset ul li:nth-child(1)');
     const assEl = document.querySelector('.gooset ul li:nth-child(2)');
     const themEl = document.querySelector('.gooset ul li:nth-child(3)');
@@ -40,7 +37,6 @@
 
     closeOrInit();
 
-    // 3. Inject Link into Footer
     if (footer && !document.querySelector(".eyecare")) {
         footer.insertAdjacentHTML("beforeend", "<ul class='link-bottom-ul'><li><a title='Toggle goosettings' class='eyecare'>Open Goosettings</a></li><li><a title='Visit the new site...' href='https://thegoosesite.github.io'>Open New Site</a></li></ul>");
     }
@@ -48,6 +44,7 @@
     const state = {
         contrastMode: false,
         duckMode: false,
+        canadaTheme: false,
         homepage: "standard",
         trackers: true,
         secureconn: true,
@@ -65,7 +62,6 @@
     const themes = document.querySelector(".gooset-themes-li");
     const toggle = document.querySelector(".eyecare");
 
-    // 4. Toggle Button Handler
     if (toggle) {
         toggle.addEventListener("click", function() {
             if (gooset.style.display === "flex") {
@@ -78,6 +74,12 @@
                 toggle.style.display = "none";
                 if (getCookie("duck_mode") === "on"){
                     state.duckMode = true;
+                }
+                if (getCookie("canada_goose") === "true") {
+                    state.canadaTheme = true;
+                    state.duckMode = false;
+                    state.contrastMode = false;
+                    state.fontGlobal = false;
                 }
                 if (getCookie("high_contrast") === "on"){
                     state.contrastMode = true;
@@ -102,15 +104,21 @@
             <span>(!) This cannot be disabled :[</span>`;
 
     const aboutScript = "<h2>About</h2><p style='overflow-y: auto;'>What started as an ongoing joke in a computer science class rapidly got out of hand. Zero of three people in that period remember the exact origin of the goose obsession. Rather quickly, it led to presentations, a religion, games, videos, and most importantly, a website.<br><br>With over twenty goose pages that include games, slideshows, videos, a bible, a search engine, and a wiki; The Goose Site is one of the largest Anseriformes-dedicated websites.</p>";
-    const themeScript = `<h2>Themes</h2><p><i>Nothing here yet</i></p><p>You can find "Duck Mode" in "Accessibility"</p><p><b><a class="click-tigre">→ Go to accessibility ←</a></b></p>`;
+    
+    const themeScript = `
+        <h2>Themes</h2>
+        <strong>Goose Experience Package (GEP)</strong>
+        <label for="canada-check"><input id="canada-check" name="canada-check" type="checkbox" />Canada Goose</label>
+        <i>Excuse me?????</i>
+        `;
     
     const accessibilityScript = `<h2>Accessibility</h2><strong>Color Filters</strong><label><input class="ass-check" id="duck-mode-check" name="assCheck" type="checkbox" /> Enable Duck Mode</label><i>Best for gooselings who like dark mode...</i><label><input id="hi-co-check" name="assCheck" class="ass-check" type="checkbox" />Enable Vision Support</label><i>Great for gooselings who experience color blindness. Tested and proven.</i><br><strong>Cross System Features</strong><label><input type="checkbox" id="gooset-font-check" />Use a global font</label><i>Makes the site a little less GOOSE but forms a more readable enviroment on non-Microsoft devices.</i>`;
 
     function renderGeneral() {
-        if (genEl) genEl.style.textDecoration = "underline";
-        if (assEl) assEl.style.textDecoration = "none";
-        if (themEl) themEl.style.textDecoration = "none";
-        if (aboEl) aboEl.style.textDecoration = "none";
+        if (genEl) genEl.style.textShadow = "1px 0 0 currentColor";
+        if (assEl) assEl.style.textShadow = "none";
+        if (themEl) themEl.style.textShadow = "none";
+        if (aboEl) aboEl.style.textShadow = "none";
 
         if (!settings) return;
         settings.innerHTML = generalScript;
@@ -129,10 +137,10 @@
     }
 
     function renderAccessibility() {
-        if (genEl) genEl.style.textDecoration = "none";
-        if (assEl) assEl.style.textDecoration = "underline";
-        if (themEl) themEl.style.textDecoration = "none";
-        if (aboEl) aboEl.style.textDecoration = "none";
+        if (genEl) genEl.style.textShadow = "none";
+        if (assEl) assEl.style.textShadow = "1px 0 0 currentColor";
+        if (themEl) themEl.style.textShadow = "none";
+        if (aboEl) aboEl.style.textShadow = "none";
 
         if (!settings) return;
         settings.innerHTML = accessibilityScript;
@@ -140,31 +148,51 @@
         const duckCheck = document.getElementById("duck-mode-check");
         const hiCoCheck = document.getElementById("hi-co-check"); 
         const fontCheck = document.getElementById("gooset-font-check");
-        
+
+        function applyAccessibilityState() {
+            const checks = [duckCheck, hiCoCheck, fontCheck];
+            checks.forEach(check => {
+                if (check) {
+                    if (state.canadaTheme) {
+                        check.checked = false;
+                        check.disabled = true;
+                    } else {
+                        check.disabled = false;
+                    }
+                }
+            });
+
+            if (!state.canadaTheme) {
+                if (duckCheck) duckCheck.checked = state.duckMode;
+                if (hiCoCheck) hiCoCheck.checked = state.contrastMode;
+                if (fontCheck) fontCheck.checked = state.fontGlobal;
+            }
+        }
+
+        applyAccessibilityState();
+
         if (duckCheck) {
-            duckCheck.checked = state.duckMode;
             duckCheck.addEventListener("change", (e) => {
-                state.duckMode = e.target.checked;
+                if (!state.canadaTheme) state.duckMode = e.target.checked;
             });
         }
-        if (hiCoCheck){
-            hiCoCheck.checked = state.contrastMode;
+        
+        if (hiCoCheck) {
             hiCoCheck.addEventListener("change", (e) => { 
-                state.contrastMode = e.target.checked;
+                if (!state.canadaTheme) state.contrastMode = e.target.checked;
             });
         }
+        
         if (fontCheck) {
-            fontCheck.checked = state.fontGlobal;
             fontCheck.addEventListener("change", (e) => { 
-                state.fontGlobal = e.target.checked; 
+                if (!state.canadaTheme) state.fontGlobal = e.target.checked; 
             });
         }
 
-        // Single-choice filter toggles
         const assChecks = document.querySelectorAll('.ass-check');
         assChecks.forEach(assCheck => {
             assCheck.addEventListener('change', function() {
-                if (this.checked) {
+                if (this.checked && !state.canadaTheme) {
                     assChecks.forEach(aC => {
                         if (aC !== this) {
                             aC.checked = false;
@@ -177,26 +205,42 @@
         });
     }
 
+    function renderThemes() {
+        if (genEl) genEl.style.textShadow = "none";
+        if (assEl) assEl.style.textShadow = "none";
+        if (themEl) themEl.style.textShadow = "1px 0 0 currentColor";
+        if (aboEl) aboEl.style.textShadow = "none";
+
+        if (!settings) return;
+        settings.innerHTML = themeScript;
+
+        const canadaCheck = document.querySelector("#canada-check");
+        if (canadaCheck) {
+            canadaCheck.checked = state.canadaTheme;
+            canadaCheck.addEventListener("change", (e) => {
+                state.canadaTheme = e.target.checked;
+                
+                if (state.canadaTheme) {
+                    state.duckMode = false;
+                    state.contrastMode = false;
+                    state.fontGlobal = false;
+                }
+            });
+        }
+    }
+
     renderGeneral();
 
     if (general) general.addEventListener("click", renderGeneral);
     if (accessibility) accessibility.addEventListener("click", renderAccessibility);
     if (about && settings) about.addEventListener("click", () => {
-        if (genEl) genEl.style.textDecoration = "none";
-        if (assEl) assEl.style.textDecoration = "none";
-        if (themEl) themEl.style.textDecoration = "none";
-        if (aboEl) aboEl.style.textDecoration = "underline";
+        if (genEl) genEl.style.textShadow = "none";
+        if (assEl) assEl.style.textShadow = "none";
+        if (themEl) themEl.style.textShadow = "none";
+        if (aboEl) aboEl.style.textShadow = "1px 0 0 currentColor";
         settings.innerHTML = aboutScript; 
     });
-    if (themes && settings) themes.addEventListener("click", () => {
-        if (genEl) genEl.style.textDecoration = "none";
-        if (assEl) assEl.style.textDecoration = "none";
-        if (themEl) themEl.style.textDecoration = "underline";
-        if (aboEl) aboEl.style.textDecoration = "none";
-        settings.innerHTML = themeScript;
-        const assLnk = document.querySelector(".click-tigre");
-        if (assLnk) assLnk.addEventListener('click', renderAccessibility);
-    });
+    if (themes) themes.addEventListener("click", renderThemes);
 
     const closeBtn = document.querySelector(".textex");
     if (closeBtn) {
@@ -213,6 +257,11 @@
             } else {
                 document.cookie = "high_contrast=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             }
+            if (state.canadaTheme) {
+                document.cookie = "canada_goose=true;path=/";
+            } else {
+                document.cookie = "canada_goose=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            }
 
             if (state.homepage === "search") {
                 localStorage.setItem("homepage", "search");
@@ -224,7 +273,7 @@
             } else {
                 localStorage.removeItem("fontGlobal");
             }
-
+            window.location.search = "";
             closeOrInit();
             setTimeout(function() { window.location.reload(); }, 500);
         });

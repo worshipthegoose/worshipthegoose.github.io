@@ -1,23 +1,23 @@
-/* Blur and dim only the main content area */
-body:has(.gooset) main {
+body:has(.gooset-container) main {
     filter: blur(2px);
-    position:relative;
-    z-index:-999999;
-    margin-top:0px !important;
+    position: relative;
+    z-index: -9999;
+    margin-top: 0px !important;
 }
-body:has(.gooset) nav{
-    position:static !important;
+
+body:has(.gooset-container) nav {
+    position: static !important;
 }
+
 input {
     height: auto;
 }
 
-/* Gooset Modal Styles */
-.gooset {
+.gooset-container {
     background-color: darkorange;
     box-shadow: 0 0 20px 5px rgba(51, 51, 51, 0.5), 0 0 40px 10px rgba(52, 52, 52, 0.7);
     color: white !important;
-    font-family: 'Comic Sans MS', sans-serif;
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Chalkboard', sans-serif;
     padding: 10px 20px;
     border-radius: 5px;
     user-select: none;
@@ -27,120 +27,165 @@ input {
     translate: -50% -50%;
     margin: 10px !important;
     width: 560px;
-    height: 300px;
+    height: 350px;
     display: flex !important;
-    flex-direction: column;
-    cursor: url(/assets/cursors/cursor.png), default;
-    cursor: url(/assets/cursors/pointer.png), pointer;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    cursor: url('/assets/cursors/cursor.png'), default;
+}
+
+.gooset-container h1 {
+    position: sticky !important;
+    top: 0;
+    z-index: 10;
+    background-color: darkorange;
+    margin: 0;
+    padding-bottom: 8.5px !important;
+    border-bottom: 2px solid white;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.gooset-container div {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.gooset-container .settings {
+    display: flex !important;
+    flex-direction: column !important;
+    padding-left: 16px;
+    color: white !important;
+    margin: 15px !important;
+    flex-grow: 1;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+.gooset-container .settings::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+.gooset-container h1 .textex {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    z-index: 11;
+    background-color: transparent;
+    border: none;
+    color: white !important;
+    font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.gooset-container input[type="checkbox"],
+.gooset-container select,
+.gooset-container ul li,
+.gooset-container ul li a {
+    cursor: url('/assets/cursors/pointer.png'), pointer;
+}
+
+.gooset-container ul li a {
+    text-shadow: 0px 0px 0px currentColor;
+    transition: text-shadow 0.7s ease-in-out;
+}
+
+.gooset-container ul li a:active {
+    text-shadow: 1px 0 0 currentColor !important;
 }
 
 .click-tigre:hover {
     text-decoration: underline;
 }
 
-/* Typography resets inside Gooset */
-.gooset h1, 
-.gooset h2, 
-.gooset h3, 
-.gooset h4, 
-.gooset h5, 
-.gooset h6, 
-.gooset p, 
-.gooset i, 
-.gooset strong, 
-.gooset em, 
-.gooset u, 
-.gooset mark {
+.gooset-container h1,
+.gooset-container h2,
+.gooset-container h3,
+.gooset-container h4,
+.gooset-container h5,
+.gooset-container h6,
+.gooset-container p,
+.gooset-container i,
+.gooset-container strong,
+.gooset-container em,
+.gooset-container u,
+.gooset-container mark {
     color: white !important;
     padding: 0;
     margin: 0;
 }
 
-.gooset h4 {
+.gooset-container h4 {
     top: 0;
     left: 0;
     position: relative;
 }
 
-.gooset h4 span {
+.gooset-container h4 span {
     font-size: 15px;
 }
 
-.gooset h4 .textex:hover {
+.gooset-container h4 .textex:hover {
     text-decoration: underline;
     cursor: pointer;
 }
 
-/* Gooset Lists */
-.gooset ul {
+.gooset-container ul {
     list-style-type: none;
     padding: 0;
     margin: 7px;
 }
 
-.gooset ul li {
+.gooset-container ul li {
     width: 101%;
     font-size: 25px;
     transition: background-color 0.3s ease-in-out;
 }
 
-.gooset ul li span {
+.gooset-container ul li span {
     padding-left: 5px;
     cursor: pointer;
 }
 
-.gooset ul li:hover {
+.gooset-container ul li:hover {
     background-color: orangered;
     cursor: pointer;
 }
 
-/* Layout Containers */
-.gooset div {
-    display: flex;
-    flex-direction: row;
+.gooset-container .settings p {
+    font-size: 16px !important;
+    margin-right: 5px;
 }
 
-.settings {
-    display: flex;
-    flex-direction: column;
+.gooset-container .settings strong,
+.gooset-container .settings b {
+    font-size: 18px !important;
 }
 
-.gooset div .settings {
-    font-size: 20px !important;
-    display: flex;
-    flex-direction: column !important;
-    padding-left: 16px;
-    color: white !important;
-    margin: 15px !important;
+.gooset-container .settings h2 {
+    font-size: 22px !important;
 }
 
-.gooset div .settings p {
-    font-size: 20px;
-    margin-right:5px;
+.gooset-container .settings span {
+    font-size: 12px !important;
 }
 
-.gooset div .settings strong, 
-.gooset div .settings b {
-    font-size: 22px;
-}
-
-.gooset div .settings h2 {
-    font-size: 26px;
-}
-
-.gooset div .settings span {
-    font-size: 12px;
-}
-
-/* Helper & Footer Links */
 .textex {
-    position: absolute;
+    position: sticky !important;
     top: 0;
     right: 0;
     background-color: transparent;
     border: none;
     color: white !important;
-    font-family: 'Comic Sans MS', sans-serif;
+    font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif;
 }
 
 .textex:hover {
@@ -149,15 +194,15 @@ input {
 
 footer center ul {
     list-style: none;
-    list-style-type: none;
     display: flex;
     flex-direction: row;
 }
-
+.gooset select {
+    background-color: #ffff;
+    border:none;
+}
 .link-bottom-ul {
     list-style-type: none;
-    list-style: none;
-    -moz-user-select: none;
     user-select: none;
     display: flex;
     gap: 10px;

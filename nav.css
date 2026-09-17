@@ -54,6 +54,7 @@
     text-decoration: none;
     display: block;
     text-align: center;
+    transition: background-color 0.3s ease;
     -webkit-text-stroke: 0px transparent !important; 
 }
 .dropdown-content li a:hover {
