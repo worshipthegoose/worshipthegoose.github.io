@@ -9,6 +9,11 @@ body{
 .hello, .welcome, .search-box, .panel{
     background-color: rgb(89, 62, 36) !important;
     box-shadow: 0px 4px 10px black;
+    color:white !important;
+}
+ .tablinks.active {
+    background-color: #3b2815 !important;
+     color:white !important;
 }
 .panel p,
 .panel h1,
