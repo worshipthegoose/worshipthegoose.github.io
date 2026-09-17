@@ -6,10 +6,25 @@
 body{
     background-image:linear-gradient(to left, #9a9a9a, #aaa, #bbb, #ccc, #ddd,#eeee, #eee, #fff) !important
 }
-.hello, .welcome, .search-box{
+.hello, .welcome, .search-box, .panel{
     background-color: rgb(89, 62, 36) !important;
     box-shadow: 0px 4px 10px black;
 }
+.panel p,
+.panel h1,
+.panel h2,
+.panel h3,
+.panel h4,
+.panel h5,
+.panel h6,
+.panel b,
+.panel u,
+.panel i,
+.panel strong,
+.panel em,
+.panel mark,
+.panel span,
+.panel center,
 .search-box p,
 .search-box h1,
 .search-box h2,
