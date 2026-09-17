@@ -10,9 +10,7 @@
 div.panel {
     background-color: gainsboro;
     width:700px;
-    padding-bottom:25px !important;
-}
-div.panel .tab .tablinks{
+    margin-bottom:30px !important;
     position:relative;
     z-index: 1 !important;
 }
