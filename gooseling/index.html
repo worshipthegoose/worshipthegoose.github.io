@@ -139,7 +139,16 @@
             if (isInitialLoad) {
                 container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>Loading...</p></center>";
             }
-
+            
+            if (getCookie('is-developer') !== 'true') {t
+                window.location.replace('/gooseling/login');
+                return;
+            }
+            
+            const username = getCookie("dev-username");
+            if (username) {
+                document.querySelectorAll(".name").forEach((name) => {name.textContent = decodeURIComponent(username)});
+            }
             try {
                 const response = await fetch(GAS_URL, {
                     method: "GET",
@@ -200,8 +209,13 @@
                         headerDiv.style.padding = "8px 0";
                         headerDiv.style.margin = "0 8px 8px 8px";
                         headerDiv.style.fontSize = "17px";
-                        headerDiv.style.borderBottom = "2px ridge #222";
-                        headerDiv.style.color = "#222";
+                        if (getCookie('canada_goose') === 'true') {
+                            headerDiv.style.borderBottom = "2px ridge white";
+                            headerDiv.style.color = "white";
+                        }else{
+                            headerDiv.style.borderBottom = "2px ridge #222";
+                            headerDiv.style.color = "#222";
+                        }
                         headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
                         headerDiv.style.userSelect = "none";
                         
@@ -450,7 +464,7 @@
             </div>
             <div id="dashboard" class="tabcontent">
                 <h2>Welcome to The Gooseling Panel, @<span class="name">PIRATED</span>!</h2>
-                <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br>You can also chat in <a title="Jump to chatbox" href="javascript:openTab(event, 'chatbox')">The Goose Chatbox.</a></p>
+                <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
             </div>
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
