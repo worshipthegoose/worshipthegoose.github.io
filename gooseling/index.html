@@ -12,14 +12,89 @@
     <link rel="stylesheet" href="/gooseling/styles.css">
     <link rel="stylesheet" href="/powerpoint/styles.css">
     <link rel="stylesheet" href="/cursor.css">
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <script class="tabscript">
+    <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVjK4Mx9ejqaqA7lH-PAQnoFrFsVbWdBXNELIWt_dV9plj2ij1eZtdesw8-3pZvbhI/exec";
+        const ORIGINAL_FAVICON = "../favicon.ico";
+        let badgedFaviconDataUrl = null;
+        let lastKnownMessageCount = 0;
+        let hasUnreadMessages = false;
+
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        function escapeHtml(str) {
+            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function generateBadgedFavicon() {
+            const img = new Image();
+            img.src = ORIGINAL_FAVICON;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 32;
+                canvas.height = 32;
+                const ctx = canvas.getContext("2d");
+
+                // Draw original image base
+                ctx.drawImage(img, 0, 0, 32, 32);
+
+                // Draw red dot on bottom right corner (X: 24, Y: 24, Radius: 5)
+                ctx.beginPath();
+                ctx.arc(24, 24, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "#FF0000";
+                ctx.fill();
+
+                // Subtle white outline for contrast
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.stroke();
+
+                badgedFaviconDataUrl = canvas.toDataURL("image/png");
+                if (hasUnreadMessages) {
+                    updateFavicon(true);
+                }
+            };
+        }
+
+        function updateFavicon(showBadge) {
+            let favicon = document.getElementById("favicon");
+            if (favicon) {
+                favicon.remove();
+            }
+
+            favicon = document.createElement("link");
+            favicon.id = "favicon";
+            favicon.rel = "icon";
+
+            if (showBadge && badgedFaviconDataUrl) {
+                favicon.type = "image/png";
+                favicon.href = badgedFaviconDataUrl;
+            } else {
+                favicon.type = "image/x-icon";
+                favicon.href = ORIGINAL_FAVICON;
+            }
+
+            document.head.appendChild(favicon);
+        }
+
+        function setUnreadStatus(showBadge) {
+            hasUnreadMessages = showBadge;
+            updateFavicon(showBadge);
+        }
+
         function openTab(evt, cityName) {
             var i, tabcontent, tablinks;
 
             var targetId = cityName.toLowerCase();
             window.location.hash = `#${targetId}`;
-            document.querySelector('title').textContent = `Gooseling ${targetId.charAt(0).toUpperCase() + targetId.slice(1)} - The Goose Site`
+            document.querySelector('title').textContent = `Gooseling ${targetId.charAt(0).toUpperCase() + targetId.slice(1)} - The Goose Site`;
+
+            if (targetId === "chatbox") {
+                setUnreadStatus(false);
+            }
 
             tabcontent = document.getElementsByClassName("tabcontent");
             for (i = 0; i < tabcontent.length; i++) {
@@ -47,20 +122,7 @@
                 }
             }
         } 
-        
-        document.addEventListener("DOMContentLoaded", function(){
-            if (!window.location.hash || window.location.hash === "#dashboard") {
-                openTab(null, 'Dashboard');
-            } else if (window.location.hash === "#notifications") {
-                openTab(null, 'Notifications');
-            } else if (window.location.hash === "#chatbox") {
-                openTab(null, 'Chatbox');
-            } else if (window.location.hash === "#account") {
-                openTab(null, 'Account');
-            }
-        });
-    </script>
-    <script class="script-js">
+
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -70,13 +132,151 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            function getCookie(name) {
-                let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                if (match) return match[2];
-                return null;
+        async function loadMessages(isInitialLoad = false) {
+            const container = document.getElementById("message-container");
+            if (!container) return;
+
+            if (isInitialLoad) {
+                container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>Loading...</p></center>";
             }
-            
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: "GET",
+                    redirect: "follow"
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    container.innerHTML = "<p style='color:red;'>Error: Invalid data structure received.</p>";
+                    return;
+                }
+
+                const devUsername = getCookie("dev-username");
+
+                if (!isInitialLoad && data.length > lastKnownMessageCount) {
+                    const latestMessage = data[data.length - 1];
+                    const currentTabHash = window.location.hash.toLowerCase();
+                    
+                    if (currentTabHash !== "#chatbox" && latestMessage.username !== devUsername) {
+                        setUnreadStatus(true);
+                    }
+                }
+
+                lastKnownMessageCount = data.length;
+
+                if (data.length === 0) {
+                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</p></center>";
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                let lastHeaderDate = "";
+                const posts = [...data].reverse();
+
+                posts.forEach(post => {
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+                    
+                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
+
+                    if (dateHeaderString !== lastHeaderDate) {
+                        lastHeaderDate = dateHeaderString;
+
+                        const headerDiv = document.createElement("div");
+                        headerDiv.style.fontWeight = "bold";
+                        headerDiv.style.textAlign = "center";
+                        headerDiv.style.padding = "8px 0";
+                        headerDiv.style.margin = "0 8px 8px 8px";
+                        headerDiv.style.fontSize = "17px";
+                        headerDiv.style.borderBottom = "2px ridge #222";
+                        headerDiv.style.color = "#222";
+                        headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                        headerDiv.style.userSelect = "none";
+                        
+                        container.appendChild(headerDiv);
+                    }
+
+                    const msgDiv = document.createElement("div");
+                    msgDiv.style.marginBottom = "8px";
+
+                    const fullTimeText = msgDateObj.toLocaleString("en-US", { 
+                        timeZone: "America/Los_Angeles" 
+                    });
+
+                    msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+                    
+                    let hyperTag = post.username === "thegoose" ? " [OMNISCIENT] " : "";
+                    
+                    if (devUsername === "thegoose") {
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.style.marginRight = "6px";
+                        checkbox.addEventListener("change", (e) => {
+                            if (!checkbox.checked) return;
+
+                            requestAnimationFrame(() => {
+                                setTimeout(async () => {
+                                    const confirmDelete = window.confirm("Do you want to delete this selected message?");
+
+                                    if (confirmDelete) {
+                                        checkbox.disabled = true;
+                                        checkbox.style.display = "none";
+                                        msgDiv.remove();
+                                        setTimeout(async () => {
+                                            msgDiv.remove();
+
+                                            try {
+                                                await fetch(GAS_URL, {
+                                                    method: "POST",
+                                                    mode: "cors",
+                                                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                                                    body: JSON.stringify({ action: "delete", timestamp: post.timestamp })
+                                                });
+                                                loadMessages(false);
+                                            } catch (err) {
+                                                console.error("Failed to delete message:", err);
+                                                checkbox.style.display = "inline-block";
+                                                checkbox.checked = false;
+                                                checkbox.disabled = false;
+                                            }
+                                        }, 1000);
+                                    } else {
+                                        checkbox.checked = false;
+                                    }
+                                }, 20);
+                            });
+                        });
+                        msgDiv.appendChild(checkbox);
+                    }
+
+                    const textSpan = document.createElement("span");
+                    textSpan.innerHTML = `<strong>${escapeHtml(hyperTag)}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                    msgDiv.appendChild(textSpan);
+                    
+                    container.appendChild(msgDiv);
+                });
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function(){
+            generateBadgedFavicon();
+
             if (getCookie('is-developer') !== 'true') {
                 window.location.replace('/gooseling/login');
                 return;
@@ -86,216 +286,73 @@
             if (username) {
                 document.querySelectorAll(".name").forEach((name) => {name.textContent = decodeURIComponent(username)});
             }
-        });
-    </script>
-    <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxLUQ9ffSBJcZ0F4n8oVRYRWt1LcNfGM-iaUf7-PYr997GvcLjqcaV3ryNvo7YL5eoh/exec";
-    
-    function getCookie(name) {
-        let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? decodeURIComponent(match[2]) : null;
-    }
 
-    function escapeHtml(str) {
-        return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-
-    async function loadMessages(isInitialLoad = false) {
-        const container = document.getElementById("message-container");
-        if (!container) return;
-
-        if (isInitialLoad) {
-            container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>Loading...</p></center>";
-        }
-
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "GET",
-                redirect: "follow"
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP Error! Status: ${response.status}`);
+            if (!window.location.hash || window.location.hash === "#dashboard") {
+                openTab(null, 'Dashboard');
+            } else if (window.location.hash === "#notifications") {
+                openTab(null, 'Notifications');
+            } else if (window.location.hash === "#chatbox") {
+                openTab(null, 'Chatbox');
+            } else if (window.location.hash === "#account") {
+                openTab(null, 'Account');
             }
 
-            const data = await response.json();
-
-            if (!Array.isArray(data)) {
-                container.innerHTML = "<p style='color:red;'>Error: Invalid data structure received.</p>";
-                return;
-            }
-
-            if (data.length === 0) {
-                container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</p></center>";
-                return;
-            }
-
-            container.innerHTML = "";
-
-            let lastHeaderDate = "";
-            const posts = [...data].reverse();
-            const devUsername = getCookie("dev-username");
-
-            posts.forEach(post => {
-                const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+            const clearBtn = document.getElementById("clear-chat");
+            if (clearBtn && username === "thegoose") {
+                clearBtn.style.display = "inline-block";
                 
-                const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
-                    timeZone: "America/Los_Angeles",
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                });
-
-                if (dateHeaderString !== lastHeaderDate) {
-                    lastHeaderDate = dateHeaderString;
-
-                    const headerDiv = document.createElement("div");
-                    headerDiv.style.fontWeight = "bold";
-                    headerDiv.style.textAlign = "center";
-                    headerDiv.style.padding = "8px 0";
-                    headerDiv.style.margin = "0 8px 8px 8px";
-                    headerDiv.style.fontSize = "17px";
-                    headerDiv.style.borderBottom = "2px ridge #222";
-                    headerDiv.style.color = "#222";
-                    headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
-                    headerDiv.style.userSelect = "none"
-                    
-                    container.appendChild(headerDiv);
-                }
-
-                const msgDiv = document.createElement("div");
-                msgDiv.style.marginBottom = "8px";
-
-                const fullTimeText = msgDateObj.toLocaleString("en-US", { 
-                    timeZone: "America/Los_Angeles" 
-                });
-
-                msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
-                
-                let hyperTag = post.username === "thegoose" ? " [OMNISCIENT] " : "";
-                
-                // Add Checkbox for admin "thegoose"
-                if (devUsername === "thegoose") {
-                    const checkbox = document.createElement("input");
-                    checkbox.type = "checkbox";
-                    checkbox.style.marginRight = "6px";
-                    checkbox.addEventListener("change", (e) => {
-    if (!checkbox.checked) return;
-
-    // Force the browser to render/paint the checked state on screen FIRST
-    requestAnimationFrame(() => {
-        setTimeout(async () => {
-            const confirmDelete = window.confirm("Do you want to delete this selected message?");
-
-            if (confirmDelete) {
-                // Disable to prevent multiple clicks while waiting
-                checkbox.disabled = true;
-                checkbox.style.display = "none";
-                msgDiv.remove();
-                // Keep checked state visible on screen for 1 full second
-                setTimeout(async () => {
-                    // Hide / kill the checkbox element
-                    msgDiv.remove();
+                clearBtn.addEventListener("click", async () => {
+                    if (!confirm("Are you sure you want to clear all chat messages?")) return;
 
                     try {
                         await fetch(GAS_URL, {
                             method: "POST",
                             mode: "cors",
                             headers: { "Content-Type": "text/plain;charset=utf-8" },
-                            body: JSON.stringify({ action: "delete", timestamp: post.timestamp })
+                            body: JSON.stringify({ action: "clear" })
+                        });
+                        
+                        loadMessages(false);
+                    } catch (err) {
+                        console.error("Failed to clear messages:", err);
+                    }
+                });
+            }
+
+            const chatForm = document.getElementById("chat-form");
+            if (chatForm) {
+                chatForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const input = document.getElementById("chat-input");
+                    if (!input || !input.value.trim()) return;
+
+                    const messageText = input.value.trim();
+                    input.value = "";
+
+                    try {
+                        await fetch(GAS_URL, {
+                            method: "POST",
+                            mode: "cors",
+                            headers: { 
+                                "Content-Type": "text/plain;charset=utf-8" 
+                            },
+                            body: JSON.stringify({
+                                username: username || "Anonymous",
+                                message: messageText
+                            })
                         });
                         loadMessages(false);
                     } catch (err) {
-                        console.error("Failed to delete message:", err);
-                        checkbox.style.display = "inline-block";
-                        checkbox.checked = false;
-                        checkbox.disabled = false;
+                        console.error("Failed to send message:", err);
                     }
-                }, 1000);
-            } else {
-                // Uncheck if user cancels
-                checkbox.checked = false;
+                });
             }
-        }, 20); // Short delay ensures repaint finishes before prompt blocks UI
-    });
-});
-                    msgDiv.appendChild(checkbox);
-                }
 
-                const textSpan = document.createElement("span");
-                textSpan.innerHTML = `<strong>${escapeHtml(hyperTag)}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
-                msgDiv.appendChild(textSpan);
-                
-                container.appendChild(msgDiv);
-            });
-
-        } catch (err) {
-            console.error("Fetch error:", err);
-            container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const clearBtn = document.getElementById("clear-chat");
-        const devUsername = getCookie("dev-username");
-
-        if (clearBtn && devUsername === "thegoose") {
-            clearBtn.style.display = "inline-block";
-            
-            clearBtn.addEventListener("click", async () => {
-                if (!confirm("Are you sure you want to clear all chat messages?")) return;
-
-                try {
-                    await fetch(GAS_URL, {
-                        method: "POST",
-                        mode: "cors",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({ action: "clear" })
-                    });
-                    
-                    loadMessages(false);
-                } catch (err) {
-                    console.error("Failed to clear messages:", err);
-                }
-            });
-        }
-
-        const chatForm = document.getElementById("chat-form");
-        if (chatForm) {
-            chatForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const input = document.getElementById("chat-input");
-                if (!input || !input.value.trim()) return;
-
-                const messageText = input.value.trim();
-                input.value = "";
-
-                try {
-                    await fetch(GAS_URL, {
-                        method: "POST",
-                        mode: "cors",
-                        headers: { 
-                            "Content-Type": "text/plain;charset=utf-8" 
-                        },
-                        body: JSON.stringify({
-                            username: devUsername || "Anonymous",
-                            message: messageText
-                        })
-                    });
-                    loadMessages(false);
-                } catch (err) {
-                    console.error("Failed to send message:", err);
-                }
-            });
-        }
-
-        loadMessages(true);
-        setInterval(() => loadMessages(false), 1000);
-    });
-</script>
+            loadMessages(true);
+            setInterval(() => loadMessages(false), 1000);
+        });
+    </script>
     <style>
-        
         .tab {
             overflow: hidden;
             border: none;
@@ -354,7 +411,6 @@
             display:flex;
             justify-content: center;
         }
-    
     </style>
     <script src="/services.js"></script>
     <title>Gooseling - The Goose Site</title>

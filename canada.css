@@ -17,7 +17,14 @@ body{
 }
 .notifbox div {
     background-color: #785c41 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width:250px !important;
 }
+.notifbox {
+    max-width:250px !important;
+}
+.panel label,
 .panel p,
 .panel h1,
 .panel h2,

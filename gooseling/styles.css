@@ -101,6 +101,26 @@ div.panel {
     overflow-y:auto;
     
 }
+#notifbox div h3 {
+    color:firebrick;
+    font-size:23px;
+    background-color:yellow;
+    width:fit-content;
+    margin: 0 auto !important;
+    text-align: center;
+    overflow-x: ;
+    display:flex; justify-content: center;
+}
+#notifbox div h3::before{
+    content:"(!) "
+}
+#notifbox div {
+    width:500px !important;
+}
+
+main{
+    padding-bottom: 20px;;
+}
 #chat-form{
     display: flex;
     justify-content: center;
