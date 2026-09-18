@@ -137,7 +137,9 @@
             if (!container) return;
 
             if (isInitialLoad) {
-                container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>Loading...</p></center>";
+                let inlineStyles;
+                if (getCookie('canada_goose') === "true") { inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' } else { inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' }
+                container.innerHTML = `<center><span ${}>Loading...</p></center>`;
             }
             
             if (getCookie('is-developer') !== 'true') {t
