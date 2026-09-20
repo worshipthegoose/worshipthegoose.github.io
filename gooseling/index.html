@@ -47,16 +47,13 @@
                 canvas.height = 32;
                 const ctx = canvas.getContext("2d");
 
-                // Draw original image base
                 ctx.drawImage(img, 0, 0, 32, 32);
 
-                // Draw red dot on bottom right corner (X: 24, Y: 24, Radius: 5)
                 ctx.beginPath();
                 ctx.arc(24, 24, 5, 0, 2 * Math.PI);
                 ctx.fillStyle = "#FF0000";
                 ctx.fill();
 
-                // Subtle white outline for contrast
                 ctx.lineWidth = 1.5;
                 ctx.strokeStyle = "#FFFFFF";
                 ctx.stroke();
@@ -148,10 +145,10 @@
             if (isInitialLoad) {
                 let inlineStyles;
                 if (getCookie('canada_goose') === "true") { inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' } else { inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' }
-                container.innerHTML = `<center><span ${inlineStyles}>Loading...</p></center>`;
+                container.innerHTML = `<center><span style="${inlineStyles}">Loading...</span></center>`;
             }
             
-            if (getCookie('is-developer') !== 'true') {t
+            if (getCookie('is-developer') !== 'true') {
                 window.location.replace('/gooseling/login');
                 return;
             }
@@ -191,7 +188,7 @@
                 lastKnownMessageCount = data.length;
 
                 if (data.length === 0) {
-                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</p></center>";
+                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
                     return;
                 }
 
@@ -223,7 +220,7 @@
                         if (getCookie('canada_goose') === 'true') {
                             headerDiv.style.borderBottom = "2px ridge white";
                             headerDiv.style.color = "white";
-                        }else{
+                        } else {
                             headerDiv.style.borderBottom = "2px ridge #222";
                             headerDiv.style.color = "#222";
                         }
@@ -243,29 +240,33 @@
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
                     
                     let hyperTag = post.username === "thegoose" ? " [OMNISCIENT] " : "";
-                    
                     if (devUsername === "thegoose") {
                         const checkbox = document.createElement("input");
                         checkbox.type = "checkbox";
-                        checkbox.style.marginRight = "6px"; // Adds space
-                        checkbox.addEventListener("change", (e) => {
+                        checkbox.style.marginRight = "6px";
+                        
+                        checkbox.addEventListener("change", () => {
                             if (!checkbox.checked) return;
+
                             setTimeout(async () => {
                                 const confirmDelete = window.confirm("Do you want to delete this selected message?");
+
                                 if (confirmDelete) {
                                     checkbox.disabled = true;
+
                                     try {
-                                        const response = await fetch(GAS_URL, {
+                                        await fetch(GAS_URL, {
                                             method: "POST",
                                             mode: "cors",
                                             headers: { "Content-Type": "text/plain;charset=utf-8" },
                                             body: JSON.stringify({ action: "delete", timestamp: post.timestamp })
                                         });
+
                                         msgDiv.remove();
-                                        await loadMessages(false);
+                                        loadMessages(false);
                                     } catch (err) {
                                         console.error("Failed to delete message:", err);
-                                        alert("Failed to delete message. Please try again.");
+                                        alert("Failed to delete message.");
                                         checkbox.checked = false;
                                         checkbox.disabled = false;
                                     }
@@ -274,16 +275,16 @@
                                 }
                             }, 50);
                         });
+
                         msgDiv.appendChild(checkbox);
                     }
 
                     const textSpan = document.createElement("span");
-                    textSpan.innerHTML = `<strong>${escapeHtml(hyperTag)}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                    textSpan.innerHTML = `<strong>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
                     msgDiv.appendChild(textSpan);
-                    
+
                     container.appendChild(msgDiv);
                 });
-
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
