@@ -13,38 +13,47 @@
     <link rel="stylesheet" href="/powerpoint/styles.css">
     <link rel="stylesheet" href="/cursor.css">
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
+
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzVjK4Mx9ejqaqA7lH-PAQnoFrFsVbWdBXNELIWt_dV9plj2ij1eZtdesw8-3pZvbhI/exec";
         const ORIGINAL_FAVICON = "../favicon.ico";
         let badgedFaviconDataUrl = null;
         let lastKnownMessageCount = 0;
         let hasUnreadMessages = false;
-        
+        let lastMessageData = "";
+
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
             return match ? decodeURIComponent(match[2]) : null;
         }
 
-        if (getCookie('') === 'testaccount'){
+        if (getCookie('') === 'testaccount') {
             const textInput = document.querySelector("#chat-form input");
             const textButton = document.querySelector("#chat-form button[type='submit']");
 
-            textInput.disabled = 'true';
-            textInput.placeholder = "The gosedevs have seized your ability to chat.";
-            textButton.style.display = "none";
+            if (textInput) {
+                textInput.disabled = true;
+                textInput.placeholder = "The gosedevs have seized your ability to chat.";
+            }
+
+            if (textButton) {
+                textButton.style.display = "none";
+            }
         }
-        
+
         function escapeHtml(str) {
-            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         function generateBadgedFavicon() {
             const img = new Image();
             img.src = ORIGINAL_FAVICON;
+
             img.onload = () => {
                 const canvas = document.createElement("canvas");
                 canvas.width = 32;
                 canvas.height = 32;
+
                 const ctx = canvas.getContext("2d");
 
                 ctx.drawImage(img, 0, 0, 32, 32);
@@ -59,6 +68,7 @@
                 ctx.stroke();
 
                 badgedFaviconDataUrl = canvas.toDataURL("image/png");
+
                 if (hasUnreadMessages) {
                     updateFavicon(true);
                 }
@@ -67,6 +77,7 @@
 
         function updateFavicon(showBadge) {
             let favicon = document.getElementById("favicon");
+
             if (favicon) {
                 favicon.remove();
             }
@@ -95,7 +106,9 @@
             var i, tabcontent, tablinks;
 
             var targetId = cityName.toLowerCase();
+
             window.location.hash = `#${targetId}`;
+
             document.querySelector('title').textContent = `Gooseling ${targetId.charAt(0).toUpperCase() + targetId.slice(1)} - The Goose Site`;
 
             if (targetId === "chatbox") {
@@ -103,16 +116,19 @@
             }
 
             tabcontent = document.getElementsByClassName("tabcontent");
+
             for (i = 0; i < tabcontent.length; i++) {
                 tabcontent[i].style.display = "none";
             }
 
             tablinks = document.getElementsByClassName("tablinks");
+
             for (i = 0; i < tablinks.length; i++) {
                 tablinks[i].className = tablinks[i].className.replace(" active", "");
             }
 
             const targetElement = document.getElementById(targetId);
+
             if (targetElement) {
                 targetElement.style.display = targetId === "account" ? "flex" : "block";
             }
@@ -121,48 +137,62 @@
                 evt.currentTarget.className += " active";
             } else {
                 var buttons = document.getElementsByClassName("tablinks");
+
                 for (i = 0; i < buttons.length; i++) {
                     if (buttons[i].textContent.trim().toLowerCase() === targetId) {
                         buttons[i].className += " active";
                     }
                 }
             }
-        } 
+        }
 
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
-                console.log('Text successfully copied to clipboard!');
+                console.log("Text successfully copied to clipboard!");
             } catch (err) {
-                console.error('Failed to copy text: ', err);
+                console.error("Failed to copy text: ", err);
             }
         }
 
         async function loadMessages(isInitialLoad = false) {
             const container = document.getElementById("message-container");
-            if (!container) return;
+
+            if (!container) {
+                return;
+            }
 
             if (isInitialLoad) {
                 let inlineStyles;
-                if (getCookie('canada_goose') === "true") { inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' } else { inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;' }
+
+                if (getCookie("canada_goose") === "true") {
+                    inlineStyles = "color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;";
+                } else {
+                    inlineStyles = "color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;";
+                }
+
                 container.innerHTML = `<center><span style="${inlineStyles}">Loading...</span></center>`;
             }
-            
-            if (getCookie('is-developer') !== 'true') {
-                window.location.replace('/gooseling/login');
+
+            if (getCookie("is-developer") !== "true") {
+                window.location.replace("/gooseling/login");
                 return;
             }
-            
+
             const username = getCookie("dev-username");
+
             if (username) {
-                document.querySelectorAll(".name").forEach((name) => {name.textContent = decodeURIComponent(username)});
+                document.querySelectorAll(".name").forEach((name) => {
+                    name.textContent = decodeURIComponent(username);
+                });
             }
+
             try {
                 const response = await fetch(GAS_URL, {
                     method: "GET",
                     redirect: "follow"
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP Error! Status: ${response.status}`);
                 }
@@ -174,12 +204,13 @@
                     return;
                 }
 
+                const newMessageData = JSON.stringify(data);
                 const devUsername = getCookie("dev-username");
 
                 if (!isInitialLoad && data.length > lastKnownMessageCount) {
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
-                    
+
                     if (currentTabHash !== "#chatbox" && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
                     }
@@ -187,10 +218,20 @@
 
                 lastKnownMessageCount = data.length;
 
+                if (!isInitialLoad && newMessageData === lastMessageData) {
+                    return;
+                }
+
+                lastMessageData = newMessageData;
+
                 if (data.length === 0) {
                     container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
                     return;
                 }
+
+                const checkedMessages = new Set(
+                    [...container.querySelectorAll('input[type="checkbox"]:checked')].map(checkbox => String(checkbox.dataset.timestamp))
+                );
 
                 container.innerHTML = "";
 
@@ -199,7 +240,7 @@
 
                 posts.forEach(post => {
                     const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
-                    
+
                     const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
                         timeZone: "America/Los_Angeles",
                         weekday: "long",
@@ -212,41 +253,50 @@
                         lastHeaderDate = dateHeaderString;
 
                         const headerDiv = document.createElement("div");
+
                         headerDiv.style.fontWeight = "bold";
                         headerDiv.style.textAlign = "center";
                         headerDiv.style.padding = "8px 0";
                         headerDiv.style.margin = "0 8px 8px 8px";
                         headerDiv.style.fontSize = "17px";
-                        if (getCookie('canada_goose') === 'true') {
+
+                        if (getCookie("canada_goose") === "true") {
                             headerDiv.style.borderBottom = "2px ridge white";
                             headerDiv.style.color = "white";
                         } else {
                             headerDiv.style.borderBottom = "2px ridge #222";
                             headerDiv.style.color = "#222";
                         }
+
                         headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
                         headerDiv.style.userSelect = "none";
-                        
+
                         container.appendChild(headerDiv);
                     }
 
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
 
-                    const fullTimeText = msgDateObj.toLocaleString("en-US", { 
-                        timeZone: "America/Los_Angeles" 
+                    const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                        timeZone: "America/Los_Angeles"
                     });
 
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
-                    
+
                     let hyperTag = post.username === "thegoose" ? " [OMNISCIENT] " : "";
+
                     if (devUsername === "thegoose") {
                         const checkbox = document.createElement("input");
+
                         checkbox.type = "checkbox";
+                        checkbox.dataset.timestamp = String(post.timestamp);
                         checkbox.style.marginRight = "6px";
-                        
+                        checkbox.checked = checkedMessages.has(String(post.timestamp));
+
                         checkbox.addEventListener("change", () => {
-                            if (!checkbox.checked) return;
+                            if (!checkbox.checked) {
+                                return;
+                            }
 
                             setTimeout(async () => {
                                 const confirmDelete = window.confirm("Do you want to delete this selected message?");
@@ -255,15 +305,25 @@
                                     checkbox.disabled = true;
 
                                     try {
-                                        await fetch(GAS_URL, {
+                                        const deleteResponse = await fetch(GAS_URL, {
                                             method: "POST",
                                             mode: "cors",
-                                            headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                            body: JSON.stringify({ action: "delete", timestamp: post.timestamp })
+                                            headers: {
+                                                "Content-Type": "text/plain;charset=utf-8"
+                                            },
+                                            body: JSON.stringify({
+                                                action: "delete",
+                                                timestamp: post.timestamp
+                                            })
                                         });
 
+                                        if (!deleteResponse.ok) {
+                                            throw new Error(`HTTP Error! Status: ${deleteResponse.status}`);
+                                        }
+
                                         msgDiv.remove();
-                                        loadMessages(false);
+
+                                        await loadMessages(false);
                                     } catch (err) {
                                         console.error("Failed to delete message:", err);
                                         alert("Failed to delete message.");
@@ -280,56 +340,69 @@
                     }
 
                     const textSpan = document.createElement("span");
-                    textSpan.innerHTML = `<strong>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
-                    msgDiv.appendChild(textSpan);
 
+                    textSpan.innerHTML = `<strong>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+
+                    msgDiv.appendChild(textSpan);
                     container.appendChild(msgDiv);
                 });
             } catch (err) {
                 console.error("Fetch error:", err);
+
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function(){
+        document.addEventListener("DOMContentLoaded", function() {
             generateBadgedFavicon();
 
-            if (getCookie('is-developer') !== 'true') {
-                window.location.replace('/gooseling/login');
+            if (getCookie("is-developer") !== "true") {
+                window.location.replace("/gooseling/login");
                 return;
             }
-            
+
             const username = getCookie("dev-username");
+
             if (username) {
-                document.querySelectorAll(".name").forEach((name) => {name.textContent = decodeURIComponent(username)});
+                document.querySelectorAll(".name").forEach((name) => {
+                    name.textContent = decodeURIComponent(username);
+                });
             }
 
             if (!window.location.hash || window.location.hash === "#dashboard") {
-                openTab(null, 'Dashboard');
+                openTab(null, "Dashboard");
             } else if (window.location.hash === "#notifications") {
-                openTab(null, 'Notifications');
+                openTab(null, "Notifications");
             } else if (window.location.hash === "#chatbox") {
-                openTab(null, 'Chatbox');
+                openTab(null, "Chatbox");
             } else if (window.location.hash === "#account") {
-                openTab(null, 'Account');
+                openTab(null, "Account");
             }
 
             const clearBtn = document.getElementById("clear-chat");
+
             if (clearBtn && username === "thegoose") {
                 clearBtn.style.display = "inline-block";
-                
+
                 clearBtn.addEventListener("click", async () => {
-                    if (!confirm("Are you sure you want to clear all chat messages?")) return;
+                    if (!confirm("Are you sure you want to clear all chat messages?")) {
+                        return;
+                    }
 
                     try {
                         await fetch(GAS_URL, {
                             method: "POST",
                             mode: "cors",
-                            headers: { "Content-Type": "text/plain;charset=utf-8" },
-                            body: JSON.stringify({ action: "clear" })
+                            headers: {
+                                "Content-Type": "text/plain;charset=utf-8"
+                            },
+                            body: JSON.stringify({
+                                action: "clear"
+                            })
                         });
-                        
-                        loadMessages(false);
+
+                        lastMessageData = "";
+                        await loadMessages(false);
                     } catch (err) {
                         console.error("Failed to clear messages:", err);
                     }
@@ -337,11 +410,16 @@
             }
 
             const chatForm = document.getElementById("chat-form");
+
             if (chatForm) {
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
+
                     const input = document.getElementById("chat-input");
-                    if (!input || !input.value.trim()) return;
+
+                    if (!input || !input.value.trim()) {
+                        return;
+                    }
 
                     const messageText = input.value.trim();
                     input.value = "";
@@ -350,15 +428,17 @@
                         await fetch(GAS_URL, {
                             method: "POST",
                             mode: "cors",
-                            headers: { 
-                                "Content-Type": "text/plain;charset=utf-8" 
+                            headers: {
+                                "Content-Type": "text/plain;charset=utf-8"
                             },
                             body: JSON.stringify({
                                 username: username || "Anonymous",
                                 message: messageText
                             })
                         });
-                        loadMessages(false);
+
+                        lastMessageData = "";
+                        await loadMessages(false);
                     } catch (err) {
                         console.error("Failed to send message:", err);
                     }
@@ -369,6 +449,7 @@
             setInterval(() => loadMessages(false), 1000);
         });
     </script>
+
     <style>
         .tab {
             overflow: hidden;
@@ -384,7 +465,7 @@
             cursor: pointer;
             padding: 14px 16px;
             transition: 0.3s;
-            font-size:20px;
+            font-size: 20px;
         }
 
         .tab button:hover {
@@ -394,122 +475,178 @@
         .tab button.active {
             background-color: gainsboro;
             position: relative;
-            z-index: 12;     
+            z-index: 12;
             box-shadow: -8px 0px 8px -4px rgba(0, 0, 0, 0.4), 8px 0px 8px -4px rgba(0, 0, 0, 0.4);
         }
+
         nav {
-            z-index:99999;
+            z-index: 99999;
         }
+
         .tabcontent {
             display: none;
             padding: 6px 12px;
             border: 1px solid #ccc;
             border-top: none;
         }
+
         #notifbox div {
-            padding:8px;
+            padding: 8px;
             background-color: silver;
-            width:fit-content;
-            margin:0 auto;
+            width: fit-content;
+            margin: 0 auto;
         }
-        #account center button{
+
+        #account center button {
             margin: 0 auto;
             display: inline-block;
             background-color: steelblue;
-            color:white !important;
-            border:none;
+            color: white !important;
+            border: none;
             border-radius: 8px;
-            padding:5px 8px;
-            font-size:19px;
-            transition:background-color 0.3s ease;
+            padding: 5px 8px;
+            font-size: 19px;
+            transition: background-color 0.3s ease;
         }
-        #account center button:hover{
+
+        #account center button:hover {
             background-color: rgb(126, 179, 223);
         }
-        #account{
-            display:flex;
+
+        #account {
+            display: flex;
             justify-content: center;
         }
     </style>
+
     <script src="/services.js"></script>
+
     <title>Gooseling - The Goose Site</title>
 </head>
+
 <body>
     <nav>
-    <ul class="grandpa">
-        <li class="dad">
-            <a class="logo son" href="/" title="Back to the homepage.">The Goose Site Legacy</a>
-        </li>
-        <li class="dad">
-            <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
-        </li>
-        <li class="dad">
-            <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
-        </li>
-        <li style="cursor:pointer;" class="dad dropdown">
-            <a class="son" title="The unity videos...">Videos</a>
-            <ul class="dropdown-content">
-                <li class="space"><a title="Subscribe or die..." href="/youtube">Youtube Channel</a></li>
-                <li><a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a></li>
-            </ul>
-        </li>
-        <li class="dad">
-            <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
-        </li>
-        <li class="dad" id="logout"><a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/;';"><img src="/assets/images/signin.png" /><u>Sign Out</u></a></li>
-    </ul>
+        <ul class="grandpa">
+            <li class="dad">
+                <a class="logo son" href="/" title="Back to the homepage.">The Goose Site Legacy</a>
+            </li>
+
+            <li class="dad">
+                <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
+            </li>
+
+            <li class="dad">
+                <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
+            </li>
+
+            <li style="cursor:pointer;" class="dad dropdown">
+                <a class="son" title="The unity videos...">Videos</a>
+
+                <ul class="dropdown-content">
+                    <li class="space">
+                        <a title="Subscribe or die..." href="/youtube">Youtube Channel</a>
+                    </li>
+
+                    <li>
+                        <a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="dad">
+                <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
+            </li>
+
+            <li style="cursor:pointer;" class="dad" id="logout">
+                <a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/;';">
+                    <img src="/assets/images/signin.png">
+                    <u>Sign Out</u>
+                </a>
+            </li>
+        </ul>
     </nav>
+
     <main>
         <div class="panel">
             <div class="tab">
-              <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
-              <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
-              <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
-              <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
+                <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
+                <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
+                <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
+                <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
             </div>
+
             <div id="dashboard" class="tabcontent">
                 <h2>Welcome to The Gooseling Panel, @<span class="name">PIRATED</span>!</h2>
-                <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
+                <p>
+                    This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications.<br>
+                    Extra GOOSE content may appear soon.
+                </p>
             </div>
+
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
+
                 <div id="notifbox">
                     <div>
                         <p><strong>[SPONSORED] Enjoy 20% off at Saint Duck's Restaurant and Gastropub • @officialsaintduck</strong></p>
-                        <p>Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's! Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.</p>
+                        <p>
+                            Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's!
+                            Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.
+                        </p>
                     </div>
+
                     <div>
                         <p><strong>Your first notification • @thegoose</strong></p>
                         <p>Hello there. It's The Goose typing. This is a test.</p>
                     </div>
                 </div>
             </div>
+
             <div id="chatbox" class="tabcontent">
                 <h2>The Goose Chatbox</h2>
                 <p>Yes, it works. Images not supported.</p>
-                <center><span class="fine-print">Never use real names or share personal details or information as this chat is visible to <u>all gooselings and gosedevs</u>. Do not use hate speech otherwise your account will be deleted (not banned) and your IP address will be blocked. </span></center>
-                <div id="message-container">
-                </div>
+
+                <center>
+                    <span class="fine-print">
+                        Never use real names or share personal details or information as this chat is visible to <u>all gooselings and gosedevs</u>.
+                        Do not use hate speech otherwise your account will be deleted (not banned) and your IP address will be blocked.
+                    </span>
+                </center>
+
+                <div id="message-container"></div>
+
                 <form id="chat-form">
                     <input type="text" id="chat-input" placeholder="Type anything, really..." required style="width: 70%; padding: 8px;">
                     <button type="submit" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear Chat</button>
                 </form>
             </div>
+
             <div id="account" class="tabcontent">
                 <h2>Account</h2>
-                <p><strong>Your account username: <span class="name"></span></strong><button title = "Click to copy..." style="margin-left:6px;border:none;font-size:17px;box-shadow:0px 4px 10px rgba(51, 51, 51,0.5);background-color: green;color:white !important;transition:background-color 0.3s ease-in-out;"  onmouseout="this.style.backgroundColor = 'green'" onmouseover="this.style.backgroundColor = 'darkgreen'" onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent = 'Copy'}, 3000)">Copy</button></p>
+
+                <p>
+                    <strong>Your account username: <span class="name"></span></strong>
+                    <button title="Click to copy..." style="margin-left:6px;border:none;font-size:17px;box-shadow:0px 4px 10px rgba(51, 51, 51,0.5);background-color:green;color:white !important;transition:background-color 0.3s ease-in-out;" onmouseout="this.style.backgroundColor = 'green'" onmouseover="this.style.backgroundColor = 'darkgreen'" onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent='Copy'}, 3000)">
+                        Copy
+                    </button>
+                </p>
+
                 <p>Manage your gooseling account here.</p>
+
                 <center>
                     <button onclick="
-    document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'dev-username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    window.location.reload();
-">Log out</button>
+                        document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        document.cookie = 'dev-username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        window.location.reload();
+                    ">
+                        Log out
+                    </button>
                 </center>
             </div>
         </div>
     </main>
+
     <footer>
         <h1 class="f1">The Goose Site Legacy</h1>
     </footer>
