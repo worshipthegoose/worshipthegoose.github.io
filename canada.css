@@ -15,10 +15,14 @@ body{
     background-color: rgb(89, 62, 36) !important;
      color:white !important;
 }
+.tablinks:active{
+    background-color: rgb(55, 42, 31);
+}
 .notifbox div {
     background-color: #785c41 !important;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    color:black !important;
     max-width:250px !important;
 }
 .notifbox {
