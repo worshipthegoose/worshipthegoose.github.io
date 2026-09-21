@@ -9,19 +9,24 @@
 
 div.panel {
     background-color: gainsboro;
-    width:700px;
+    max-width: 840px;
+    width:100%;
 }
 
-#auth {
-    margin: 9px auto;
+#notifbox {
+    text-align: center;
+    margin: 0 auto;
     display: flex;
-    padding: 15px; 
-    background-color: rgba(226, 224, 224, 0.2);
-    width: fit-content;
-    flex-direction: column; 
-    gap: 12px; 
-    user-select: none;
-    box-shadow: 0px 4px 10px rgba(51, 51, 51, 0.6)
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+}
+
+#notifbox div {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 0px !important;
 }
 
 #auth label {
@@ -40,7 +45,7 @@ div.panel {
     gap:5px;
 }
 #notifications div div{
-    box-shadow: 0px 4px 10px rgba(51, 51, 51, 0.6);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.9) !important
 }
 #auth label input {
     font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif, serif;
@@ -101,6 +106,7 @@ div.panel {
     overflow-y:auto;
     
 }
+
 #notifbox div h3 {
     color:firebrick;
     font-size:23px;
@@ -157,4 +163,7 @@ main{
     margin: 0;
     padding:0;
     line-height:1.1;
+}
+.fine-print::before{
+    content:"⚠️ "
 }

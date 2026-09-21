@@ -26,7 +26,7 @@
             return match ? decodeURIComponent(match[2]) : null;
         }
 
-        if (getCookie('') === 'testaccount'){
+        if (getCookie('dev-username') === 'testaccount' && "ignore-this" === "ignore-that"){
             const textInput = document.querySelector("#chat-form input");
             const textButton = document.querySelector("#chat-form button[type='submit']");
 
@@ -92,11 +92,72 @@
             updateFavicon(showBadge);
         }
 
+        function ensureGuidelinesTabButton() {
+            let tabContainer = document.querySelector(".tab");
+            if (!tabContainer) return null;
+
+            let existingBtn = document.getElementById("guidelines-tab-btn");
+
+            if (!existingBtn) {
+                existingBtn = document.createElement("button");
+                existingBtn.id = "guidelines-tab-btn";
+                existingBtn.className = "tablinks";
+                existingBtn.textContent = "Guidelines";
+                existingBtn.onclick = (e) => openTab(e, 'Guidelines');
+                tabContainer.appendChild(existingBtn);
+            }
+            return existingBtn;
+        }
+
+        function removeGuidelinesTabButton() {
+            let existingBtn = document.getElementById("guidelines-tab-btn");
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+        }
+
+        function handleRoute() {
+            let rawHash = window.location.hash.replace(/^#\/?/, "").toLowerCase();
+
+            if (rawHash === "guidelines" || rawHash === "chatbox/guidelines") {
+                openTab(null, 'Guidelines');
+            } else if (rawHash === "notifications") {
+                openTab(null, 'Notifications');
+            } else if (rawHash === "chatbox") {
+                openTab(null, 'Chatbox');
+            } else if (rawHash === "account") {
+                openTab(null, 'Account');
+            } else {
+                openTab(null, 'Dashboard');
+            }
+        }
+
         function openTab(evt, cityName) {
             var i, tabcontent, tablinks;
 
             var targetId = cityName.toLowerCase();
-            window.location.hash = `#${targetId}`;
+
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            if (targetId === "guidelines" || targetId === "chatbox/guidelines") {
+                targetId = "guidelines";
+                if (window.location.hash !== "#/chatbox/guidelines" && window.location.hash !== "#guidelines") {
+                    window.location.hash = `#/chatbox/guidelines`;
+                }
+                const btn = ensureGuidelinesTabButton();
+                if (btn) {
+                    btn.className += " active";
+                }
+            } else {
+                if (window.location.hash !== `#/${targetId}`) {
+                    window.location.hash = `#/${targetId}`;
+                }
+                removeGuidelinesTabButton();
+            }
+
             document.querySelector('title').textContent = `Gooseling ${targetId.charAt(0).toUpperCase() + targetId.slice(1)} - The Goose Site`;
 
             if (targetId === "chatbox") {
@@ -108,23 +169,20 @@
                 tabcontent[i].style.display = "none";
             }
 
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-
             const targetElement = document.getElementById(targetId);
             if (targetElement) {
                 targetElement.style.display = targetId === "account" ? "flex" : "block";
             }
 
-            if (evt && evt.currentTarget) {
-                evt.currentTarget.className += " active";
-            } else {
-                var buttons = document.getElementsByClassName("tablinks");
-                for (i = 0; i < buttons.length; i++) {
-                    if (buttons[i].textContent.trim().toLowerCase() === targetId) {
-                        buttons[i].className += " active";
+            if (targetId !== "guidelines") {
+                if (evt && evt.currentTarget) {
+                    evt.currentTarget.className += " active";
+                } else {
+                    var buttons = document.getElementsByClassName("tablinks");
+                    for (i = 0; i < buttons.length; i++) {
+                        if (buttons[i].textContent.trim().toLowerCase() === targetId) {
+                            buttons[i].className += " active";
+                        }
                     }
                 }
             }
@@ -182,7 +240,7 @@
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
 
-                    if (currentTabHash !== "#chatbox" && latestMessage.username !== devUsername) {
+                    if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
                     }
                 }
@@ -319,15 +377,8 @@
                 document.querySelectorAll(".name").forEach((name) => {name.textContent = decodeURIComponent(username)});
             }
 
-            if (!window.location.hash || window.location.hash === "#dashboard") {
-                openTab(null, 'Dashboard');
-            } else if (window.location.hash === "#notifications") {
-                openTab(null, 'Notifications');
-            } else if (window.location.hash === "#chatbox") {
-                openTab(null, 'Chatbox');
-            } else if (window.location.hash === "#account") {
-                openTab(null, 'Account');
-            }
+            handleRoute();
+            window.addEventListener("hashchange", handleRoute);
 
             const clearBtn = document.getElementById("clear-chat");
             if (clearBtn && username === "thegoose") {
@@ -448,6 +499,56 @@
             display:flex;
             justify-content: center;
         }
+        main{
+            margin-bottom: 40px !important;
+        }
+        ul.guidelines-chat{
+            list-style: upper-roman;
+            list-style-type:upper-roman;
+
+        }
+        ul.guidelines-chat li::marker {
+            font-weight: bold;
+            color:black;
+            font-size:23px;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+        ul.guidelines-chat li p{
+            font-size:20px;
+            color:black;
+            text-align:left;
+            margin:0;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+        ul.guidelines-chat li strong {
+            color:black !important;
+            font-size:25px !important;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+        s {
+            font-size: inherit !important;
+            font-family: 'Georgia', 'Times New Roman', Times, serif !important;
+            text-decoration: none !important;
+            background-color: rgba(0, 0, 0, 0.8) !important;
+            transform: background-color 0.3s ease;
+            color: rgba(0, 0, 0, 0.86) !important; 
+            padding: 0 3px; 
+            font-weight: normal !important;
+            transition:background-color 0.3s ease, color 0.3s ease;
+
+        }
+        ul.guidelines-chat li:nth-last-child(1)::marker{
+            content:"Ult." !important;
+            margin-right:10px !important;
+            letter-spacing: -3px !important;
+        }
+        ul.guidelines-chat li:nth-last-child(1) strong{
+            margin-left:7px;
+        }
+        s:hover{
+            background-color: rgba(0,0,0,0.6) !important;
+            color:white !important;
+        }
     </style>
     <script src="/services.js"></script>
     <title>Gooseling - The Goose Site</title>
@@ -491,7 +592,7 @@
             </div>
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
-                <div id="notifbox">
+                <div id="notifbox" style="display:flex;gap:15px;flex-direction: column;">
                     <div>
                         <p><strong>[SPONSORED] Enjoy 20% off at Saint Duck's Restaurant and Gastropub • @officialsaintduck</strong></p>
                         <p>Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's! Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.</p>
@@ -502,10 +603,45 @@
                     </div>
                 </div>
             </div>
+            <div id="guidelines" class="tabcontent">
+                <h2>The Goose Chatbox <u>Guidelines</u></h2>
+                <p>List of guidelines and policies for The Goose Chatbox.</p>
+                <p><i style="font-size:14px;">Some words or phrases on this page may be censored. To view the uncensored text, simply hover or look at the censored text a bit closer...</i></p>
+                <ul class="guidelines-chat">
+                    <li>
+                        <strong>Basic Goosettiquete</strong>
+                        <p>The Goose Chatbox Administrators will not tolerate hate speech or discriminatory conduct. This includes racism, sexism, misogyny, misandry, homophobia, queerphobia, cisheteronormativity, androcentrism, islamophobia, anti-religion remarks, anti-semitic remarks, ethinicity bullying, xenophobia, ageism, gender-based discrimination and sex-based discrimination.</p>
+                    </li>
+                    <li>
+                        <strong>Cross Site Scripting</strong>
+                        <p>Using The Goose Chatbox for Cross Site Scripting (also known simply as XSS) is illegal under federal law. If any admin notices this behavior, (they will) you will be IP banned from the website and will be reported to the authorities.</p>
+                    </li>
+                    <li>
+                        <strong>No Explicit or Inappropriate Content</strong>
+                        <p>Promoting or mentioning explicit or violent content (includes music) is an instant ban as most, if not all gooselings do not want to see or hear anything indecorous, which exclude goosism related material.</p>
+                    </li>
+                    <li>
+                        <strong>Zero Tolerance for Foul Language</strong>
+                        <p>Words like "<s>fuck</s>", "<s>shit</s>", every slur to ever exist, jargon for <s>genitalia</s>, and "<s>bitch</s>" are not allowed in The Goose Chatbox and are filtered. Milder terms like "damn", "crap", "<s>frick</s>" (refrain if not used in vain), and "tf" are allowed if not used in every message.</p>
+                    </li>
+                    <li>
+                        <strong>Freedom of Speech</strong>
+                        <p>While hatred or scorn of The Goose is discouraged, it is still allowed since The Goose Chatbox is a not a totalitarian state. Talks about politics are <b style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">heavily discoruaged</b> and should be talked about outside of The Goose Chatbox.</p>
+                    </li>
+                    <li>
+                        <strong>Stay on Topic: 80% of Messages Should Be Related to Geese or The Goose.</strong>
+                        <p>It's important to know that messing around is <i style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">sometimes tolerated</i>, please keep it at an 80:20 ratio.</p>
+                    </li>
+                    <li>
+                        <strong>Consequences to Violation</strong>
+                        <p>Violation of these rules stated above could cause a permanent ban, IP ban, or report to the local authorities. As stated in rule V, <u style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">scorn of The Goose is never a violation.</u></p>
+                    </li>
+                </ul>
+            </div>
             <div id="chatbox" class="tabcontent">
                 <h2>The Goose Chatbox</h2>
                 <p>Yes, it works. Images not supported.</p>
-                <center><span class="fine-print">Never use real names or share personal details or information as this chat is visible to <u>all gooselings and gosedevs</u>. Do not use hate speech otherwise your account will be deleted (not banned) and your IP address will be blocked. </span></center>
+                <center><span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span></center>
                 <div id="message-container">
                 </div>
                 <form id="chat-form">

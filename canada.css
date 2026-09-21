@@ -12,21 +12,45 @@ body{
     color:white !important;
 }
  .tab, .tablinks {
-    background-color: rgb(89, 62, 36) !important;
+    background-color: rgb(108, 91, 75) !important;
      color:white !important;
+     transition:background-color 0.3s ease !important;
 }
-.tablinks:active{
-    background-color: rgb(55, 42, 31);
+.panel{
+    background-color: rgb(89, 62, 36) !important;
+    border-radius: none !important;
 }
-.notifbox div {
+.tablinks.active{
+    background-color: rgb(89, 62, 36) !important;
+}
+.tabcontent{
+    border:none;
+    border-radius: none;
+}
+a {
+    color:white;
+    text-decoration: none;
+    transform:text-decoration 0.3s white;
+}
+a:hover{
+    text-decoration: underline;
+}
+#notifbox div {
     background-color: #785c41 !important;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    color:black !important;
-    max-width:250px !important;
+    color:white !important;
 }
-.notifbox {
-    max-width:250px !important;
+ul.guidelines-chat li::marker, ul.guidelines-chat li p, ul.guidelines-chat li strong, ul.guidelines-chat li {
+    color:white !important;
+}
+ul.guidelines-chat li p s, ul.guidelines-chat li strong s {
+    color:#222 !important;
+    transition:color 0.3s ease;
+}
+ul.guidelines-chat li p s:hover, ul.guidelines-chat li strong s:hover{
+    color:#666 !important;
+
 }
 .panel label,
 .panel p,
