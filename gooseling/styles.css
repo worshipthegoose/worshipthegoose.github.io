@@ -12,6 +12,7 @@ div.panel {
     max-width: 840px;
     width:100%;
 }
+
 #auth {
     margin: 9px auto;
     display: flex;
