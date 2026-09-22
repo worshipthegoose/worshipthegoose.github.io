@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function(){
         if (userIndex !== -1 && passwords[userIndex] === enteredPass) {
             document.cookie = `is-developer=true; path=/`;
             document.cookie = `dev-username=${encodeURIComponent(usernames[userIndex])}; path=/`;
-            window.location.replace('/gooseling');
+            window.location.reload();
         } else {
             if (errorMessage) {
                 errorMessage.textContent = "Incorrect username or password";
