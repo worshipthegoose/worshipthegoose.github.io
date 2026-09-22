@@ -11,6 +11,7 @@ div.panel {
     background-color: gainsboro;
     max-width: 840px;
     width:100%;
+    min-height:606px !important;
 }
 
 #auth {
