@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             title: "The Holy Goose Bible",
             url: "/bible",
             content: "Read the holy goose bible and cherish it for dear life.",
-            keywords: "quran, bible, book, gooseling, holy"
+            keywords: "quran, bible, book, holy"
         },
         {
             title: "Dancing Monster",
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         {
             title: "Gooseling-only Page",
-            url: "/developer",
-            content: "Sacred GOOSE page for gooselings and gosedevs only...",
+            url: "/gooseling",
+            content: "Sacred page for gooselings ONLY...",
             keywords: "secret, gooseling, goose, sacredpage, gooselingonly, developer, gosedev, goosedev, goosedevs, gosedevs"
         }
     ];
