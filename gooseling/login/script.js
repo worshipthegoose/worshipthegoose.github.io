@@ -1,7 +1,3 @@
-const usernames = ["thenumberonegooseling", "thegoose", "testaccount", "agooseworshipper"];
-const crypt = ["omwozixpgbwbpmowwam", "bpmpwtgaiqvblcks", "bmabikkwcvb", "xtmiamkpivombpqaowwam"];
-const passwords = crypt.map(item => superShift(item, false));
-
 function superShift(str, type) {
     let shiftBy = type ? 8 : -8;
     const normalizedShift = ((shiftBy % 26) + 26) % 26;
@@ -17,9 +13,13 @@ function superShift(str, type) {
     }).join('');
 }
 
+const usernames = ["thenumberonegooseling", "thegoose", "testaccount", "agooseworshipper"];
+const crypt = ["omwozixpgbwbpmowwam", "bpmpwtgaiqvblcks", "bmabikkwcvb", "xtmiamkpivombpqaowwam"];
+const passwords = crypt.map(item => superShift(item, false));
+
 function getCookie(name) {
     let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    if (match) return match;
+    if (match) return match[2];
     return null;
 }
 
