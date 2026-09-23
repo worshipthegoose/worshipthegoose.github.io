@@ -142,3 +142,6 @@ div.panel {
     padding:0;
     line-height:1.1;
 }
+.tabcontent {
+    border: 0px solid transparent;
+}
