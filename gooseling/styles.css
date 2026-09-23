@@ -6,7 +6,7 @@
     -moz-background-clip: text;
     color:transparent
 }
-
+.tabcontent {border:none !important}
 div.panel {
     background-color: gainsboro;
     max-width: 840px;
