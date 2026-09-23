@@ -167,7 +167,7 @@ main{
     color:white !important;
 }
 
-#chat-form button:nth-child(2).send-button-active, #chat-form button:nth-child(2).send-button-active:hover{
+#chat-form button:nth-child().send-button-active, #chat-form button:nth-child(2).send-button-active:hover{
     background-color: rgb(118, 177, 226) !important;
     color:white !important;
     cursor:not-allowed  !important;
@@ -177,12 +177,12 @@ main{
     background-color: crimson;
 }
 
-#chat-form button:hover{
+#chat-form button:nth-child(1):hover{
     background-color: royalblue !important;
 }
 
 #chat-form button#clear-chat:hover{
-    background-color: firebrick;
+    background-color: firebrick !important;
 }
 
 #chat-form input {
