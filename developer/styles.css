@@ -143,5 +143,5 @@ div.panel {
     line-height:1.1;
 }
 .tabcontent {
-    border: 0px solid transparent;
+    border: none !important;
 }
