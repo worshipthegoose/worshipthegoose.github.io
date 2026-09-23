@@ -584,7 +584,13 @@
                     }
 
                     const textSpan = document.createElement("span");
-                    textSpan.innerHTML = `<strong>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                    let ifUsername;
+                    if (post.username == getCookie("dev-username")){
+                        ifUsername = " style='text-decoration:underline;'";
+                    } else {
+                        ifUsername = "";
+                    }
+                    textSpan.innerHTML = `<strong${ifUsername}>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
                     msgDiv.appendChild(textSpan);
 
                     container.appendChild(msgDiv);
