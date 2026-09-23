@@ -586,7 +586,11 @@
                     const textSpan = document.createElement("span");
                     let ifUsername;
                     if (post.username == getCookie("dev-username")){
-                        ifUsername = " style='color:#111'";
+                        if (getCookie("canada_goose") === "true"){
+                            ifUsername = "style='color:#ddd'"
+                        }else{
+                            ifUsername = " style='color:#111'";
+                        }
                     } else {
                         ifUsername = "";
                     }
