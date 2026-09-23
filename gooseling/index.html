@@ -24,7 +24,7 @@
         let pendingDeleteTimestamp = null;
         let pendingDeleteElement = null;
         let pendingClearChat = false;
-        const admins = ["thegoose"] // Add more or less as we go
+        const admins = ["thegoose", "thenumberonegooseling"] // Add more or less as we go
 
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -586,7 +586,7 @@
                     const textSpan = document.createElement("span");
                     let ifUsername;
                     if (post.username == getCookie("dev-username")){
-                        ifUsername = " style='text-decoration:underline;'";
+                        ifUsername = " style='text-decoration:1.5px underline;'";
                     } else {
                         ifUsername = "";
                     }
