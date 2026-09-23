@@ -599,7 +599,7 @@
             
             let disclaimerTextContent;
             if (admins.includes(getCookie('dev-username'))) { disclaimerTextContent = getCookie('dev-username') } else { disclaimerTextContent = "There was an error. Please refresh, gooseling." }
-            document.querySelector("disclaimer-find-admin").textContent = disclaimerTextContent;
+            document.querySelector(".disclaimer-find-admin").textContent = disclaimerTextContent;
             
             generateBadgedFavicon();
 
