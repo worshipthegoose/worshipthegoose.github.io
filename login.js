@@ -177,10 +177,12 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   function sayChez() {
-    const degree = cycle ? 180 : 0;
-    cycle = !cycle;
-    html.style.transformOrigin = "center center";
-    html.style.transition = "transform 0.5s ease";
-    html.style.transform = `rotate(${degree}deg)`;
-  }
+    if (!window.location.pathname == "/gooseling/#/chatbox") {
+      const degree = cycle ? 180 : 0;
+      cycle = !cycle;
+      html.style.transformOrigin = "center center";
+      html.style.transition = "transform 0.5s ease";
+      html.style.transform = `rotate(${degree}deg)`;
+    }
+   }
 });

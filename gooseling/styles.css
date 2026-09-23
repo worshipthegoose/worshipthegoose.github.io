@@ -1,3 +1,4 @@
+
 .panel h1 {
     -webkit-text-stroke:1px black;
     background:linear-gradient(to left, green, darkgreen);
@@ -18,11 +19,11 @@ div.panel {
 #auth {
     margin: 9px auto;
     display: flex;
-    padding: 15px; 
+    padding: 15px;
     background-color: rgba(226, 224, 224, 0.2);
     width: fit-content;
-    flex-direction: column; 
-    gap: 12px; 
+    flex-direction: column;
+    gap: 12px;
     user-select: none;
     box-shadow: 0px 4px 10px rgba(51, 51, 51, 0.6)
 }
@@ -45,28 +46,31 @@ div.panel {
 
 #auth label {
     color: black;
-    display: grid; 
-    grid-template-columns: 110px 200px 30px; 
-    align-items: center; 
+    display: grid;
+    grid-template-columns: 110px 200px 30px;
+    align-items: center;
     gap: 7px;
     font-size: 21px;
     font-weight: bold;
-    text-align: left; 
+    text-align: left;
 }
+
 #account {
     display: flex;
     flex-direction: column;
     gap:5px;
 }
+
 #notifications div div{
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.9) !important
 }
+
 #auth label input {
     font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif, serif;
-    padding: 5px; 
+    padding: 5px;
     border: 0px solid transparent;
     border-radius: 5px;
-    width: 95%; 
+    width: 95%;
     box-sizing: border-box;
     box-shadow: 0px 4px 10px rgba(53, 53, 53, 0.5);
     transition: background-color 0.5s ease-in-out;
@@ -97,28 +101,31 @@ div.panel {
     background-color: lightskyblue;
     transform: scale(1.1);
 }
+
 #auth button:active {
     background-color: rgba(212, 226, 239, 0.7);
 }
+
 .panel p, #auth p, #auth h2 {
     margin:0;
     padding: 0;
 }
+
 #auth label input:hover, #auth label input:active, #auth label input:focus{
     background-color: rgb(238, 241, 244);
 }
+
 #message-container{
     width:auto;
     height:250px;
     padding:7px;
-    overflow-wrap: break-word; 
+    overflow-wrap: break-word;
     word-wrap: break-word;
     background-color: rgba(20, 98, 21, 0.4);
     margin:15px 6px;
     box-shadow:8px 8px rgba(51, 51, 51, 0.6);
     color:#333;
     overflow-y:auto;
-    
 }
 
 #notifbox div h3 {
@@ -130,9 +137,11 @@ div.panel {
     text-align: center;
     display:flex; justify-content: center;
 }
+
 #notifbox div h3::before{
     content:"(!) "
 }
+
 #notifbox div {
     width:500px !important;
 }
@@ -140,11 +149,13 @@ div.panel {
 main{
     padding-bottom: 20px;;
 }
+
 #chat-form{
     display: flex;
     justify-content: center;
     gap:7px;
 }
+
 #chat-form input, form button {
     border:none;
     box-shadow: 3px 4px 10px rgba(53, 53, 53, 0.5);
@@ -155,20 +166,35 @@ main{
     background-color: steelblue;
     color:white !important;
 }
+
+#chat-form button:nth-child(2).send-button-active, #chat-form button:nth-child(2).send-button-active:hover{
+    background-color: rgb(118, 177, 226) !important;
+    color:white !important;
+    cursor:not-allowed  !important;
+}
+
 #chat-form button#clear-chat{
     background-color: crimson;
 }
+
 #chat-form button:hover{
-    background-color: royalblue;
+    background-color: royalblue !important;
 }
+
 #chat-form button#clear-chat:hover{
     background-color: firebrick;
 }
+
 #chat-form input {
     background-color:white;
 }
-#chat-form input:hover, #chat-form input:focus{
+
+#chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus{
     background-color: #ddd;
+    cursor:text !important;
+}
+#chat-form input.chat-input-active, .send-button-active{
+    cursor:not-allowed !important;
 }
 .fine-print{
     font-size:12px;
@@ -178,6 +204,7 @@ main{
     padding:0;
     line-height:1.1;
 }
+
 .fine-print::before{
     content:"⚠️ "
 }

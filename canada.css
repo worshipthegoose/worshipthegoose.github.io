@@ -27,6 +27,13 @@ body{
     border:none;
     border-radius: none;
 }
+.edit-modal{
+    width:fit-content;
+    background: rgb(108, 91, 75) !important
+}
+.modal-disclaimer-fine{
+    background: none !important;
+}
 a {
     color:white;
     text-decoration: none;
