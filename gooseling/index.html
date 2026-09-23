@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="/cursor.css">
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyiXCNcIv7_a69STK0bxLq6O3sxRRiUPupC0QFS4PNKSSftUuUXgg_9lj6b_ZeJ9xCq/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyje3pAWA_tmMSrT7iLKxCI3GwWNToWnwl-5RgBU3zduOl9bl2AmUivbSUrMt1OGjtZ/exec";
         const ORIGINAL_FAVICON = "../favicon.ico";
         let badgedFaviconDataUrl = null;
         let lastKnownMessageCount = 0;
@@ -1103,7 +1103,7 @@
                     </li>
                     <li>
                         <strong>Zero Tolerance for Foul Language</strong>
-                        <p>The use of any profanity, vulgarity, or prohibited language may result in the immediate termination of your account. There is zero tolerance for this type of behavior.</p>
+                        <p>The use of any profanity, vulgarity, or prohibited language may result in the immediate termination of your account. There is zero tolerance for this type of behavior. If you really need to use profanity, replace the word with "goose."</p>
                     </li>
                     <li>
                         <strong>Freedom of Speech</strong>
@@ -1127,7 +1127,7 @@
                 </div>
                 <form id="chat-form">
                     <input type="text" id="chat-input" placeholder="Type anything, really..." required style="width: 70%; padding: 8px;">
-                    <button type="submit" style="padding: 8px;">Send</button>
+                    <button type="submit" id="send-message" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear Chat</button>
                 </form>
             </div>

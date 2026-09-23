@@ -162,7 +162,7 @@ main{
     transition: background-color 0.3s ease-in-out;
 }
 
-#chat-form button {
+#chat-form button#send-message {
     background-color: steelblue;
     color:white !important;
 }
@@ -175,9 +175,10 @@ main{
 
 #chat-form button#clear-chat{
     background-color: crimson;
+    color:white;
 }
 
-#chat-form button:nth-child(1):hover{
+#chat-form button#send-message:hover{
     background-color: royalblue !important;
 }
 
