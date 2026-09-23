@@ -586,11 +586,11 @@
                     const textSpan = document.createElement("span");
                     let ifUsername;
                     if (post.username == getCookie("dev-username")){
-                        ifUsername = " style='text-decoration:1.5px underline;'";
+                        ifUsername = " style='color:#111'";
                     } else {
                         ifUsername = "";
                     }
-                    textSpan.innerHTML = `<strong${ifUsername}>${hyperTag}@${escapeHtml(post.username)}:</strong> ${escapeHtml(post.message)}`;
+                    textSpan.innerHTML = `<strong><span${ifUsername}>${hyperTag}@${escapeHtml(post.username)}</span>:</strong> ${escapeHtml(post.message)}`;
                     msgDiv.appendChild(textSpan);
 
                     container.appendChild(msgDiv);
