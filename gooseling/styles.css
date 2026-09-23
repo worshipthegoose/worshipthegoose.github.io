@@ -175,7 +175,7 @@ main{
 
 #chat-form button#clear-chat{
     background-color: crimson;
-    color:white !;
+    color:white !important;
 }
 
 #chat-form button#send-message:hover{
