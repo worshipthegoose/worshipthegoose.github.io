@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="/cursor.css">
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyje3pAWA_tmMSrT7iLKxCI3GwWNToWnwl-5RgBU3zduOl9bl2AmUivbSUrMt1OGjtZ/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
         const ORIGINAL_FAVICON = "../favicon.ico";
         let badgedFaviconDataUrl = null;
         let lastKnownMessageCount = 0;
@@ -384,7 +384,29 @@
 
             if (!input || !pushButton) return;
 
-            const newMessage = input.value.trim();
+            let newMessage = input.value.trim();
+            messageText = messageText
+                .replace(/\briker\b/gi, "@thenumberonegooseling")
+                .replace(/\baarya\b/gi, "@agooseworshipper")
+                .replace(/\bsaam\b/gi, "The 2oose")
+                .replace(/\bshit\b/gi, "****")
+                .replace(/\bfuck\b/gi, "****")
+                .replace(/\bdick\b/gi, "****")
+                .replace(/\bcock\b/gi, "****")
+                .replace(/\bpenis\b/gi, "*****")
+                .replace(/\bcunt\b/gi, "****")
+                .replace(/\bvagina\b/gi, "******")
+                .replace(/\bpussy\b/gi, "*****")
+                .replace(/\bhoneypot\b/gi, "********")
+                .replace(/\bbitch\b/gi, "*****")
+                .replace(/\bboobs\b/gi, "*****")
+                .replace(/\btestes\b/gi, "******")
+                .replace(/\btesticles\b/gi, "*********")
+                .replace(/\bscrotum\b/gi, "*******")
+                .replace(/\btits\b/gi, "*****")
+                .replace(/\btit\b/gi, "*****")
+                .replace(/\britardando\b/gi, "[I tried to say an ableist slur]")
+                .replace(/\bsinner shark\b/gi, "****** *****")
 
             if (!newMessage) {
                 alert("The message cannot be empty.");
@@ -649,7 +671,25 @@
                     messageText = messageText
                     .replace(/\briker\b/gi, "@thenumberonegooseling")
                     .replace(/\baarya\b/gi, "@agooseworshipper")
-                    .replace(/\bsaam\b/gi, "The 2oose");
+                    .replace(/\bsaam\b/gi, "The 2oose")
+                    .replace(/\bshit\b/gi, "****")
+                    .replace(/\bfuck\b/gi, "****")
+                    .replace(/\bdick\b/gi, "****")
+                    .replace(/\bcock\b/gi, "****")
+                    .replace(/\bpenis\b/gi, "*****")
+                    .replace(/\bcunt\b/gi, "****")
+                    .replace(/\bvagina\b/gi, "******")
+                    .replace(/\bpussy\b/gi, "*****")
+                    .replace(/\bhoneypot\b/gi, "********")
+                    .replace(/\bbitch\b/gi, "*****")
+                    .replace(/\bboobs\b/gi, "*****")
+                    .replace(/\btestes\b/gi, "******")
+                    .replace(/\btesticles\b/gi, "*********")
+                    .replace(/\bscrotum\b/gi, "*******")
+                    .replace(/\btits\b/gi, "*****")
+                    .replace(/\btit\b/gi, "*****")
+                    .replace(/\britardando\b/gi, "[I tried to say an ableist slur]")
+                    .replace(/\bsinner shark\b/gi, "****** *****")
                     input.value = "";
 
                     input.disabled = true;
