@@ -533,8 +533,8 @@
                             headerDiv.style.borderBottom = "2px ridge white";
                             headerDiv.style.color = "white";
                         } else {
-                            headerDiv.style.borderBottom = "2px ridge #222";
-                            headerDiv.style.color = "#222";
+                            headerDiv.style.borderBottom = "2px ridge #111";
+                            headerDiv.style.color = "#111";
                         }
 
                         headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
@@ -587,9 +587,9 @@
                     let ifUsername;
                     if (post.username === getCookie("dev-username")){
                         if (getCookie("canada_goose") === "true"){
-                            ifUsername = " style='text-decoration:underline 1.5px !important;'"
+                            ifUsername = " style='border-bottom:1.35px solid white;padding-bottom:0.75px'"
                         }else{
-                            ifUsername = " style='color:#111'";
+                            ifUsername = " style='color:#222'";
                         }
                     } else {
                         ifUsername = "";
