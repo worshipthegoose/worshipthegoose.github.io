@@ -552,7 +552,7 @@
 
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                    let hyperTag = post.username === "thegoose" ? " [OMNISCIENT] " : "";
+                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (admins.includes(devUsername)) {
                         const checkbox = document.createElement("input");
@@ -587,7 +587,7 @@
                     let ifUsername;
                     if (post.username === getCookie("dev-username")){
                         if (getCookie("canada_goose") === "true"){
-                            ifUsername = " style='border-bottom:1.35px solid white;padding-bottom:0.75px'"
+                            ifUsername = " style='border-bottom:1.7px solid white !important;padding-bottom:0.45px'"
                         }else{
                             ifUsername = " style='color:#222'";
                         }
