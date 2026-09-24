@@ -24,7 +24,8 @@
         let pendingDeleteTimestamp = null;
         let pendingDeleteElement = null;
         let pendingClearChat = false;
-        const admins = ["thegoose", "agooseworshipper"] // Add more or less as we go
+        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"] // Add more or less as we go
+        const inputSuggestions = ["Suggest goose ideas...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
 
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -43,11 +44,11 @@
 
         function escapeHtml(str) {
             return String(str || "")
-                .replace(/&/g, "&")
-                .replace(/</g, "<")
-                .replace(/>/g, ">")
-                .replace(/"/g, "\"")
-                .replace(/'/g, "'");
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
         }
 
         function generateBadgedFavicon() {
@@ -207,19 +208,18 @@
                 console.error('Failed to copy text: ', err);
             }
         }
-
         function openEditModal(post) {
             if (!admins.includes(getCookie("dev-username"))) return;
 
             const overlay = document.getElementById("edit-modal-overlay");
             const input = document.getElementById("edit-message-input");
-            const authorElement = document.querySelector(".disclaimer-fine-author");
 
             if (!overlay || !input) return;
 
             editingMessageTimestamp = post.timestamp;
             input.value = post.message || "";
 
+            const authorElement = overlay.querySelector(".disclaimer-fine-author");
             if (authorElement) {
                 authorElement.textContent = post.username || "Unknown";
             }
@@ -231,7 +231,6 @@
                 input.select();
             }, 50);
         }
-
         function closeEditModal() {
             const overlay = document.getElementById("edit-modal-overlay");
 
@@ -242,7 +241,7 @@
             editingMessageTimestamp = null;
         }
 
-        function openDeleteModal(timestamp, msgDiv) {
+        function openDeleteModal(timestamp, msgDiv, post) {
             if (!admins.includes(getCookie("dev-username"))) return;
 
             const overlay = document.getElementById("delete-modal-overlay");
@@ -251,6 +250,11 @@
 
             pendingDeleteTimestamp = timestamp;
             pendingDeleteElement = msgDiv;
+
+            const authorElement = overlay.querySelector(".disclaimer-fine-author");
+            if (authorElement) {
+                authorElement.textContent = post.username || "Unknown";
+            }
 
             overlay.style.display = "flex";
         }
@@ -262,12 +266,6 @@
                 overlay.style.display = "none";
             }
 
-            if (pendingDeleteElement) {
-                const checkbox = pendingDeleteElement.querySelector('input[type="checkbox"]');
-                if (checkbox) {
-                    checkbox.checked = false;
-                }
-            }
 
             pendingDeleteTimestamp = null;
             pendingDeleteElement = null;
@@ -374,7 +372,7 @@
                 console.error("Failed to clear messages:", err);
             } finally {
                 clearButton.disabled = false;
-                clearButton.textContent = "Clear Chat";
+                clearButton.textContent = "Clear All";
             }
         }
 
@@ -497,12 +495,12 @@
                     container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
                     return;
                 }
-
+                /* 
                 const checkedMessages = new Set(
                     [...container.querySelectorAll('input[type="checkbox"]:checked')]
                         .map(checkbox => checkbox.dataset.timestamp)
                 );
-
+                */
                 container.innerHTML = "";
 
                 let lastHeaderDate = "";
@@ -555,21 +553,16 @@
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (admins.includes(devUsername)) {
-                        const checkbox = document.createElement("input");
-                        checkbox.type = "checkbox";
-                        checkbox.dataset.timestamp = String(post.timestamp);
-                        checkbox.style.marginRight = "6px";
-                        checkbox.checked = checkedMessages.has(String(post.timestamp));
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ Delete";
+                        killButton.className = "message-delete-button";
 
-                        checkbox.addEventListener("change", () => {
-                            if (!checkbox.checked) return;
-
-                            setTimeout(() => {
-                                openDeleteModal(post.timestamp, msgDiv);
-                            }, 50);
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, msgDiv, post);
                         });
 
-                        msgDiv.appendChild(checkbox);
+                        msgDiv.appendChild(killButton);
 
                         const editButton = document.createElement("button");
                         editButton.type = "button";
@@ -587,7 +580,7 @@
                     let ifUsername;
                     if (post.username === getCookie("dev-username")){
                         if (getCookie("canada_goose") === "true"){
-                            ifUsername = " style='border-bottom:1.7px solid white !important;padding-bottom:0.45px'"
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'"
                         }else{
                             ifUsername = " style='color:#222'";
                         }
@@ -609,7 +602,12 @@
             
             let disclaimerTextContent;
             if (admins.includes(getCookie('dev-username'))) { disclaimerTextContent = getCookie('dev-username') } else { disclaimerTextContent = "There was an error. Please refresh, gooseling." }
-            document.querySelector(".disclaimer-find-admin").textContent = disclaimerTextContent;
+            document.querySelectorAll(".disclaimer-find-admin").forEach((element) => {
+                element.textContent = disclaimerTextContent;
+            });
+
+            const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
+            document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
             
             generateBadgedFavicon();
 
@@ -647,7 +645,11 @@
                     const sendButton = chatForm.querySelector("button[type='submit']");
                     if (!input || !input.value.trim() || !sendButton) return;
 
-                    const messageText = input.value.trim();
+                    let messageText = input.value.trim();
+                    messageText = messageText
+                    .replace(/\bss\b/gi, "@thenumberonegooseling")
+                    .replace(/\btwos\b/gi, "@agooseworshipper")
+                    .replace(/\bthrees\b/gi, "The 2oose");
                     input.value = "";
 
                     input.disabled = true;
@@ -1130,9 +1132,9 @@
                 <div id="message-container">
                 </div>
                 <form id="chat-form">
-                    <input type="text" id="chat-input" placeholder="Type anything, really..." required style="width: 70%; padding: 8px;">
+                    <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
-                    <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear Chat</button>
+                    <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear All</button>
                 </form>
             </div>
             <div id="account" class="tabcontent">
@@ -1164,7 +1166,7 @@
 
     <div id="delete-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="delete-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-            <span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span></p>
             <h2 id="delete-modal-title">Delete Message</h2>
             <p>Are you sure you want to delete this message?</p>
             <div class="edit-modal-buttons">
@@ -1181,7 +1183,7 @@
             <p>Are you sure you want to clear all chat messages?</p>
             <div class="edit-modal-buttons">
                 <button type="button" id="clear-cancel-button">Cancel</button>
-                <button type="button" id="clear-confirm-button">Clear Chat</button>
+                <button type="button" id="clear-confirm-button">Clear Everything</button>
             </div>
         </div>
     </div>

@@ -15,7 +15,20 @@ div.panel {
     min-height:480px !important;
     height:auto;
 }
+.message-delete-button {
+    text-shadow: 0 0 1px currentColor;
+    background-color: #b34752 !important;
+    border: none;
+    border-radius: 5px;
+    color:white !important;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease;
+    margin-right:6px
+}
 
+.message-delete-button:hover {
+    background-color: #8c232d !important;
+    color:white !important
+}
 #auth {
     margin: 9px auto;
     display: flex;
@@ -98,7 +111,7 @@ div.panel {
 }
 
 #auth button:hover{
-    background-color: lightskyblue;
+    background-color: royalblue !important;
     transform: scale(1.1);
 }
 
@@ -174,7 +187,7 @@ main{
 }
 
 #chat-form button#clear-chat{
-    background-color: crimson;
+    background-color: rgb(162, 82, 162);
     color:white !important;
 }
 
@@ -183,7 +196,7 @@ main{
 }
 
 #chat-form button#clear-chat:hover{
-    background-color: firebrick !important;
+    background-color: rgb(110, 41, 110) !important;
     color:white !important;
 }
 
