@@ -24,8 +24,8 @@
         let pendingDeleteTimestamp = null;
         let pendingDeleteElement = null;
         let pendingClearChat = false;
-        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"] // Add more or less as we go
-        const inputSuggestions = ["Suggest goose ideas...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
+        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"]
+        const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
 
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -41,7 +41,6 @@
             textButton.style.display = "none";
         }
 
-
         function escapeHtml(str) {
             return String(str || "")
                 .replace(/&/g, "&amp;")
@@ -49,6 +48,46 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;");
+        }
+
+        function isAdmin() {
+            return admins.includes(getCookie("dev-username"));
+        }
+
+        function showAdminFeatures() {
+            const toggle = document.getElementById("show-admin-features");
+            return isAdmin() && toggle && toggle.checked;
+        }
+
+        function updateAdminFeatures() {
+            const admin = isAdmin();
+            const enabled = showAdminFeatures();
+
+            const toggleContainer = document.getElementById("admin-feature-toggle-container");
+
+            if (admin && enabled) {
+                document.querySelector(".admin-feature-status").textContent = "on";
+            } else if (admin && !enabled) {
+                document.querySelector(".admin-feature-status").textContent = "off";
+            }
+
+            if (toggleContainer) {
+                toggleContainer.style.display = admin ? "block" : "none";
+            }
+
+            const clearButton = document.getElementById("clear-chat");
+
+            if (clearButton) {
+                clearButton.style.display = enabled ? "inline-block" : "none";
+            }
+
+            document.querySelectorAll(".fine-print-admin").forEach(element => {
+                element.style.display = enabled ? "" : "none";
+            });
+
+            document.querySelectorAll(".admin-only-feature").forEach(element => {
+                element.style.display = enabled ? "" : "none";
+            });
         }
 
         function generateBadgedFavicon() {
@@ -208,8 +247,9 @@
                 console.error('Failed to copy text: ', err);
             }
         }
+
         function openEditModal(post) {
-            if (!admins.includes(getCookie("dev-username"))) return;
+            if (!isAdmin()) return;
 
             const overlay = document.getElementById("edit-modal-overlay");
             const input = document.getElementById("edit-message-input");
@@ -231,6 +271,7 @@
                 input.select();
             }, 50);
         }
+
         function closeEditModal() {
             const overlay = document.getElementById("edit-modal-overlay");
 
@@ -242,7 +283,7 @@
         }
 
         function openDeleteModal(timestamp, msgDiv, post) {
-            if (!admins.includes(getCookie("dev-username"))) return;
+            if (!isAdmin()) return;
 
             const overlay = document.getElementById("delete-modal-overlay");
 
@@ -265,7 +306,6 @@
             if (overlay) {
                 overlay.style.display = "none";
             }
-
 
             pendingDeleteTimestamp = null;
             pendingDeleteElement = null;
@@ -317,7 +357,7 @@
         }
 
         function openClearModal() {
-            if (!admins.includes(getCookie('dev-username'))) return;
+            if (!isAdmin()) return;
 
             const overlay = document.getElementById("clear-modal-overlay");
 
@@ -448,6 +488,7 @@
             }
 
             const username = getCookie("dev-username");
+
             if (username) {
                 document.querySelectorAll(".name").forEach((name) => {
                     name.textContent = decodeURIComponent(username);
@@ -495,12 +536,7 @@
                     container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
                     return;
                 }
-                /* 
-                const checkedMessages = new Set(
-                    [...container.querySelectorAll('input[type="checkbox"]:checked')]
-                        .map(checkbox => checkbox.dataset.timestamp)
-                );
-                */
+
                 container.innerHTML = "";
 
                 let lastHeaderDate = "";
@@ -552,11 +588,11 @@
 
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
-                    if (admins.includes(devUsername)) {
+                    if (showAdminFeatures()) {
                         const killButton = document.createElement("button");
                         killButton.type = "button";
                         killButton.innerHTML = "✦ 🗑";
-                        killButton.className = "message-delete-button";
+                        killButton.className = "message-delete-button admin-only-feature";
 
                         killButton.addEventListener("click", () => {
                             openDeleteModal(post.timestamp, msgDiv, post);
@@ -568,6 +604,7 @@
                         editButton.type = "button";
                         editButton.textContent = "✦ Edit";
                         editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
 
                         editButton.addEventListener("click", () => {
                             openEditModal(post);
@@ -578,20 +615,25 @@
 
                     const textSpan = document.createElement("span");
                     let ifUsername;
-                    if (post.username === getCookie("dev-username")){
-                        if (getCookie("canada_goose") === "true"){
-                            ifUsername = " style='border-bottom:1.7px solid white !important;'"
-                        }else{
+
+                    if (post.username === getCookie("dev-username")) {
+                        if (getCookie("canada_goose") === "true") {
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                        } else {
                             ifUsername = " style='color:#222'";
                         }
                     } else {
                         ifUsername = "";
                     }
-                    textSpan.innerHTML = `<strong><span${ifUsername}>${hyperTag}@${escapeHtml(post.username)}</span>:</strong> ${escapeHtml(post.message)}`;
+
+                    textSpan.innerHTML = `<strong style="user-select:none !important;margin-right:3px;"><span${ifUsername}>${hyperTag}@${escapeHtml(post.username)}</span>:</strong>${escapeHtml(post.message)}`;
                     msgDiv.appendChild(textSpan);
 
                     container.appendChild(msgDiv);
                 });
+
+                updateAdminFeatures();
+
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
@@ -599,16 +641,23 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            
+
             let disclaimerTextContent;
-            if (admins.includes(getCookie('dev-username'))) { disclaimerTextContent = getCookie('dev-username') } else { disclaimerTextContent = "There was an error. Please refresh, gooseling." }
+
+            if (isAdmin()) {
+                disclaimerTextContent = getCookie('dev-username');
+            } else {
+                disclaimerTextContent = "There was an error. Please refresh, gooseling.";
+            }
+
+
             document.querySelectorAll(".disclaimer-find-admin").forEach((element) => {
                 element.textContent = disclaimerTextContent;
             });
 
             const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
             document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
-            
+
             generateBadgedFavicon();
 
             if (getCookie('is-developer') !== 'true') {
@@ -618,6 +667,7 @@
 
             const username = getCookie("dev-username");
             const devUsername = getCookie("dev-username");
+
             if (username) {
                 document.querySelectorAll(".name").forEach((name) => {
                     name.textContent = decodeURIComponent(username);
@@ -627,29 +677,51 @@
             handleRoute();
             window.addEventListener("hashchange", handleRoute);
 
-            const clearBtn = document.getElementById("clear-chat");
-            if (clearBtn && admins.includes(devUsername)) {
-                clearBtn.style.display = "inline-block";
+            const adminFeatureToggle = document.getElementById("show-admin-features");
 
+            if (adminFeatureToggle) {
+                if (isAdmin()) {
+                    adminFeatureToggle.checked = getCookie("show-admin-features") === "true";
+
+                    adminFeatureToggle.addEventListener("change", () => {
+                        document.cookie = `show-admin-features=${adminFeatureToggle.checked}; expires=Thu, 31 Dec 2026 23:59:59 UTC; path=/`;
+                        updateAdminFeatures();
+                        lastMessageData = "";
+                        loadMessages(false);
+                    });
+                } else {
+                    adminFeatureToggle.checked = false;
+                }
+            }
+
+            updateAdminFeatures();
+
+            const clearBtn = document.getElementById("clear-chat");
+
+            if (clearBtn && isAdmin()) {
                 clearBtn.addEventListener("click", async () => {
                     openClearModal();
                 });
             }
 
             const chatForm = document.getElementById("chat-form");
+
             if (chatForm) {
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
 
                     const input = document.getElementById("chat-input");
                     const sendButton = chatForm.querySelector("button[type='submit']");
+
                     if (!input || !input.value.trim() || !sendButton) return;
 
                     let messageText = input.value.trim();
+
                     messageText = messageText
-                    .replace(/\briker\b/gi, "@thenumberonegooseling")
-                    .replace(/\baarya\b/gi, "@agooseworshipper")
-                    .replace(/\bsaam\b/gi, "The 2oose");
+                        .replace(/\briker\b/gi, "@thenumberonegooseling")
+                        .replace(/\baarya\b/gi, "@agooseworshipper")
+                        .replace(/\bsaam\b/gi, "The 2oose");
+
                     input.value = "";
 
                     input.disabled = true;
@@ -657,8 +729,8 @@
                     sendButton.disabled = true;
                     sendButton.style.backgroundColor = "rgb(118, 177, 226)";
                     sendButton.textContent = "Sending...";
-                    sendButton.classList.add("send-button-active")
-                    
+                    sendButton.classList.add("send-button-active");
+
                     try {
                         const response = await fetch(GAS_URL, {
                             method: "POST",
@@ -678,16 +750,17 @@
 
                         lastMessageData = "";
                         await loadMessages(false);
+
                     } catch (err) {
                         console.error("Failed to send message:", err);
                     } finally {
                         input.disabled = false;
-                        input.classList.remove("chat-input-active")
+                        input.classList.remove("chat-input-active");
                         sendButton.disabled = false;
                         sendButton.style.backgroundColor = "steelblue";
                         sendButton.textContent = "Send";
                         sendButton.classList.remove("send-button-active");
-                        input.focus()
+                        input.focus();
                     }
                 });
             }
@@ -774,7 +847,15 @@
             setInterval(() => loadMessages(false), 1000);
         });
     </script>
+
     <style>
+        .copy-account-btn{
+            margin-left:6px;border:none;font-size:17px;box-shadow:0px 4px 10px rgba(51, 51, 51,0.5);background-color: olivedrab !important;color:white !important;
+            transition:background-color 0.2s ease-in-out;
+        }
+        .copy-account-btn:hover{
+            background-color: darkolivegreen !important;
+        }
         .tab {
             overflow: hidden;
             border: none;
@@ -915,7 +996,7 @@
             display: flex;
             justify-content: center;
             flex-direction: column;
-            width:fit-content;
+            width: fit-content;
             box-sizing: border-box;
             padding: 24px;
             border-radius: 12px;
@@ -953,7 +1034,8 @@
             font-size: 17px;
         }
 
-        #edit-message-input:focus, #edit-message-input:hover{
+        #edit-message-input:focus,
+        #edit-message-input:hover {
             background-color: #eee !important;
         }
 
@@ -977,14 +1059,14 @@
         #clear-cancel-button {
             background: #ccc;
             color: #444 !important;
-            transition:background 0.3s ease, color 0.3s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         #edit-cancel-button:hover,
         #delete-cancel-button:hover,
         #clear-cancel-button:hover {
             background: #bbb;
-            color:#222 !important;
+            color: #222 !important;
         }
 
         #edit-push-button,
@@ -992,7 +1074,7 @@
         #clear-confirm-button {
             background: steelblue;
             color: #eee !important;
-            transition:background 0.3s ease, color 0.3s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         #edit-push-button:hover,
@@ -1010,19 +1092,83 @@
         }
 
         span.modal-disclaimer-fine {
-            font-size:16px;
+            font-size: 16px;
             text-align: center !important;
             display: inline-block;
             margin: 0 auto;
             font-weight: bolder;
             background-color: rgba(240, 248, 255, 0.3);
-            padding:2px;
+            padding: 2px;
             user-select: none;
         }
-
+        #account p:nth-child(3) {
+            margin:15px;
+            margin-top:9px;
+        }
         span.modal-disclaimer-fine::before {
             content: "✦ ";
-            font-style:normal !important;
+            font-style: normal !important;
+        }
+
+        .admin-feature-setting {
+            margin: 20px auto;
+            margin-top:0 !important;
+            padding: 12px 16px;
+            width: fit-content;
+            border-radius: 10px;
+            background-color: rgba(192, 192, 192, 0.688);
+            color:black;
+            transition: background-color 0.3s ease;
+            box-shadow:-5px 4px 10px rgba(51, 51, 51, 0.6333)
+        }
+
+        .admin-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            user-select: none;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+        }
+
+        .admin-feature-setting:hover{
+            background-color: #b0a9a9;
+        }
+
+        .admin-toggle input {
+            display: none;
+        }
+
+        .admin-toggle-slider {
+            position: relative;
+            width: 48px;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+            height: 26px;
+            background-color: #747171;
+
+            border-radius: 20px;
+            transition: background-color 0.25s ease;
+        }
+
+        .admin-toggle-slider::before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            top: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider {
+            background-color: darkolivegreen;
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider::before {
+            transform: translateX(22px);
         }
 
         @keyframes editModalAppear {
@@ -1037,46 +1183,56 @@
             }
         }
     </style>
+
     <script src="/services.js"></script>
     <title>Gooseling - The Goose Site</title>
 </head>
+
 <body>
     <nav>
-    <ul class="grandpa">
-        <li class="dad">
-            <a class="logo son" href="/" title="Back to the homepage.">The Goose Site Legacy</a>
-        </li>
-        <li class="dad">
-            <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
-        </li>
-        <li class="dad">
-            <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
-        </li>
-        <li style="cursor:pointer;" class="dad dropdown">
-            <a class="son" title="The unity videos...">Videos</a>
-            <ul class="dropdown-content">
-                <li class="space"><a title="Subscribe or die..." href="/youtube">Youtube Channel</a></li>
-                <li><a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a></li>
-            </ul>
-        </li>
-        <li class="dad">
-            <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
-        </li>
-        <li class="dad" id="logout"><a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/';"><img src="/assets/images/signin.png" /><u>Sign Out</u></a></li>
-    </ul>
+        <ul class="grandpa">
+            <li class="dad">
+                <a class="logo son" href="/" title="Back to the homepage.">The Goose Site Legacy</a>
+            </li>
+            <li class="dad">
+                <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
+            </li>
+            <li class="dad">
+                <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
+            </li>
+            <li style="cursor:pointer;" class="dad dropdown">
+                <a class="son" title="The unity videos...">Videos</a>
+                <ul class="dropdown-content">
+                    <li class="space"><a title="Subscribe or die..." href="/youtube">Youtube Channel</a></li>
+                    <li><a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a></li>
+                </ul>
+            </li>
+            <li class="dad">
+                <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
+            </li>
+            <li class="dad" id="logout">
+                <a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/';">
+                    <img src="/assets/images/signin.png" />
+                    <u>Sign Out</u>
+                </a>
+            </li>
+        </ul>
     </nav>
+
     <main>
         <div class="panel">
             <div class="tab">
-              <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
-              <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
-              <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
-              <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
+                <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
+                <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
+                <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
+                <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
             </div>
+
             <div id="dashboard" class="tabcontent">
                 <h2>Welcome to The Gooseling Panel, @<span class="name">PIRATED</span>!</h2>
                 <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
             </div>
+
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
                 <div id="notifbox" style="display:flex;gap:15px;flex-direction: column;">
@@ -1090,6 +1246,35 @@
                     </div>
                 </div>
             </div>
+
+            <div id="administrator" class="tabcontent">
+                <h2>Administrators: What are they?</h2>
+                <p>Administrators, commonly shortened to admins and also known as goosadmins, are moderators who run, manage, and moderate The Goose Chatbox. These select gooselings can delete and comments, go anonymous under aliases, and gain a lot more perks compared to standard-level gooselings. This status is given by @thegoose, and it's estimated that only ten or so gooselings have administrator access.<br>
+                A star icon (✦) next to a feature indicates that it is an admin perk. Star icons do not appear for standard-tier individuals.<br>
+                Messages from admin accounts do not have the star icon next to their name to avoid unnecessary harassment.</p>
+                <p>
+                    <b>Perks</b>
+                    <p>Some, but not all, perks include:</p>
+                    <ul>
+                        <li>
+                            <p>Faster servers for faster messaging.</p>
+                        </li>
+                        <li>
+                            <p>Twice the encryption compared to a normal gooseling account</p>
+                        </li>
+                        <li>
+                            <p>The abillity to delete, edit, and clear all messages</p>
+                        </li>
+                        <li>
+                            <p>Alias mode (going under an alias which cannot be an existing account)</p>
+                        </li>
+                        <li>
+                            <p>Admin-only messaging</p>
+                        </li>
+                    </ul>
+                </p>
+            </div>
+
             <div id="guidelines" class="tabcontent">
                 <h2>The Goose Chatbox <u>Guidelines</u></h2>
                 <p>List of guidelines and policies for The Goose Chatbox.</p>
@@ -1121,35 +1306,57 @@
                     </li>
                     <li>
                         <strong>Messages Must Basic Goose Typing Rules</strong>
-                        <p>Using the letter "2"  when writing canon or talking about goose-related topics is not allowed. Canonically, "2" is a short form of The 2oose, who is The Goosatan. If you are writing "The 2oose", that is allowed. However, when saying the number, substitute it with "goose." (Note: If you are trying to type "The 2oose" in a place where numbers are not allowed, type "the qoose" since Q in cursive looks like a goose.</p>
+                        <p>Using the letter "2" when writing canon or talking about goose-related topics is not allowed. Canonically, "2" is a short form of The 2oose, who is The Goosatan. If you are writing "The 2oose", that is allowed. However, when saying the number, substitute it with "goose." (Note: If you are trying to type "The 2oose" in a place where numbers are not allowed, type "the qoose" since Q in cursive looks like a goose.</p>
+                    </li>
                     <li>
                         <strong>Consequences to Violation</strong>
                         <p>Violation of these rules stated above could cause a permanent ban, IP ban, or report to the local authorities. As stated in rule V, <u style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">scorn of The Goose is never a violation.</u></p>
                     </li>
                 </ul>
             </div>
+
             <div id="chatbox" class="tabcontent">
                 <h2>The Goose Chatbox</h2>
                 <p>Yes, it works. Images not supported.</p>
-                <center><span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span></center>
-                <div id="message-container">
-                </div>
+                <center>
+                    <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
+                    <br>
+                    <span class="fine-print-admin admin-only-feature" style="display:none !important;opacity:0;">You currently have admin mode <span class="admin-feature-status"></span>. To toggle it <span class="admin-feature-status-opp">off</span>, please click <a href = "javascript:document.querySelector('#show-admin-features').click()">here</a>. </span>
+                </center>
+
+                <div id="message-container"></div>
+
                 <form id="chat-form">
                     <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear All</button>
                 </form>
             </div>
+
             <div id="account" class="tabcontent">
                 <h2>Account</h2>
-                <p><strong>Your account username: <span class="name"></span></strong><button title="Click to copy..." style="margin-left:6px;border:none;font-size:17px;box-shadow:0px 4px 10px rgba(51, 51, 51,0.5);background-color: green;color:white !important;transition:background-color 0.3s ease-in-out;" onmouseout="this.style.backgroundColor = 'green'" onmouseover="this.style.backgroundColor = 'darkgreen'" onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent = 'Copy'}, 3000)">Copy</button></p>
+
+                <p>
+                    <strong>Your account username: <span class="name"></span></strong>
+                    <button title="Click to copy..."  onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent = 'Copy'}, 3000)" class="copy-account-btn">Copy</button>
+                </p>
+
                 <p>Manage your gooseling account here.</p>
+
+                <div id="admin-feature-toggle-container" onclick="document.getElementById('show-admin-featues').click()" class="admin-feature-setting" style="display:none;">
+                    <label title="Switch to non-admin mode..." class="admin-toggle">
+                        <span>✦ Show admin features</span>
+                        <input type="checkbox" id="show-admin-features">
+                        <span class="admin-toggle-slider"></span>
+                    </label>
+                </div>
+
                 <center>
-                    <button onclick="
-    document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'dev-username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    window.location.reload();
-">Log out</button>
+                    <button title="Sign out of your gooseling account..." onclick="
+                        document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        document.cookie = 'dev-username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        window.location.reload();
+                    ">Log out</button>
                 </center>
             </div>
         </div>
@@ -1157,7 +1364,7 @@
 
     <div id="edit-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
-            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span></p>
+            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
             <h2 id="edit-modal-title">Edit Message</h2>
             <input id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
             <div class="edit-modal-buttons">
@@ -1169,7 +1376,7 @@
 
     <div id="delete-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="delete-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span></p>
+            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
             <h2 id="delete-modal-title">Delete Message</h2>
             <p>Are you sure you want to delete this message?</p>
             <div class="edit-modal-buttons">

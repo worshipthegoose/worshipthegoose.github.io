@@ -3,8 +3,17 @@
     font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif !important;
 
 }
+html{
+    background-image:url('/assets/images/BBbackground.png') !important;
+    background: url('/assets/images/BBbackground.png') !important;
+}
 body{
-    background-image:linear-gradient(to left, #9a9a9a, #aaa, #bbb, #ccc, #ddd,#eeee, #eee, #fff) !important
+    background-color: #cccccc36;
+    background-image:url('/assets/images/BBbackground.png') stretch !important;
+    background: url('/assets/images/BBbackground.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+
 }
 .hello, .welcome, .search-box, .panel{
     background-color: rgb(89, 62, 36) !important;
@@ -15,6 +24,9 @@ body{
     background-color: rgb(108, 91, 75) !important;
      color:white !important;
      transition:background-color 0.3s ease !important;
+}
+.format center button {
+    color:white !important;
 }
 .edit-modal, .edit-modal h2, .edit-modal p, .edit-modal span {color:white !important;}
 .panel{
