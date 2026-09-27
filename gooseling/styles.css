@@ -228,16 +228,23 @@ main{
 }
 
 #chat-form button#clear-chat{
-    background-color: rgb(162, 82, 162);
-    color:white !important;
+    background-color: #75baa1;
+    color:#222 !important;
+    transition:background-color 0.3s ease-in-out, color 0.3s ease;
 }
-
+#chat-form button#add-image{
+    background-color: rgb(231, 168, 179);
+    color:#222 !important;
+    transition:background-color 0.3s ease-in-out, color 0.3s ease;
+}
 #chat-form button#send-message:hover{
     background-color: royalblue !important;
 }
-
+#chat-form button#add-image:hover{
+    background-color:palevioletred !important;
+}
 #chat-form button#clear-chat:hover{
-    background-color: rgb(110, 41, 110) !important;
+    background-color:#498a72!important;
     color:white !important;
 }
 
@@ -270,4 +277,108 @@ main{
 }
 .fine-print-admin::before{
     content:"✦ "
+}
+
+#image-filename-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 17px;
+}
+
+#image-filename-input:focus,
+#image-filename-input:hover {
+    background-color: #eee !important;
+}
+
+/* Clickable image filename in chat */
+.image-chat-link {
+    cursor: pointer;
+}
+
+/* 80% screen image viewer */
+.image-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100001;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.image-viewer {
+    position: relative;
+    width:fit-content;
+    height:auto;
+    min-width:50vh;
+    max-width: 50vh;
+    max-height:70vh;
+    box-sizing: border-box;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition:display 0.5s ease;
+    animation: editModalAppear 0.15s ease-out;
+}
+#image-viewer .image-viewer-content img {
+    overflow:hidden !important;
+}
+#image-viewer-filename{color:#222 !important}
+.image-viewer-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    border: none;
+    background: transparent;
+    color: #333;
+    font-size: 38px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 8px;
+    transition:color 0.5s ease, text-shadow 0.5s ease;
+}
+
+.image-viewer-close:hover {
+    color:#000 !important;
+    text-shadow:0px 1px 1px rgba(0, 0, 0, 0.9)
+}
+
+.image-viewer-filename {
+    font-family:
+        "Comic Sans MS",
+        Chalkboard,
+        "Chalkboard SE",
+        cursive;
+
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    word-break: break-word;
+}
+
+.image-viewer-content {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+}
+
+.image-viewer-content img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }

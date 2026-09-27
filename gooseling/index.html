@@ -88,6 +88,12 @@
             document.querySelectorAll(".admin-only-feature").forEach(element => {
                 element.style.display = enabled ? "" : "none";
             });
+
+            const addImage = document.getElementById("add-image");
+
+            if (addImage) {
+                addImage.style.display = admin ? "inline-block" : "none";
+            }
         }
 
         function generateBadgedFavicon() {
@@ -377,44 +383,178 @@
             pendingClearChat = false;
         }
 
-        async function confirmClearChat() {
-            if (!pendingClearChat) return;
+        let pendingImageFilename = null;
 
-            const clearButton = document.getElementById("clear-confirm-button");
+        function openImageModal() {
+            if (!isAdmin()) return;
 
-            if (!clearButton) return;
+            const overlay = document.getElementById("image-modal-overlay");
+            const input = document.getElementById("image-filename-input");
 
-            clearButton.disabled = true;
-            clearButton.textContent = "Clearing...";
+            if (!overlay || !input) return;
+
+            input.value = "";
+            overlay.style.display = "flex";
+
+            setTimeout(() => {
+                input.focus();
+            }, 50);
+        }
+
+        function closeImageModal() {
+            const overlay = document.getElementById("image-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+
+            pendingImageFilename = null;
+        }
+
+        async function insertImageToken() {
+            if (!isAdmin()) {
+                document.querySelector(".image-modal-status").textContent = "Hackers fortunately cannot insert images..."
+                return;
+            }
+
+            const input = document.getElementById("chat-input");
+            const filenameInput = document.getElementById("image-filename-input");
+            const insertButton = document.getElementById("image-insert-button");
+
+            if (!input || !filenameInput) return;
+
+            const filename = filenameInput.value.trim();
+
+            if (!filename) {
+                document.querySelector(".image-modal-status").textContent = "Please enter an actual file name, goose you."
+                return;
+            }
+
+            if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) {
+                document.querySelector(".image-modal-status").textContent = "Sorry! You can't add your own images to avoid inappropriate content. Request an image to '/assets/images' first."
+                return;
+            }
+
+            if (!/^[^?#%]+\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)) {
+                document.querySelector(".image-modal-status").textContent = "Invalid. Just invalid."
+                return;
+            }
+
+            const imagePath = `/assets/images/${encodeURIComponent(filename)}`;
+
+            if (insertButton) {
+                insertButton.disabled = true;
+                insertButton.textContent = "Checking...";
+            }
 
             try {
-                const response = await fetch(GAS_URL, {
-                    method: "POST",
-                    mode: "cors",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8"
-                    },
-                    body: JSON.stringify({
-                        action: "clear"
-                    })
+                let response = await fetch(imagePath, {
+                    method: "HEAD",
+                    cache: "no-store"
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                if (response.status === 405 || response.status === 501) {
+                    response = await fetch(imagePath, {
+                        method: "GET",
+                        cache: "no-store"
+                    });
                 }
 
-                closeClearModal();
+                if (!response.ok) {
+                    throw new Error("Image not found.");
+                }
 
-                lastMessageData = "";
-                await loadMessages(false);
+                const contentType = response.headers.get("content-type") || "";
 
+                if (!contentType.toLowerCase().startsWith("image/")) {
+                    throw new Error("The file is not an image.");
+                }
+
+                const token = `[image=${filename}] `;
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+
+                input.value =
+                    input.value.slice(0, start) +
+                    token +
+                    input.value.slice(end);
+
+                input.focus();
+
+                const newCursorPosition = start + token.length;
+                input.setSelectionRange(newCursorPosition, newCursorPosition);
+
+                closeImageModal();
             } catch (err) {
-                console.error("Failed to clear messages:", err);
+                document.querySelector(".image-modal-status").textContent = "Sorry! Not found in '/assets/images'. Try another?"
             } finally {
-                clearButton.disabled = false;
-                clearButton.textContent = "Clear All";
+                if (insertButton) {
+                    insertButton.disabled = false;
+                    insertButton.textContent = "Insert";
+                }
             }
         }
+    function openImageViewer(filename) {
+        const overlay = document.getElementById("image-viewer-overlay");
+        const image = document.getElementById("image-viewer-image");
+        const filenameElement = document.getElementById("image-viewer-filename");
+
+        if (!overlay || !image || !filenameElement) return;
+
+        filenameElement.textContent = filename;
+
+        image.src = `/assets/images/${encodeURIComponent(filename)}`;
+
+        image.alt = filename;
+
+        overlay.style.display = "flex";
+    }
+
+    function closeImageViewer() {
+        const overlay = document.getElementById("image-viewer-overlay");
+
+        if (overlay) {
+            overlay.style.display = "none";
+        }
+    }
+    async function confirmClearChat() {
+        if (!pendingClearChat) return;
+
+        const clearButton = document.getElementById("clear-confirm-button");
+
+        if (!clearButton) return;
+
+        clearButton.disabled = true;
+        clearButton.textContent = "Clearing...";
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "clear"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+
+            closeClearModal();
+
+            lastMessageData = "";
+            await loadMessages(false);
+
+        } catch (err) {
+            console.error("Failed to clear messages:", err);
+        } finally {
+            clearButton.disabled = false;
+            clearButton.textContent = "Clear All";
+        }
+    }
 
         async function pushEditedMessage() {
             if (!editingMessageTimestamp) return;
@@ -468,6 +608,54 @@
             }
         }
 
+        function renderChatMessage(message) {
+            const fragment = document.createDocumentFragment();
+            const regex = /\[image=([^\]]+)\]/gi;
+
+            let lastIndex = 0;
+            let match;
+
+            while ((match = regex.exec(message)) !== null) {
+                const textBefore = message.slice(lastIndex, match.index);
+                if (textBefore) {
+                    fragment.appendChild(document.createTextNode(textBefore));
+                }
+
+                const filename = match[1].trim();
+
+                if (
+                    filename &&
+                    !/[\\/:?#]/.test(filename) &&
+                    /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)
+                ) {
+                    const link = document.createElement("a");
+                    link.href = "#";
+                    link.className = "image-chat-link";
+                    link.textContent = `goosefile:${filename}`;
+
+                    link.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        openImageViewer(filename);
+                    });
+
+                    fragment.appendChild(link);
+                } else {
+                    fragment.appendChild(
+                        document.createTextNode(match[0])
+                    );
+                }
+
+                lastIndex = regex.lastIndex;
+            }
+
+            const remaining = message.slice(lastIndex);
+            if (remaining) {
+                fragment.appendChild(document.createTextNode(remaining));
+            }
+
+            return fragment;
+        }
+
         async function loadMessages(isInitialLoad = false) {
             const container = document.getElementById("message-container");
             if (!container) return;
@@ -508,9 +696,14 @@
                 const data = await response.json();
 
                 if (!Array.isArray(data)) {
-                    container.innerHTML = "<p style='color:red;'>Error: Invalid data structure received.</p>";
+                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
                     return;
                 }
+                /*if (window.location.origin !== "worshipthegoose.github.io" || window.location.origin !== "https://worshipthegoose.github.io") {
+                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>You are viewing this site from a pirated source. For your safety, please switch to the original site immediately.</p>";
+                    return;
+                }
+                    */
 
                 const devUsername = getCookie("dev-username");
                 const currentMessageData = JSON.stringify(data);
@@ -626,7 +819,19 @@
                         ifUsername = "";
                     }
 
-                    textSpan.innerHTML = `<strong style="user-select:none !important;margin-right:3px;"><span${ifUsername}>${hyperTag}@${escapeHtml(post.username)}</span>:</strong>${escapeHtml(post.message)}`;
+                    const usernameStrong = document.createElement("strong");
+                    usernameStrong.style.userSelect = "none";
+                    usernameStrong.style.marginRight = "3px";
+
+                    const usernameSpan = document.createElement("span");
+                    usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                    usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+
+                    usernameStrong.appendChild(usernameSpan);
+                    textSpan.appendChild(usernameStrong);
+
+                    textSpan.appendChild(renderChatMessage(post.message || ""));
+
                     msgDiv.appendChild(textSpan);
 
                     container.appendChild(msgDiv);
@@ -650,6 +855,7 @@
                 disclaimerTextContent = "There was an error. Please refresh, gooseling.";
             }
 
+            document.querySelector(".image-viewer-close").addEventListener('click', closeImageViewer);
 
             document.querySelectorAll(".disclaimer-find-admin").forEach((element) => {
                 element.textContent = disclaimerTextContent;
@@ -720,7 +926,7 @@
                     messageText = messageText
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
                         .replace(/\baarya\b/gi, "@agooseworshipper")
-                        .replace(/\bsaam\b/gi, "The 2oose");
+                        .replace(/\bsaam\b/gi, "saam");
 
                     input.value = "";
 
@@ -795,6 +1001,44 @@
                 });
             }
 
+            const imageCancelButton = document.getElementById("image-cancel-button");
+            const imageInsertButton = document.getElementById("image-insert-button");
+            const imageOverlay = document.getElementById("image-modal-overlay");
+            const addImageButton = document.getElementById("add-image");
+            const imageFilenameInput = document.getElementById("image-filename-input");
+
+            if (addImageButton) {
+                addImageButton.addEventListener("click", () => {
+                    if (!isAdmin()) return;
+                    openImageModal();
+                });
+            }
+
+            if (imageCancelButton) {
+                imageCancelButton.addEventListener("click", closeImageModal);
+            }
+
+            if (imageInsertButton) {
+                imageInsertButton.addEventListener("click", insertImageToken);
+            }
+
+            if (imageOverlay) {
+                imageOverlay.addEventListener("click", function(e) {
+                    if (e.target === imageOverlay) {
+                        closeImageModal();
+                    }
+                });
+            }
+
+            if (imageFilenameInput) {
+                imageFilenameInput.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        insertImageToken();
+                    }
+                });
+            }
+
             const deleteCancelButton = document.getElementById("delete-cancel-button");
             const deleteConfirmButton = document.getElementById("delete-confirm-button");
             const deleteOverlay = document.getElementById("delete-modal-overlay");
@@ -840,6 +1084,8 @@
                     closeEditModal();
                     closeDeleteModal();
                     closeClearModal();
+                    closeImageModal();
+                    closeImageViewer();
                 }
             });
 
@@ -1056,7 +1302,8 @@
 
         #edit-cancel-button,
         #delete-cancel-button,
-        #clear-cancel-button {
+        #clear-cancel-button,
+        #image-cancel-button {
             background: #ccc;
             color: #444 !important;
             transition: background 0.3s ease, color 0.3s ease;
@@ -1064,14 +1311,16 @@
 
         #edit-cancel-button:hover,
         #delete-cancel-button:hover,
-        #clear-cancel-button:hover {
+        #clear-cancel-button:hover,
+        #image-cancel-button:hover {
             background: #bbb;
             color: #222 !important;
         }
 
         #edit-push-button,
         #delete-confirm-button,
-        #clear-confirm-button {
+        #clear-confirm-button,
+        #image-insert-button {
             background: steelblue;
             color: #eee !important;
             transition: background 0.3s ease, color 0.3s ease;
@@ -1079,14 +1328,16 @@
 
         #edit-push-button:hover,
         #delete-confirm-button:hover,
-        #clear-confirm-button:hover {
+        #clear-confirm-button:hover,
+        #image-insert-button:hover {
             background: rgb(126, 179, 223);
             color: #222 !important;
         }
 
         #edit-push-button:disabled,
         #delete-confirm-button:disabled,
-        #clear-confirm-button:disabled {
+        #clear-confirm-button:disabled,
+        #image-insert-button:disabled {
             opacity: 0.6;
             cursor: wait;
         }
@@ -1317,7 +1568,7 @@
 
             <div id="chatbox" class="tabcontent">
                 <h2>The Goose Chatbox</h2>
-                <p>Yes, it works. Images not supported.</p>
+                <p>For gooselings only. No goosinners ever.</p>
                 <center>
                     <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
                     <br>
@@ -1329,7 +1580,8 @@
                 <form id="chat-form">
                     <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
-                    <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear All</button>
+                    <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear</button>
+                    <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
                 </form>
             </div>
 
@@ -1394,6 +1646,29 @@
             <div class="edit-modal-buttons">
                 <button type="button" id="clear-cancel-button">Cancel</button>
                 <button type="button" id="clear-confirm-button">Clear Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="image-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
+            <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <h2 style="margin:7px;margin-bottom:7px !important" id="image-modal-title">Paste Image</h2>
+            <p style="margin-bottom: 5px !important;" class="image-modal-status">What image would you like to paste?</p>
+            <input type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            <div class="edit-modal-buttons">
+                <button type="button" id="image-cancel-button">Cancel</button>
+                <button type="button" id="image-insert-button">Insert</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-viewer-overlay" class="image-viewer-overlay" style="display:none;">
+        <div id="image-viewer" class="image-viewer" role="dialog" aria-modal="true">
+            <button type="button" id="image-viewer-close" class="image-viewer-close" aria-label="Close goosImage">x</button>
+            <div id="image-viewer-filename" class="image-viewer-filename"></div>
+            <div class="image-viewer-content">
+                <img style="overflow:hidden" id="image-viewer-image" src="" alt="">
             </div>
         </div>
     </div>
