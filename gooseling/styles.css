@@ -15,6 +15,7 @@ div.panel {
     min-height:480px !important;
     height:auto;
 }
+#image-viewer-image{max-width:65vh !important;max-height:55vh !important;}
 .message-delete-button {
     text-shadow: 0 0 1px currentColor;
     background-color: #b34752 !important;
