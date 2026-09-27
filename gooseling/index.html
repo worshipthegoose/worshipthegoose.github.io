@@ -92,7 +92,7 @@
             const addImage = document.getElementById("add-image");
 
             if (addImage) {
-                addImage.style.display = admin ? "inline-block" : "none";
+                addImage.style.display = enabled ? "inline-block" : "none";
             }
         }
 
@@ -512,10 +512,12 @@
 
     function closeImageViewer() {
         const overlay = document.getElementById("image-viewer-overlay");
+        const image = document.getElementById("image-viewer-image");
 
         if (overlay) {
             overlay.style.display = "none";
         }
+        if (image) image.src = ``;
     }
     async function confirmClearChat() {
         if (!pendingClearChat) return;
