@@ -316,9 +316,8 @@ main{
     position: relative;
     width:fit-content;
     height:auto;
-    min-width:50vh;
-    max-width: 50vh;
-    max-height:70vh;
+    max-width: 60vh;
+    max-height:80vh;
     box-sizing: border-box;
     padding: 25px;
     background: white;
