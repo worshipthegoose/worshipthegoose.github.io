@@ -1580,7 +1580,7 @@
                 <div id="message-container"></div>
 
                 <form id="chat-form">
-                    <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
+                    <input maxlength="255" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear</button>
                     <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
@@ -1620,7 +1620,7 @@
         <div id="edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
             <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
             <h2 id="edit-modal-title">Edit Message</h2>
-            <input id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
+            <input maxlength="255" id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
             <div class="edit-modal-buttons">
                 <button type="button" id="edit-cancel-button">Cancel</button>
                 <button type="button" id="edit-push-button">Push</button>
@@ -1657,7 +1657,7 @@
             <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
             <h2 style="margin:7px;margin-bottom:7px !important" id="image-modal-title">Paste Image</h2>
             <p style="margin-bottom: 5px !important;" class="image-modal-status">What image would you like to paste?</p>
-            <input type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            <input maxlength="255" type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
             <div class="edit-modal-buttons">
                 <button type="button" id="image-cancel-button">Cancel</button>
                 <button type="button" id="image-insert-button">Insert</button>
