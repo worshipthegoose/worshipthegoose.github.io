@@ -783,29 +783,59 @@
 
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
-                    if (showAdminFeatures()) {
-                        const killButton = document.createElement("button");
-                        killButton.type = "button";
-                        killButton.innerHTML = "✦ 🗑";
-                        killButton.className = "message-delete-button admin-only-feature";
+                    const headerMatch = String(post.message || "")
+                        .trim()
+                        .match(/^\[header=([^\]]+)\]$/i);
 
-                        killButton.addEventListener("click", () => {
-                            openDeleteModal(post.timestamp, msgDiv, post);
-                        });
+                    if (headerMatch) {
+                        const headerText = headerMatch[1].trim();
 
-                        msgDiv.appendChild(killButton);
+                        if (headerText) {
+                            const headerWrapper = document.createElement("div");
+                            headerWrapper.style.position = "relative";
+                            headerWrapper.style.marginBottom = "8px";
 
-                        const editButton = document.createElement("button");
-                        editButton.type = "button";
-                        editButton.textContent = "✦ Edit";
-                        editButton.style.marginRight = "6px";
-                        editButton.classList.add("admin-only-feature");
+                            const headerDiv = document.createElement("div");
 
-                        editButton.addEventListener("click", () => {
-                            openEditModal(post);
-                        });
+                            headerDiv.style.fontWeight = "bold";
+                            headerDiv.style.textAlign = "center";
+                            headerDiv.style.padding = "8px 0";
+                            headerDiv.style.fontStyle = "italic";
+                            headerDiv.style.margin = "0 8px";
+                            headerDiv.style.fontSize = "17px";
+                            headerDiv.style.userSelect = "none";
 
-                        msgDiv.appendChild(editButton);
+                            if (getCookie("canada_goose") === "true") {
+                                headerDiv.style.borderBottom = "2px ridge white";
+                                headerDiv.style.color = "white";
+                            } else {
+                                headerDiv.style.borderBottom = "2px ridge #111";
+                                headerDiv.style.color = "#111";
+                            }
+
+                            headerDiv.textContent = `[!] ${headerText} [!]`;
+
+                            // FB delete check
+                            if (showAdminFeatures()) {
+                                const killButton = document.createElement("button");
+
+                                killButton.type = "button";
+                                killButton.innerHTML = "✦ 🗑";
+                                killButton.className = "message-delete-button admin-only-feature";
+
+                                killButton.addEventListener("click", () => {
+                                    openDeleteModal(post.timestamp, headerWrapper, post);
+                                });
+
+                                headerWrapper.appendChild(killButton);
+                            }
+
+                            headerWrapper.appendChild(headerDiv);
+                            container.appendChild(headerWrapper);
+
+                            // This post was a header, so don't render it as a normal message
+                            return;
+                        }
                     }
 
                     const textSpan = document.createElement("span");
