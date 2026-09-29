@@ -732,9 +732,10 @@
                     return;
                 }
 
-                
+
                 container.innerHTML = "";
                 let lastHeaderDate = "";
+                let announcementActive = false;
                 const posts = [...data].reverse();
                 posts.forEach((post, index) => {
                     const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
@@ -828,11 +829,13 @@
                         container.appendChild(headerWrapper);
                         return;
                     }
+                    
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
                     });
+
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
                     let hyperTag = post.username === "thegoose"
                         ? "[OMNISCIENT] "
@@ -856,13 +859,16 @@
                     usernameSpan.setAttribute("style", ifUsername);
                     usernameSpan.textContent = `${hyperTag}@${post.username}:`;
                     usernameStrong.appendChild(usernameSpan);
+
                     textSpan.appendChild(usernameStrong);
                     textSpan.appendChild(
                         renderChatMessage(post.message || "")
                     );
+
                     msgDiv.appendChild(textSpan);
                     container.appendChild(msgDiv);
                     const nextPost = posts[index + 1];
+
                     if (announcementActive && nextPost) {
                         const nextDateObj = nextPost.timestamp
                             ? new Date(nextPost.timestamp)
