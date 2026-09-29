@@ -14,6 +14,14 @@
     <link rel="stylesheet" href="/cursor.css">
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
     <script>
+        // I've decided to include comments for this script. I hate comments so if you see me ranting that is why.
+        // I did NOT use comments for the default script for that reason.
+
+        // Constants
+        
+
+    </script>
+    <script class="default">
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyje3pAWA_tmMSrT7iLKxCI3GwWNToWnwl-5RgBU3zduOl9bl2AmUivbSUrMt1OGjtZ/exec";
         const ORIGINAL_FAVICON = "../favicon.ico";
         let badgedFaviconDataUrl = null;
@@ -400,7 +408,31 @@
                 input.focus();
             }, 50);
         }
+        function openImageViewer(filename) {
+            const overlay = document.getElementById("image-viewer-overlay");
+            const image = document.getElementById("image-viewer-image");
+            const filenameElement = document.getElementById("image-viewer-filename");
 
+            if (!overlay || !image || !filenameElement) return;
+
+            filenameElement.textContent = filename;
+
+            image.src = `/assets/images/${encodeURIComponent(filename)}`;
+
+            image.alt = filename;
+
+            overlay.style.display = "flex";
+        }
+
+        function closeImageViewer() {
+            const overlay = document.getElementById("image-viewer-overlay");
+            const image = document.getElementById("image-viewer-image");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+            if (image) image.src = ``;
+        }
         function closeImageModal() {
             const overlay = document.getElementById("image-modal-overlay");
 
@@ -410,154 +442,6 @@
 
             pendingImageFilename = null;
         }
-
-        async function insertImageToken() {
-            if (!isAdmin()) {
-                document.querySelector(".image-modal-status").textContent = "Hackers fortunately cannot insert images..."
-                return;
-            }
-
-            const input = document.getElementById("chat-input");
-            const filenameInput = document.getElementById("image-filename-input");
-            const insertButton = document.getElementById("image-insert-button");
-
-            if (!input || !filenameInput) return;
-
-            const filename = filenameInput.value.trim();
-
-            if (!filename) {
-                document.querySelector(".image-modal-status").textContent = "Please enter an actual file name, goose you."
-                return;
-            }
-
-            if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) {
-                document.querySelector(".image-modal-status").textContent = "Sorry! You can't add your own images to avoid inappropriate content. Request an image to '/assets/images' first."
-                return;
-            }
-
-            if (!/^[^?#%]+\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)) {
-                document.querySelector(".image-modal-status").textContent = "Invalid. Just invalid."
-                return;
-            }
-
-            const imagePath = `/assets/images/${encodeURIComponent(filename)}`;
-
-            if (insertButton) {
-                insertButton.disabled = true;
-                insertButton.textContent = "Checking...";
-            }
-
-            try {
-                let response = await fetch(imagePath, {
-                    method: "HEAD",
-                    cache: "no-store"
-                });
-
-                if (response.status === 405 || response.status === 501) {
-                    response = await fetch(imagePath, {
-                        method: "GET",
-                        cache: "no-store"
-                    });
-                }
-
-                if (!response.ok) {
-                    throw new Error("Image not found.");
-                }
-
-                const contentType = response.headers.get("content-type") || "";
-
-                if (!contentType.toLowerCase().startsWith("image/")) {
-                    throw new Error("The file is not an image.");
-                }
-
-                const token = `[image=${filename}] `;
-                const start = input.selectionStart ?? input.value.length;
-                const end = input.selectionEnd ?? input.value.length;
-
-                input.value =
-                    input.value.slice(0, start) +
-                    token +
-                    input.value.slice(end);
-
-                input.focus();
-
-                const newCursorPosition = start + token.length;
-                input.setSelectionRange(newCursorPosition, newCursorPosition);
-
-                closeImageModal();
-            } catch (err) {
-                document.querySelector(".image-modal-status").textContent = "Sorry! Not found in '/assets/images'. Try another?"
-            } finally {
-                if (insertButton) {
-                    insertButton.disabled = false;
-                    insertButton.textContent = "Insert";
-                }
-            }
-        }
-    function openImageViewer(filename) {
-        const overlay = document.getElementById("image-viewer-overlay");
-        const image = document.getElementById("image-viewer-image");
-        const filenameElement = document.getElementById("image-viewer-filename");
-
-        if (!overlay || !image || !filenameElement) return;
-
-        filenameElement.textContent = filename;
-
-        image.src = `/assets/images/${encodeURIComponent(filename)}`;
-
-        image.alt = filename;
-
-        overlay.style.display = "flex";
-    }
-
-    function closeImageViewer() {
-        const overlay = document.getElementById("image-viewer-overlay");
-        const image = document.getElementById("image-viewer-image");
-
-        if (overlay) {
-            overlay.style.display = "none";
-        }
-        if (image) image.src = ``;
-    }
-    async function confirmClearChat() {
-        if (!pendingClearChat) return;
-
-        const clearButton = document.getElementById("clear-confirm-button");
-
-        if (!clearButton) return;
-
-        clearButton.disabled = true;
-        clearButton.textContent = "Clearing...";
-
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8"
-                },
-                body: JSON.stringify({
-                    action: "clear"
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP Error! Status: ${response.status}`);
-            }
-
-            closeClearModal();
-
-            lastMessageData = "";
-            await loadMessages(false);
-
-        } catch (err) {
-            console.error("Failed to clear messages:", err);
-        } finally {
-            clearButton.disabled = false;
-            clearButton.textContent = "Clear All";
-        }
-    }
-
         async function pushEditedMessage() {
             if (!editingMessageTimestamp) return;
 
@@ -609,8 +493,45 @@
                 pushButton.textContent = "Push";
             }
         }
+        async function confirmClearChat() {
+        if (!pendingClearChat) return;
 
-        function renderChatMessage(message) {
+        const clearButton = document.getElementById("clear-confirm-button");
+
+        if (!clearButton) return;
+
+        clearButton.disabled = true;
+        clearButton.textContent = "Clearing...";
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "clear"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+
+            closeClearModal();
+
+            lastMessageData = "";
+            await loadMessages(false);
+
+        } catch (err) {
+            console.error("Failed to clear messages:", err);
+        } finally {
+            clearButton.disabled = false;
+            clearButton.textContent = "Clear All";
+        }
+    }
+    function renderChatMessage(message) {
             const fragment = document.createDocumentFragment();
             const regex = /\[image=([^\]]+)\]/gi;
 
@@ -657,7 +578,183 @@
 
             return fragment;
         }
+    async function insertImageToken() {
+        const IMG_GAS = "https://script.google.com/macros/s/AKfycbzBjj4EGfXq0aO7Zw1tPvV-qxKXjMfiK_TJT8rS7pPNJGe__e1TQ6Bdz_K_0IVZkg2_Yg/exec";
 
+        if (!isAdmin()) {
+            const status = document.querySelector(".image-modal-status");
+            if (status) {
+                status.textContent =
+                    "Hackers fortunately cannot insert images...";
+            }
+            return;
+        }
+
+        const input = document.getElementById("chat-input");
+        const filenameInput = document.getElementById("image-filename-input");
+        const fileInput = document.getElementById("image-file-input");
+        const insertButton = document.getElementById("image-insert-button");
+        const status = document.querySelector(".image-modal-status");
+
+        if (!input || !filenameInput) return;
+
+        const filename = filenameInput.value.trim();
+        const file = fileInput?.files?.[0] || null;
+
+        if (!filename) {
+            status.textContent =
+                "Please enter an actual file name, goose you.";
+            return;
+        }
+
+        if (
+            filename.includes("/") ||
+            filename.includes("\\") ||
+            filename.includes("..")
+        ) {
+            status.textContent =
+                "Sorry! You can't add your own images to avoid inappropriate content.";
+            return;
+        }
+
+        if (!/^[^?#%]+\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)) {
+            status.textContent = "Invalid. Just invalid.";
+            return;
+        }
+
+        if (!file) {
+            const token = `[image='${filename}'] `;
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+
+            input.value =
+                input.value.slice(0, start) +
+                token +
+                input.value.slice(end);
+
+            input.focus();
+
+            const newCursorPosition = start + token.length;
+
+            input.setSelectionRange(
+                newCursorPosition,
+                newCursorPosition
+            );
+
+            status.textContent = "Image token inserted!";
+
+            closeImageModal();
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            status.textContent =
+                "That isn't an image, goose.";
+            return;
+        }
+
+        const MAX_SIZE = 10 * 1024 * 1024;
+
+        if (file.size > MAX_SIZE) {
+            status.textContent =
+                "That image is too large. Maximum size is 10 MB.";
+            return;
+        }
+
+        if (insertButton) {
+            insertButton.disabled = true;
+            insertButton.textContent = "Uploading...";
+        }
+
+        try {
+            const base64Content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    const result = reader.result;
+
+                    if (typeof result !== "string") {
+                        reject(new Error("Could not convert image."));
+                        return;
+                    }
+
+                    const base64 = result.split(",")[1];
+
+                    if (!base64) {
+                        reject(new Error("Could not convert image."));
+                        return;
+                    }
+
+                    resolve(base64);
+                };
+
+                reader.onerror = () => {
+                    reject(new Error("Could not read image."));
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            const response = await fetch(IMG_GAS, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "upload-image",
+                    fileName: filename,
+                    content: base64Content
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || result.status !== "success") {
+                throw new Error(
+                    result.message ||
+                    result.error ||
+                    "Image upload failed."
+                );
+            }
+
+            const token = `[image='${filename}'] `;
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+
+            input.value =
+                input.value.slice(0, start) +
+                token +
+                input.value.slice(end);
+
+            input.focus();
+
+            const newCursorPosition = start + token.length;
+
+            input.setSelectionRange(
+                newCursorPosition,
+                newCursorPosition
+            );
+
+            status.textContent = "Image uploaded!";
+
+            closeImageModal();
+
+        } catch (err) {
+            console.error("Image upload failed:", err);
+
+            status.textContent =
+                "Upload failed: " + err.message;
+
+        } finally {
+            if (insertButton) {
+                insertButton.disabled = false;
+                insertButton.textContent = "Insert";
+            }
+        }
+    }
         async function loadMessages(isInitialLoad = false) {
             const container = document.getElementById("message-container");
             if (!container) return;
@@ -701,6 +798,11 @@
                     container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
                     return;
                 }
+                /*if (window.location.origin !== "worshipthegoose.github.io" || window.location.origin !== "https://worshipthegoose.github.io") {
+                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>You are viewing this site from a pirated source. For your safety, please switch to the original site immediately.</p>";
+                    return;
+                }
+                    */
 
                 const devUsername = getCookie("dev-username");
                 const currentMessageData = JSON.stringify(data);
@@ -709,11 +811,7 @@
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
 
-                    if (
-                        currentTabHash !== "#chatbox" &&
-                        currentTabHash !== "#/chatbox" &&
-                        latestMessage.username !== devUsername
-                    ) {
+                    if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
                     }
                 }
@@ -734,138 +832,44 @@
                 container.innerHTML = "";
 
                 let lastHeaderDate = "";
-                let currentMessageGroup = [];
-                let currentManualHeader = null;
-
                 const posts = [...data].reverse();
 
-                const renderDateHeader = (dateHeaderString) => {
-                    const headerDiv = document.createElement("div");
-
-                    headerDiv.style.fontWeight = "bold";
-                    headerDiv.style.textAlign = "center";
-                    headerDiv.style.padding = "8px 0";
-                    headerDiv.style.margin = "0 8px 8px 8px";
-                    headerDiv.style.fontSize = "17px";
-                    headerDiv.style.clear = "both";
-
-                    if (getCookie('canada_goose') === 'true') {
-                        headerDiv.style.borderBottom = "2px ridge white";
-                        headerDiv.style.color = "white";
-                    } else {
-                        headerDiv.style.borderBottom = "2px ridge #111";
-                        headerDiv.style.color = "#111";
-                    }
-
-                    headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
-                    headerDiv.style.userSelect = "none";
-
-                    container.appendChild(headerDiv);
-                };
-
-                const renderManualHeader = (post) => {
-                    const headerText = String(post.message || "")
-                        .trim()
-                        .match(/^\[header=([^\]]+)\]$/i)[1]
-                        .trim();
-
-                    const headerWrapper = document.createElement("div");
-
-                    headerWrapper.style.position = "relative";
-                    headerWrapper.style.display = "block";
-                    headerWrapper.style.width = "100%";
-                    headerWrapper.style.boxSizing = "border-box";
-                    headerWrapper.style.margin = "0";
-                    headerWrapper.style.clear = "both";
-
-                    const headerDiv = document.createElement("div");
-
-                    headerDiv.style.fontWeight = "bold";
-                    headerDiv.style.textAlign = "center";
-                    headerDiv.style.padding = "8px 0";
-                    headerDiv.style.margin = "0 8px";
-                    headerDiv.style.fontSize = "17px";
-                    headerDiv.style.userSelect = "none";
-
-                    if (getCookie("canada_goose") === "true") {
-                        headerDiv.style.borderBottom = "2px ridge white";
-                        headerDiv.style.color = "white";
-                    } else {
-                        headerDiv.style.borderBottom = "2px ridge #111";
-                        headerDiv.style.color = "#111";
-                    }
-
-                    headerDiv.textContent = `[!] ${headerText} [!]`;
-
-                    if (showAdminFeatures()) {
-                        const editButton = document.createElement("button");
-
-                        editButton.type = "button";
-                        editButton.textContent = "✦ Edit";
-                        editButton.className = "admin-only-feature";
-
-                        editButton.style.position = "absolute";
-                        editButton.style.right = "72px";
-                        editButton.style.top = "50%";
-                        editButton.style.transform = "translateY(-50%)";
-                        editButton.style.zIndex = "2";
-
-                        editButton.addEventListener("click", () => {
-                            openEditModal(post);
-                        });
-
-                        headerWrapper.appendChild(editButton);
-
-                        const killButton = document.createElement("button");
-
-                        killButton.type = "button";
-                        killButton.innerHTML = "✦ 🗑";
-                        killButton.className = "message-delete-button admin-only-feature";
-
-                        killButton.style.position = "absolute";
-                        killButton.style.right = "18px";
-                        killButton.style.top = "50%";
-                        killButton.style.transform = "translateY(-50%)";
-                        killButton.style.zIndex = "2";
-
-                        killButton.addEventListener("click", () => {
-                            openDeleteModal(post.timestamp, headerWrapper, post);
-                        });
-
-                        headerWrapper.appendChild(killButton);
-                    }
-
-                    headerWrapper.appendChild(headerDiv);
-
-                    const cutoffDiv = document.createElement("div");
-
-                    cutoffDiv.style.display = "block";
-                    cutoffDiv.style.width = "calc(100% - 16px)";
-                    cutoffDiv.style.height = "0";
-                    cutoffDiv.style.paddingBottom = "6.5px";
-                    cutoffDiv.style.borderBottom =
-                        getCookie("canada_goose") === "true"
-                            ? "2px dashed white"
-                            : "2px dashed #111";
-                    cutoffDiv.style.margin = "8px";
-                    cutoffDiv.style.clear = "both";
-
-                    return {
-                        headerWrapper,
-                        cutoffDiv
-                    };
-                };
-
-                const renderMessage = (post) => {
+                posts.forEach(post => {
                     const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
 
-                    const msgDiv = document.createElement("div");
+                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
 
-                    msgDiv.style.display = "block";
-                    msgDiv.style.position = "relative";
-                    msgDiv.style.clear = "both";
-                    msgDiv.style.width = "100%";
-                    msgDiv.style.boxSizing = "border-box";
+                    if (dateHeaderString !== lastHeaderDate) {
+                        lastHeaderDate = dateHeaderString;
+
+                        const headerDiv = document.createElement("div");
+                        headerDiv.style.fontWeight = "bold";
+                        headerDiv.style.textAlign = "center";
+                        headerDiv.style.padding = "8px 0";
+                        headerDiv.style.margin = "0 8px 8px 8px";
+                        headerDiv.style.fontSize = "17px";
+
+                        if (getCookie('canada_goose') === 'true') {
+                            headerDiv.style.borderBottom = "2px ridge white";
+                            headerDiv.style.color = "white";
+                        } else {
+                            headerDiv.style.borderBottom = "2px ridge #111";
+                            headerDiv.style.color = "#111";
+                        }
+
+                        headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                        headerDiv.style.userSelect = "none";
+
+                        container.appendChild(headerDiv);
+                    }
+
+                    const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
 
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
@@ -877,41 +881,28 @@
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (showAdminFeatures()) {
-                        const editButton = document.createElement("button");
-
-                        editButton.type = "button";
-                        editButton.textContent = "✦ Edit";
-                        editButton.className = "admin-only-feature";
-
-                        editButton.style.position = "absolute";
-                        editButton.style.right = "72px";
-                        editButton.style.top = "50%";
-                        editButton.style.transform = "translateY(-50%)";
-                        editButton.style.zIndex = "2";
-
-                        editButton.addEventListener("click", () => {
-                            openEditModal(post);
-                        });
-
-                        msgDiv.appendChild(editButton);
-
                         const killButton = document.createElement("button");
-
                         killButton.type = "button";
                         killButton.innerHTML = "✦ 🗑";
                         killButton.className = "message-delete-button admin-only-feature";
-
-                        killButton.style.position = "absolute";
-                        killButton.style.right = "18px";
-                        killButton.style.top = "50%";
-                        killButton.style.transform = "translateY(-50%)";
-                        killButton.style.zIndex = "2";
 
                         killButton.addEventListener("click", () => {
                             openDeleteModal(post.timestamp, msgDiv, post);
                         });
 
                         msgDiv.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal(post);
+                        });
+
+                        msgDiv.appendChild(editButton);
                     }
 
                     const textSpan = document.createElement("span");
@@ -919,9 +910,9 @@
 
                     if (post.username === getCookie("dev-username")) {
                         if (getCookie("canada_goose") === "true") {
-                            ifUsername = "border-bottom:1.7px solid white !important;";
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
                         } else {
-                            ifUsername = "color:#222";
+                            ifUsername = " style='color:#222'";
                         }
                     } else {
                         ifUsername = "";
@@ -932,7 +923,7 @@
                     usernameStrong.style.marginRight = "3px";
 
                     const usernameSpan = document.createElement("span");
-                    usernameSpan.setAttribute("style", ifUsername);
+                    usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
                     usernameSpan.textContent = `${hyperTag}@${post.username}:`;
 
                     usernameStrong.appendChild(usernameSpan);
@@ -942,67 +933,8 @@
 
                     msgDiv.appendChild(textSpan);
 
-                    return msgDiv;
-                };
-
-                const flushGroup = () => {
-                    if (currentManualHeader) {
-                        const { headerWrapper, cutoffDiv } = renderManualHeader(currentManualHeader);
-
-                        container.appendChild(headerWrapper);
-                        container.appendChild(cutoffDiv);
-
-                        currentMessageGroup.reverse().forEach((message) => {
-                            container.appendChild(message);
-                        });
-
-                        currentManualHeader = null;
-                        currentMessageGroup = [];
-                        return;
-                    }
-
-                    currentMessageGroup.reverse().forEach((message) => {
-                        container.appendChild(message);
-                    });
-
-                    currentMessageGroup = [];
-                };
-
-                for (const post of posts) {
-                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
-
-                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
-                        timeZone: "America/Los_Angeles",
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric"
-                    });
-
-                    const headerMatch = String(post.message || "")
-                        .trim()
-                        .match(/^\[header=([^\]]+)\]$/i);
-
-                    if (headerMatch && headerMatch[1].trim()) {
-                        if (!lastHeaderDate) {
-                            lastHeaderDate = dateHeaderString;
-                            renderDateHeader(dateHeaderString);
-                        }
-
-                        currentManualHeader = post;
-                        continue;
-                    }
-
-                    if (dateHeaderString !== lastHeaderDate) {
-                        flushGroup();
-                        lastHeaderDate = dateHeaderString;
-                        renderDateHeader(dateHeaderString);
-                    }
-
-                    currentMessageGroup.push(renderMessage(post));
-                }
-
-                flushGroup();
+                    container.appendChild(msgDiv);
+                });
 
                 updateAdminFeatures();
 
@@ -1011,6 +943,7 @@
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
             }
         }
+
         document.addEventListener("DOMContentLoaded", function() {
 
             let disclaimerTextContent;
@@ -1744,7 +1677,7 @@
                 <div id="message-container"></div>
 
                 <form id="chat-form">
-                    <input maxlength="255" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
+                    <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear</button>
                     <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
@@ -1784,7 +1717,7 @@
         <div id="edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
             <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
             <h2 id="edit-modal-title">Edit Message</h2>
-            <input maxlength="255" id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
+            <input maxLength="150" id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
             <div class="edit-modal-buttons">
                 <button type="button" id="edit-cancel-button">Cancel</button>
                 <button type="button" id="edit-push-button">Push</button>
@@ -1821,7 +1754,9 @@
             <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
             <h2 style="margin:7px;margin-bottom:7px !important" id="image-modal-title">Paste Image</h2>
             <p style="margin-bottom: 5px !important;" class="image-modal-status">What image would you like to paste?</p>
-            <input maxlength="255" type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            <input maxLength="150" type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            <p>...if your image doesn't exist, add a new one!</p>
+            <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp,image/svg+xml">
             <div class="edit-modal-buttons">
                 <button type="button" id="image-cancel-button">Cancel</button>
                 <button type="button" id="image-insert-button">Insert</button>
