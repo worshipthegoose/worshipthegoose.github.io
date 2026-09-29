@@ -734,155 +734,130 @@
                 container.innerHTML = "";
 
                 let lastHeaderDate = "";
-                let currentMessageGroupStart = null;
+                let currentMessageGroup = [];
+                let currentManualHeader = null;
 
                 const posts = [...data].reverse();
 
-                posts.forEach(post => {
-                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+                const renderDateHeader = (dateHeaderString) => {
+                    const headerDiv = document.createElement("div");
 
-                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
-                        timeZone: "America/Los_Angeles",
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric"
-                    });
+                    headerDiv.style.fontWeight = "bold";
+                    headerDiv.style.textAlign = "center";
+                    headerDiv.style.padding = "8px 0";
+                    headerDiv.style.margin = "0 8px 8px 8px";
+                    headerDiv.style.fontSize = "17px";
+                    headerDiv.style.clear = "both";
 
-                    const headerMatch = String(post.message || "")
+                    if (getCookie('canada_goose') === 'true') {
+                        headerDiv.style.borderBottom = "2px ridge white";
+                        headerDiv.style.color = "white";
+                    } else {
+                        headerDiv.style.borderBottom = "2px ridge #111";
+                        headerDiv.style.color = "#111";
+                    }
+
+                    headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                    headerDiv.style.userSelect = "none";
+
+                    container.appendChild(headerDiv);
+                };
+
+                const renderManualHeader = (post) => {
+                    const headerText = String(post.message || "")
                         .trim()
-                        .match(/^\[header=([^\]]+)\]$/i);
+                        .match(/^\[header=([^\]]+)\]$/i)[1]
+                        .trim();
 
-                    if (headerMatch && headerMatch[1].trim()) {
-                        const headerText = headerMatch[1].trim();
+                    const headerWrapper = document.createElement("div");
 
-                        const headerWrapper = document.createElement("div");
+                    headerWrapper.style.position = "relative";
+                    headerWrapper.style.display = "block";
+                    headerWrapper.style.width = "100%";
+                    headerWrapper.style.boxSizing = "border-box";
+                    headerWrapper.style.margin = "0";
+                    headerWrapper.style.clear = "both";
 
-                        headerWrapper.style.position = "relative";
-                        headerWrapper.style.display = "block";
-                        headerWrapper.style.width = "100%";
-                        headerWrapper.style.boxSizing = "border-box";
-                        headerWrapper.style.margin = "0 0 8px 0";
-                        headerWrapper.style.clear = "both";
-                        headerWrapper.style.overflow = "hidden";
+                    const headerDiv = document.createElement("div");
 
-                        const headerDiv = document.createElement("div");
+                    headerDiv.style.fontWeight = "bold";
+                    headerDiv.style.textAlign = "center";
+                    headerDiv.style.padding = "8px 0";
+                    headerDiv.style.margin = "0 8px";
+                    headerDiv.style.fontSize = "17px";
+                    headerDiv.style.userSelect = "none";
 
-                        headerDiv.style.fontWeight = "bold";
-                        headerDiv.style.textAlign = "center";
-                        headerDiv.style.padding = "8px 0";
-                        headerDiv.style.width = "100%";
-                        headerDiv.style.boxSizing = "border-box";
-                        headerDiv.style.margin = "0 8px";
-                        headerDiv.style.fontSize = "17px";
-                        headerDiv.style.userSelect = "none";
-
-                        if (getCookie("canada_goose") === "true") {
-                            headerDiv.style.borderBottom = "2px ridge white";
-                            headerDiv.style.color = "white";
-                        } else {
-                            headerDiv.style.borderBottom = "2px ridge #111";
-                            headerDiv.style.color = "#111";
-                        }
-
-                        headerDiv.textContent = `[!] ${headerText} [!]`;
-
-                        if (showAdminFeatures()) {
-                            const editButton = document.createElement("button");
-
-                            editButton.type = "button";
-                            editButton.textContent = "✦ Edit";
-                            editButton.className = "admin-only-feature";
-
-                            editButton.style.position = "absolute";
-                            editButton.style.right = "72px";
-                            editButton.style.top = "50%";
-                            editButton.style.transform = "translateY(-50%)";
-                            editButton.style.zIndex = "2";
-
-                            editButton.addEventListener("click", () => {
-                                openEditModal(post);
-                            });
-
-                            headerWrapper.appendChild(editButton);
-
-                            const killButton = document.createElement("button");
-
-                            killButton.type = "button";
-                            killButton.innerHTML = "✦ 🗑";
-                            killButton.className = "message-delete-button admin-only-feature";
-
-                            killButton.style.position = "absolute";
-                            killButton.style.right = "18px";
-                            killButton.style.top = "50%";
-                            killButton.style.transform = "translateY(-50%)";
-                            killButton.style.zIndex = "2";
-
-                            killButton.addEventListener("click", () => {
-                                openDeleteModal(post.timestamp, headerWrapper, post);
-                            });
-
-                            headerWrapper.appendChild(killButton);
-                        }
-
-                        headerWrapper.appendChild(headerDiv);
-
-                        const cutoffDiv = document.createElement("div");
-
-                        cutoffDiv.style.display = "block";
-                        cutoffDiv.style.width = "calc(100% - 16px)";
-                        cutoffDiv.style.height = "0";
-                        cutoffDiv.style.paddingBottom = "6.5px";
-                        cutoffDiv.style.borderBottom =
-                            getCookie("canada_goose") === "true"
-                                ? "2px dashed white"
-                                : "2px dashed #111";
-                        cutoffDiv.style.margin = "8px";
-                        cutoffDiv.style.clear = "both";
-
-                        /*
-                        if (currentMessageGroupStart) {
-                            container.insertBefore(headerWrapper, currentMessageGroupStart);
-                            container.insertBefore(cutoffDiv, currentMessageGroupStart);
-                        } else {
-                            container.appendChild(headerWrapper);
-                            container.appendChild(cutoffDiv);
-                        }
-                        */
-                       container.appendChild(headerWrapper);
-                        container.appendChild(cutoffDiv);
-
-
-                        currentMessageGroupStart = null;
-
-                        return;
+                    if (getCookie("canada_goose") === "true") {
+                        headerDiv.style.borderBottom = "2px ridge white";
+                        headerDiv.style.color = "white";
+                    } else {
+                        headerDiv.style.borderBottom = "2px ridge #111";
+                        headerDiv.style.color = "#111";
                     }
-                    if (dateHeaderString !== lastHeaderDate) {
-                        lastHeaderDate = dateHeaderString;
-                        currentMessageGroupStart = null;
 
-                        const headerDiv = document.createElement("div");
+                    headerDiv.textContent = `[!] ${headerText} [!]`;
 
-                        headerDiv.style.fontWeight = "bold";
-                        headerDiv.style.textAlign = "center";
-                        headerDiv.style.padding = "8px 0";
-                        headerDiv.style.margin = "0 8px 8px 8px";
-                        headerDiv.style.fontSize = "17px";
-                        headerDiv.style.clear = "both";
+                    if (showAdminFeatures()) {
+                        const editButton = document.createElement("button");
 
-                        if (getCookie('canada_goose') === 'true') {
-                            headerDiv.style.borderBottom = "2px ridge white";
-                            headerDiv.style.color = "white";
-                        } else {
-                            headerDiv.style.borderBottom = "2px ridge #111";
-                            headerDiv.style.color = "#111";
-                        }
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.className = "admin-only-feature";
 
-                        headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
-                        headerDiv.style.userSelect = "none";
+                        editButton.style.position = "absolute";
+                        editButton.style.right = "72px";
+                        editButton.style.top = "50%";
+                        editButton.style.transform = "translateY(-50%)";
+                        editButton.style.zIndex = "2";
 
-                        container.appendChild(headerDiv);
+                        editButton.addEventListener("click", () => {
+                            openEditModal(post);
+                        });
+
+                        headerWrapper.appendChild(editButton);
+
+                        const killButton = document.createElement("button");
+
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.style.position = "absolute";
+                        killButton.style.right = "18px";
+                        killButton.style.top = "50%";
+                        killButton.style.transform = "translateY(-50%)";
+                        killButton.style.zIndex = "2";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, headerWrapper, post);
+                        });
+
+                        headerWrapper.appendChild(killButton);
                     }
+
+                    headerWrapper.appendChild(headerDiv);
+
+                    const cutoffDiv = document.createElement("div");
+
+                    cutoffDiv.style.display = "block";
+                    cutoffDiv.style.width = "calc(100% - 16px)";
+                    cutoffDiv.style.height = "0";
+                    cutoffDiv.style.paddingBottom = "6.5px";
+                    cutoffDiv.style.borderBottom =
+                        getCookie("canada_goose") === "true"
+                            ? "2px dashed white"
+                            : "2px dashed #111";
+                    cutoffDiv.style.margin = "8px";
+                    cutoffDiv.style.clear = "both";
+
+                    return {
+                        headerWrapper,
+                        cutoffDiv
+                    };
+                };
+
+                const renderMessage = (post) => {
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
 
                     const msgDiv = document.createElement("div");
 
@@ -893,10 +868,6 @@
                     msgDiv.style.boxSizing = "border-box";
                     msgDiv.style.marginBottom = "8px";
 
-                    if (!currentMessageGroupStart) {
-                        currentMessageGroupStart = msgDiv;
-                    }
-
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
                     });
@@ -906,30 +877,41 @@
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (showAdminFeatures()) {
-                        const killButton = document.createElement("button");
-
-                        killButton.type = "button";
-                        killButton.innerHTML = "✦ 🗑";
-                        killButton.className = "message-delete-button admin-only-feature";
-
-                        killButton.addEventListener("click", () => {
-                            openDeleteModal(post.timestamp, msgDiv, post);
-                        });
-
-                        msgDiv.appendChild(killButton);
-
                         const editButton = document.createElement("button");
 
                         editButton.type = "button";
                         editButton.textContent = "✦ Edit";
-                        editButton.style.marginRight = "6px";
                         editButton.className = "admin-only-feature";
+
+                        editButton.style.position = "absolute";
+                        editButton.style.right = "72px";
+                        editButton.style.top = "50%";
+                        editButton.style.transform = "translateY(-50%)";
+                        editButton.style.zIndex = "2";
 
                         editButton.addEventListener("click", () => {
                             openEditModal(post);
                         });
 
                         msgDiv.appendChild(editButton);
+
+                        const killButton = document.createElement("button");
+
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.style.position = "absolute";
+                        killButton.style.right = "18px";
+                        killButton.style.top = "50%";
+                        killButton.style.transform = "translateY(-50%)";
+                        killButton.style.zIndex = "2";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, msgDiv, post);
+                        });
+
+                        msgDiv.appendChild(killButton);
                     }
 
                     const textSpan = document.createElement("span");
@@ -959,8 +941,68 @@
                     textSpan.appendChild(renderChatMessage(post.message || ""));
 
                     msgDiv.appendChild(textSpan);
-                    container.appendChild(msgDiv);
-                });
+
+                    return msgDiv;
+                };
+
+                const flushGroup = () => {
+                    if (currentManualHeader) {
+                        const { headerWrapper, cutoffDiv } = renderManualHeader(currentManualHeader);
+
+                        container.appendChild(headerWrapper);
+                        container.appendChild(cutoffDiv);
+
+                        currentMessageGroup.reverse().forEach((message) => {
+                            container.appendChild(message);
+                        });
+
+                        currentManualHeader = null;
+                        currentMessageGroup = [];
+                        return;
+                    }
+
+                    currentMessageGroup.reverse().forEach((message) => {
+                        container.appendChild(message);
+                    });
+
+                    currentMessageGroup = [];
+                };
+
+                for (const post of posts) {
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
+
+                    const headerMatch = String(post.message || "")
+                        .trim()
+                        .match(/^\[header=([^\]]+)\]$/i);
+
+                    if (headerMatch && headerMatch[1].trim()) {
+                        if (!lastHeaderDate) {
+                            lastHeaderDate = dateHeaderString;
+                            renderDateHeader(dateHeaderString);
+                        }
+
+                        currentManualHeader = post;
+                        continue;
+                    }
+
+                    if (dateHeaderString !== lastHeaderDate) {
+                        flushGroup();
+                        lastHeaderDate = dateHeaderString;
+                        renderDateHeader(dateHeaderString);
+                    }
+
+                    currentMessageGroup.push(renderMessage(post));
+                }
+
+                flushGroup();
 
                 updateAdminFeatures();
 
@@ -969,7 +1011,6 @@
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
             }
         }
-
         document.addEventListener("DOMContentLoaded", function() {
 
             let disclaimerTextContent;
