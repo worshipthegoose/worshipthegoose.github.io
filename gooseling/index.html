@@ -840,6 +840,7 @@
                         cutoffDiv.style.margin = "8px";
                         cutoffDiv.style.clear = "both";
 
+                        /*
                         if (currentMessageGroupStart) {
                             container.insertBefore(headerWrapper, currentMessageGroupStart);
                             container.insertBefore(cutoffDiv, currentMessageGroupStart);
@@ -847,6 +848,10 @@
                             container.appendChild(headerWrapper);
                             container.appendChild(cutoffDiv);
                         }
+                        */
+                       container.appendChild(headerWrapper);
+                        container.appendChild(cutoffDiv);
+
 
                         currentMessageGroupStart = null;
 
