@@ -757,6 +757,7 @@
                         const headerText = headerMatch[1].trim();
 
                         const headerWrapper = document.createElement("div");
+
                         headerWrapper.style.position = "relative";
                         headerWrapper.style.display = "block";
                         headerWrapper.style.width = "100%";
@@ -785,9 +786,26 @@
                         }
 
                         headerDiv.textContent = `[!] ${headerText} [!]`;
-                        /* 
-                        OLD: KEEP FOR REF
+
                         if (showAdminFeatures()) {
+                            const editButton = document.createElement("button");
+
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.className = "admin-only-feature";
+
+                            editButton.style.position = "absolute";
+                            editButton.style.right = "72px";
+                            editButton.style.top = "50%";
+                            editButton.style.transform = "translateY(-50%)";
+                            editButton.style.zIndex = "2";
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal(post);
+                            });
+
+                            headerWrapper.appendChild(editButton);
+
                             const killButton = document.createElement("button");
 
                             killButton.type = "button";
@@ -806,7 +824,7 @@
 
                             headerWrapper.appendChild(killButton);
                         }
-                        */
+
                         headerWrapper.appendChild(headerDiv);
 
                         const cutoffDiv = document.createElement("div");
