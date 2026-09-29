@@ -770,13 +770,17 @@
 
                         headerWrapper.style.position = "relative";
                         headerWrapper.style.marginBottom = "8px";
+                        headerWrapper.style.display = "flex";
+                        headerWrapper.style.flexDirection = "row";
+                        headerWrapper.style.justifyContent = "center";
+                        headerWrapper.style.alignItems = "center";
 
                         const headerDiv = document.createElement("div");
 
                         headerDiv.style.fontWeight = "bold";
                         headerDiv.style.textAlign = "center";
                         headerDiv.style.padding = "8px 0";
-                        headerDiv.style.fontStyle = "italic";
+                        headerDiv.style.width = "100%;"
                         headerDiv.style.margin = "0 8px";
                         headerDiv.style.fontSize = "17px";
                         headerDiv.style.userSelect = "none";
@@ -797,8 +801,6 @@
                             killButton.type = "button";
                             killButton.innerHTML = "✦ 🗑";
                             killButton.className = "message-delete-button admin-only-feature";
-                            headerWrapper.style.display = "flex";
-                            headerWrapper.style.flexDirection = "row";
 
                             killButton.addEventListener("click", () => {
                                 openDeleteModal(post.timestamp, headerWrapper, post);
