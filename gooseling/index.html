@@ -625,7 +625,7 @@
         }
 
         if (!file) {
-            const token = `[image='${filename}'] `;
+            const token = `[image=${filename}] `;
 
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
@@ -1757,8 +1757,10 @@
             <h2 style="margin:7px;margin-bottom:7px !important" id="image-modal-title">Paste Image</h2>
             <p style="margin-bottom: 5px !important;" class="image-modal-status">What image would you like to paste?</p>
             <input maxLength="150" type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            <!--
             <p>...if your image doesn't exist, add a new one!</p>
             <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp,image/svg+xml">
+            -->
             <div class="edit-modal-buttons">
                 <button type="button" id="image-cancel-button">Cancel</button>
                 <button type="button" id="image-insert-button">Insert</button>
