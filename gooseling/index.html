@@ -458,6 +458,7 @@
             }
 
             pushButton.disabled = true;
+            input.disabled = true;
             pushButton.textContent = "Pushing...";
 
             try {
@@ -490,6 +491,7 @@
                 alert("Failed to edit message: " + err.message);
             } finally {
                 pushButton.disabled = false;
+                input.disabled = false;
                 pushButton.textContent = "Push";
             }
         }
