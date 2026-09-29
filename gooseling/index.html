@@ -785,7 +785,8 @@
                         }
 
                         headerDiv.textContent = `[!] ${headerText} [!]`;
-
+                        /* 
+                        OLD: KEEP FOR REF
                         if (showAdminFeatures()) {
                             const killButton = document.createElement("button");
 
@@ -805,7 +806,7 @@
 
                             headerWrapper.appendChild(killButton);
                         }
-
+                        */
                         headerWrapper.appendChild(headerDiv);
 
                         const cutoffDiv = document.createElement("div");
@@ -833,7 +834,6 @@
 
                         return;
                     }
-
                     if (dateHeaderString !== lastHeaderDate) {
                         lastHeaderDate = dateHeaderString;
                         currentMessageGroupStart = null;
