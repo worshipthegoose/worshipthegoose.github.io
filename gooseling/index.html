@@ -798,6 +798,7 @@
                         const headerWrapper = document.createElement("div");
                         headerWrapper.style.position = "relative";
                         headerWrapper.style.marginBottom = "8px";
+                        headerWrapper.style.borderBottom = "1.5px solid black";
                         const manualHeaderDiv = document.createElement("div");
                         manualHeaderDiv.style.fontWeight = "bold";
                         manualHeaderDiv.style.textAlign = "center";
@@ -806,6 +807,8 @@
                         manualHeaderDiv.style.margin = "0 8px";
                         manualHeaderDiv.style.fontSize = "17px";
                         manualHeaderDiv.style.userSelect = "none";
+                        manualHeaderDiv.style.borderBottom = "1.5px solid black";
+                        
                         if (getCookie("canada_goose") === "true") {
                             manualHeaderDiv.style.color = "white";
                         } else {
@@ -829,7 +832,7 @@
                         container.appendChild(headerWrapper);
                         return;
                     }
-                    
+
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
