@@ -736,6 +736,7 @@
                 container.innerHTML = "";
                 let lastHeaderDate = "";
                 let announcementActive = false;
+                let headerWrapper = null; // For now...
                 const posts = [...data].reverse();
                 posts.forEach((post, index) => {
                     const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
@@ -768,10 +769,10 @@
                         }
                         lastHeaderDate = dateHeaderString;
                         const dateHeaderDiv = document.createElement("div");
-                        dateHeaderDiv.style.fontWeight = "bold";
+                        dateHeaderDiv.style.fontWeight = "bolder";
                         dateHeaderDiv.style.textAlign = "center";
                         dateHeaderDiv.style.padding = "8px 0";
-                        dateHeaderDiv.style.margin = "0 8px 8px 8px";
+                        dateHeaderDiv.style.margin = "0 8px 3px 8px";
                         dateHeaderDiv.style.fontSize = "17px";
                         dateHeaderDiv.style.userSelect = "none";
                         if (getCookie("canada_goose") === "true") {
@@ -795,7 +796,7 @@
                         }
                         announcementActive = true;
                         const headerText = headerMatch[1].trim();
-                        const headerWrapper = document.createElement("div");
+                        headerWrapper = document.createElement("div");
                         headerWrapper.style.position = "relative";
                         headerWrapper.style.marginBottom = "8px";
                         headerWrapper.style.borderBottom = "1.5px solid black";
@@ -804,7 +805,7 @@
                         manualHeaderDiv.style.textAlign = "center";
                         manualHeaderDiv.style.padding = "8px 0";
                         /* manualHeaderDiv.style.fontStyle = "italic"; Goose this goose this is pathetic and so are commments!!!!!!!!!!!!!!!!!!!!!!!!! */
-                        manualHeaderDiv.style.margin = "0 8px";
+                        manualHeaderDiv.style.margin = "0 5px";
                         manualHeaderDiv.style.fontSize = "17px";
                         manualHeaderDiv.style.userSelect = "none";
                         manualHeaderDiv.style.borderBottom = "1.5px solid black";
