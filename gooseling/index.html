@@ -883,30 +883,42 @@
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (showAdminFeatures()) {
+                        // Add the edit btn!!! Also I still hate comments but i love fun slides even though Cora 
+                        const editButton = document.createElement("button");
+
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.className = "admin-only-feature";
+
+                        editButton.style.position = "absolute";
+                        editButton.style.right = "72px";
+                        editButton.style.top = "50%";
+                        editButton.style.transform = "translateY(-50%)";
+                        editButton.style.zIndex = "2";
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal(post);
+                        });
+
+                        headerWrapper.appendChild(editButton);
+
                         const killButton = document.createElement("button");
 
                         killButton.type = "button";
                         killButton.innerHTML = "✦ 🗑";
                         killButton.className = "message-delete-button admin-only-feature";
 
+                        killButton.style.position = "absolute";
+                        killButton.style.right = "18px";
+                        killButton.style.top = "50%";
+                        killButton.style.transform = "translateY(-50%)";
+                        killButton.style.zIndex = "2";
+
                         killButton.addEventListener("click", () => {
-                            openDeleteModal(post.timestamp, msgDiv, post);
+                            openDeleteModal(post.timestamp, headerWrapper, post);
                         });
 
-                        msgDiv.appendChild(killButton);
-
-                        const editButton = document.createElement("button");
-
-                        editButton.type = "button";
-                        editButton.textContent = "✦ Edit";
-                        editButton.style.marginRight = "6px";
-                        editButton.className = "admin-only-feature";
-
-                        editButton.addEventListener("click", () => {
-                            openEditModal(post);
-                        });
-
-                        msgDiv.appendChild(editButton);
+                        headerWrapper.appendChild(killButton);
                     }
 
                     const textSpan = document.createElement("span");
