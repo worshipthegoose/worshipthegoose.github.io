@@ -709,7 +709,11 @@
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
 
-                    if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
+                    if (
+                        currentTabHash !== "#chatbox" &&
+                        currentTabHash !== "#/chatbox" &&
+                        latestMessage.username !== devUsername
+                    ) {
                         setUnreadStatus(true);
                     }
                 }
@@ -753,12 +757,15 @@
                         if (announcementActive) {
                             const cutoffDiv = document.createElement("div");
 
+                            cutoffDiv.style.display = "block";
+                            cutoffDiv.style.width = "calc(100% - 16px)";
+                            cutoffDiv.style.height = "0";
                             cutoffDiv.style.borderBottom =
                                 getCookie("canada_goose") === "true"
                                     ? "2px ridge white"
                                     : "2px ridge #111";
-
-                            cutoffDiv.style.margin = "8px 8px 8px 8px";
+                            cutoffDiv.style.margin = "8px";
+                            cutoffDiv.style.clear = "both";
 
                             container.appendChild(cutoffDiv);
                         }
@@ -769,18 +776,20 @@
                         const headerWrapper = document.createElement("div");
 
                         headerWrapper.style.position = "relative";
-                        headerWrapper.style.marginBottom = "8px";
-                        headerWrapper.style.display = "flex";
-                        headerWrapper.style.flexDirection = "row";
-                        headerWrapper.style.justifyContent = "center";
-                        headerWrapper.style.alignItems = "center";
+                        headerWrapper.style.display = "block";
+                        headerWrapper.style.width = "100%";
+                        headerWrapper.style.boxSizing = "border-box";
+                        headerWrapper.style.margin = "0 0 8px 0";
+                        headerWrapper.style.clear = "both";
+                        headerWrapper.style.overflow = "hidden";
 
                         const headerDiv = document.createElement("div");
 
                         headerDiv.style.fontWeight = "bold";
                         headerDiv.style.textAlign = "center";
                         headerDiv.style.padding = "8px 0";
-                        headerDiv.style.width = "100%;"
+                        headerDiv.style.width = "100%";
+                        headerDiv.style.boxSizing = "border-box";
                         headerDiv.style.margin = "0 8px";
                         headerDiv.style.fontSize = "17px";
                         headerDiv.style.userSelect = "none";
@@ -802,6 +811,12 @@
                             killButton.innerHTML = "✦ 🗑";
                             killButton.className = "message-delete-button admin-only-feature";
 
+                            killButton.style.position = "absolute";
+                            killButton.style.right = "8px";
+                            killButton.style.top = "50%";
+                            killButton.style.transform = "translateY(-50%)";
+                            killButton.style.zIndex = "2";
+
                             killButton.addEventListener("click", () => {
                                 openDeleteModal(post.timestamp, headerWrapper, post);
                             });
@@ -818,17 +833,21 @@
                     if (announcementActive) {
                         const cutoffDiv = document.createElement("div");
 
+                        cutoffDiv.style.display = "block";
+                        cutoffDiv.style.width = "calc(100% - 16px)";
+                        cutoffDiv.style.height = "0";
                         cutoffDiv.style.borderBottom =
                             getCookie("canada_goose") === "true"
                                 ? "2px ridge white"
                                 : "2px ridge #111";
-
-                        cutoffDiv.style.margin = "8px 8px 8px 8px";
+                        cutoffDiv.style.margin = "8px";
+                        cutoffDiv.style.clear = "both";
 
                         container.appendChild(cutoffDiv);
 
                         announcementActive = false;
                     }
+
                     if (dateHeaderString !== lastHeaderDate) {
                         lastHeaderDate = dateHeaderString;
 
@@ -839,6 +858,7 @@
                         headerDiv.style.padding = "8px 0";
                         headerDiv.style.margin = "0 8px 8px 8px";
                         headerDiv.style.fontSize = "17px";
+                        headerDiv.style.clear = "both";
 
                         if (getCookie('canada_goose') === 'true') {
                             headerDiv.style.borderBottom = "2px ridge white";
@@ -855,6 +875,12 @@
                     }
 
                     const msgDiv = document.createElement("div");
+
+                    msgDiv.style.display = "block";
+                    msgDiv.style.position = "relative";
+                    msgDiv.style.clear = "both";
+                    msgDiv.style.width = "100%";
+                    msgDiv.style.boxSizing = "border-box";
                     msgDiv.style.marginBottom = "8px";
 
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
@@ -870,9 +896,9 @@
 
                     if (post.username === getCookie("dev-username")) {
                         if (getCookie("canada_goose") === "true") {
-                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                            ifUsername = "border-bottom:1.7px solid white !important;";
                         } else {
-                            ifUsername = " style='color:#222'";
+                            ifUsername = "color:#222";
                         }
                     } else {
                         ifUsername = "";
@@ -883,7 +909,7 @@
                     usernameStrong.style.marginRight = "3px";
 
                     const usernameSpan = document.createElement("span");
-                    usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                    usernameSpan.setAttribute("style", ifUsername);
                     usernameSpan.textContent = `${hyperTag}@${post.username}:`;
 
                     usernameStrong.appendChild(usernameSpan);
@@ -892,19 +918,21 @@
                     textSpan.appendChild(renderChatMessage(post.message || ""));
 
                     msgDiv.appendChild(textSpan);
-
                     container.appendChild(msgDiv);
                 });
 
                 if (announcementActive) {
                     const cutoffDiv = document.createElement("div");
 
+                    cutoffDiv.style.display = "block";
+                    cutoffDiv.style.width = "calc(100% - 16px)";
+                    cutoffDiv.style.height = "0";
                     cutoffDiv.style.borderBottom =
                         getCookie("canada_goose") === "true"
                             ? "2px ridge white"
                             : "2px ridge #111";
-
-                    cutoffDiv.style.margin = "8px 8px 8px 8px";
+                    cutoffDiv.style.margin = "8px";
+                    cutoffDiv.style.clear = "both";
 
                     container.appendChild(cutoffDiv);
                 }
