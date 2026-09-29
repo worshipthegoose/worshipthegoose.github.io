@@ -815,7 +815,7 @@
                         return;
                     }
 
-                    if (announcementActive && dateHeaderString !== lastHeaderDate && lastHeaderDate !== "") {
+                    if (announcementActive) {
                         const cutoffDiv = document.createElement("div");
 
                         cutoffDiv.style.borderBottom =
@@ -829,7 +829,6 @@
 
                         announcementActive = false;
                     }
-
                     if (dateHeaderString !== lastHeaderDate) {
                         lastHeaderDate = dateHeaderString;
 
