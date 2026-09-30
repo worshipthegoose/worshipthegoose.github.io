@@ -876,6 +876,17 @@
                         container.appendChild(headerDiv);
                     }
 
+                    let ifUsername;
+
+                    if (post.username === getCookie("dev-username")) {
+                        if (getCookie("canada_goose") === "true") {
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                        } else {
+                            ifUsername = " style='color:#222'";
+                        }
+                    } else {
+                        ifUsername = "";
+                    }
                     const headerMatch = String(post.message || "").match(/^\[header=([^\]]+)\]$/i);
 
                     if (headerMatch) { // Nayeon singing I'm gonna be a star was unexpected 
