@@ -876,22 +876,9 @@
                         container.appendChild(headerDiv);
                     }
 
-                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
-
-                    let ifUsername;
-
-                    if (post.username === getCookie("dev-username")) {
-                        if (getCookie("canada_goose") === "true") {
-                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
-                        } else {
-                            ifUsername = " style='color:#222'";
-                        }
-                    } else {
-                        ifUsername = "";
-                    }
                     const headerMatch = String(post.message || "").match(/^\[header=([^\]]+)\]$/i);
 
-                    if (headerMatch) { // Nayeon singing I'm gonna be a star was unexpected 
+                    if (headerMatch) {
                         if (announcementWrapper) {
                             const separator = document.createElement("div");
                             separator.style.display = "block";
@@ -966,6 +953,73 @@
                         container.appendChild(announcementWrapper);
 
                         return;
+                    }
+
+                    const msgDiv = document.createElement("div");
+                    msgDiv.style.marginBottom = "8px";
+                    msgDiv.style.display = "flex";
+                    msgDiv.style.alignItems = "flex-start";
+                    msgDiv.style.flexWrap = "wrap";
+                    msgDiv.style.width = "100%";
+                    msgDiv.style.boxSizing = "border-box";
+                    msgDiv.className = "chatbox-message-parent";
+
+                    const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
+                    msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+
+                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+
+                    if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, msgDiv, post);
+                        });
+
+                        buttonWrapper.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal(post);
+                        });
+
+                        buttonWrapper.appendChild(editButton);
+                        msgDiv.appendChild(buttonWrapper);
+                    }
+
+                    const textSpan = document.createElement("span");
+                    textSpan.style.flex = "1 1 0";
+                    textSpan.style.minWidth = "0";
+                    textSpan.style.overflowWrap = "anywhere";
+                    textSpan.style.wordBreak = "break-all";
+
+                    let ifUsername;
+
+                    if (post.username === getCookie("dev-username")) {
+                        if (getCookie("canada_goose") === "true") {
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                        } else {
+                            ifUsername = " style='color:#222'";
+                        }
+                    } else {
+                        ifUsername = "";
                     }
 
                     const usernameStrong = document.createElement("strong");
