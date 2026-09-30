@@ -882,7 +882,7 @@
                         msgDivButton.style.verticalAlign = "top";
                     });
 
-                    const msgText = document.querySelector(".chatbox-message-parent")
+                    const msgText = document.querySelector(`.${msgDiv.className} span`)
                     msgText.style.overflowWrap = "anywhere";
 
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
