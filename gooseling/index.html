@@ -882,9 +882,6 @@
                         msgDivButton.style.verticalAlign = "top";
                     });
 
-                    const msgText = document.querySelector(`.${msgDiv.className} span`)
-                    msgText.style.overflowWrap = "anywhere";
-
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
                     });
@@ -917,6 +914,9 @@
 
                         msgDiv.appendChild(editButton);
                     }
+
+                    const msgText = msgDiv.querySelector(`span`)
+                    msgText.style.overflowWrap = "anywhere";
 
                     const textSpan = document.createElement("span");
                     let ifUsername;
