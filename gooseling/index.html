@@ -1009,7 +1009,6 @@
                     manualHeaderRow.style.position = "relative";
                     manualHeaderRow.style.display = "flex";
                     manualHeaderRow.style.alignItems = "center";
-                    manualHeaderRow.style.justifyContent = "center";
                     manualHeaderRow.style.width = "calc(100% - 16px)";
                     manualHeaderRow.style.margin = "3px 8px 8px 8px";
                     manualHeaderRow.style.borderBottom = "2px dashed #111";
@@ -1049,6 +1048,10 @@
                     }
 
                     const manualHeader = document.createElement("div");
+                    manualHeader.style.position = "absolute";
+                    manualHeader.style.left = "50%";
+                    manualHeader.style.transform = "translateX(-50%)";
+                    manualHeader.style.width = "max-content";
                     manualHeader.style.textAlign = "center";
                     manualHeader.style.fontWeight = "bold";
                     manualHeader.style.margin = "0";
@@ -1057,7 +1060,6 @@
                     manualHeader.style.fontSize = "17px";
                     manualHeader.style.paddingBottom = "8px";
                     manualHeader.textContent = section.headerText;
-                    manualHeader.textContent = `${section.headerText}`;
 
                     manualHeaderRow.appendChild(manualHeader);
                     announcementWrapper.appendChild(manualHeaderRow);
