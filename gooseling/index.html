@@ -874,6 +874,8 @@
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
                     msgDiv.style.display = "block";
+                    msgDiv.style.overflowWrap = "anywhere";
+                    msgDiv.style.wordBreak = "break-word";
                     msgDiv.className = "chatbox-message-parent"
 
                     const msgDivButtons = document.querySelectorAll(`.${msgDiv.className} button`);
