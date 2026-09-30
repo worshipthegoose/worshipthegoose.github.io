@@ -915,10 +915,9 @@
                         msgDiv.appendChild(editButton);
                     }
 
-                    const msgText = msgDiv.querySelector(`span`)
-                    msgText.style.overflowWrap = "anywhere";
 
                     const textSpan = document.createElement("span");
+                    textSpan.style.overflowWrap = "anywhere";
                     let ifUsername;
 
                     if (post.username === getCookie("dev-username")) {
