@@ -800,11 +800,6 @@
                     container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
                     return;
                 }
-                /*if (window.location.origin !== "worshipthegoose.github.io" || window.location.origin !== "https://worshipthegoose.github.io") {
-                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>You are viewing this site from a pirated source. For your safety, please switch to the original site immediately.</p>";
-                    return;
-                }
-                    */
 
                 const devUsername = getCookie("dev-username");
                 const currentMessageData = JSON.stringify(data);
@@ -834,6 +829,7 @@
                 container.innerHTML = "";
 
                 let lastHeaderDate = "";
+                let announcementWrapper = null;
                 const posts = [...data].reverse();
 
                 posts.forEach(post => {
@@ -848,6 +844,15 @@
                     });
 
                     if (dateHeaderString !== lastHeaderDate) {
+                        if (announcementWrapper) {
+                            const separator = document.createElement("div");
+                            separator.style.display = "block";
+                            separator.style.borderBottom = "2px dashed #111";
+                            separator.style.margin = "8px 0";
+                            announcementWrapper.appendChild(separator);
+                            announcementWrapper = null;
+                        }
+
                         lastHeaderDate = dateHeaderString;
 
                         const headerDiv = document.createElement("div");
@@ -871,24 +876,53 @@
                         container.appendChild(headerDiv);
                     }
 
+                    const headerMatch = String(post.message || "").match(/^\[header=([^\]]+)\]$/i);
+
+                    if (headerMatch) {
+                        if (announcementWrapper) {
+                            const separator = document.createElement("div");
+                            separator.style.display = "block";
+                            separator.style.borderBottom = "2px dashed #111";
+                            separator.style.margin = "8px 0";
+                            announcementWrapper.appendChild(separator);
+                        }
+
+                        announcementWrapper = document.createElement("div");
+                        announcementWrapper.style.display = "block";
+                        announcementWrapper.style.width = "100%";
+                        announcementWrapper.style.boxSizing = "border-box";
+                        announcementWrapper.style.marginBottom = "8px";
+
+                        const manualHeader = document.createElement("div");
+                        manualHeader.style.display = "block";
+                        manualHeader.style.width = "100%";
+                        manualHeader.style.boxSizing = "border-box";
+                        manualHeader.style.textAlign = "center";
+                        manualHeader.style.fontWeight = "bold";
+                        manualHeader.style.margin = "4px 0 8px 0";
+                        manualHeader.style.userSelect = "none";
+                        manualHeader.textContent = `[!] ${headerMatch[1].trim()} [!]`;
+
+                        const separator = document.createElement("div");
+                        separator.style.display = "block";
+                        separator.style.borderBottom = "2px dashed #111";
+                        separator.style.margin = "0 0 8px 0";
+
+                        announcementWrapper.appendChild(manualHeader);
+                        announcementWrapper.appendChild(separator);
+                        container.appendChild(announcementWrapper);
+
+                        return;
+                    }
+
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
                     msgDiv.style.display = "flex";
                     msgDiv.style.alignItems = "flex-start";
                     msgDiv.style.flexWrap = "wrap";
                     msgDiv.style.width = "100%";
-                    msgDiv.style.maxWidth = "100%";
-                    msgDiv.style.minWidth = "0";
                     msgDiv.style.boxSizing = "border-box";
-                    msgDiv.style.overflowWrap = "anywhere";
-                    msgDiv.style.wordBreak = "break-word";
                     msgDiv.className = "chatbox-message-parent";
-
-                    const msgDivButtons = document.querySelectorAll(`.${msgDiv.className} button`);
-                    msgDivButtons.forEach((msgDivButton) => {
-                        msgDivButton.style.display = "inline-block";
-                        msgDivButton.style.verticalAlign = "top";
-                    });
 
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
@@ -900,7 +934,8 @@
 
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
-                        buttonWrapper.style.display = "inline-block";
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
                         buttonWrapper.style.whiteSpace = "nowrap";
                         buttonWrapper.style.verticalAlign = "top";
 
@@ -926,9 +961,8 @@
                         });
 
                         buttonWrapper.appendChild(editButton);
-                        msgDiv.appendChild(buttonWrapper)
+                        msgDiv.appendChild(buttonWrapper);
                     }
-
 
                     const textSpan = document.createElement("span");
                     textSpan.style.flex = "1 1 0";
@@ -963,8 +997,20 @@
 
                     msgDiv.appendChild(textSpan);
 
-                    container.appendChild(msgDiv);
+                    if (announcementWrapper) {
+                        announcementWrapper.appendChild(msgDiv);
+                    } else {
+                        container.appendChild(msgDiv);
+                    }
                 });
+
+                if (announcementWrapper) {
+                    const separator = document.createElement("div");
+                    separator.style.display = "block";
+                    separator.style.borderBottom = "2px dashed #111";
+                    separator.style.margin = "8px 0";
+                    announcementWrapper.appendChild(separator);
+                }
 
                 updateAdminFeatures();
 
