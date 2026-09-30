@@ -889,9 +889,9 @@
 
                         announcementWrapper = document.createElement("div");
                         announcementWrapper.style.display = "block";
-                        announcementWrapper.style.width = "100%";
+                        announcementWrapper.style.width = "auto";
+                        announcementWrapper.style.margin = "0 8px 8px 8px";
                         announcementWrapper.style.boxSizing = "border-box";
-                        announcementWrapper.style.marginBottom = "8px";
 
                         const manualHeaderRow = document.createElement("div");
                         manualHeaderRow.style.display = "flex";
@@ -935,25 +935,23 @@
                         manualHeader.style.display = "block";
                         manualHeader.style.flex = "1 1 0";
                         manualHeader.style.minWidth = "0";
-                        manualHeader.style.textDecoration = "underline 1.5px black";
                         manualHeader.style.textAlign = "center";
                         manualHeader.style.fontWeight = "bold";
                         manualHeader.style.margin = "4px 0 8px 0";
                         manualHeader.style.userSelect = "none";
                         manualHeader.style.color = "#111";
                         manualHeader.style.textDecoration = "underline";
+                        manualHeader.style.fontSize = "17px";
                         manualHeader.textContent = `[!] ${headerMatch[1].trim()} [!]`;
 
                         manualHeaderRow.appendChild(manualHeader);
-
-                        /// announcementWrapper.appendChild(topSeparator);
-                        announcementWrapper.appendChild(manualHeaderRow);
 
                         const headerSeparator = document.createElement("div");
                         headerSeparator.style.display = "block";
                         headerSeparator.style.borderBottom = "2px dashed #111";
                         headerSeparator.style.margin = "0 0 8px 0";
 
+                        announcementWrapper.appendChild(manualHeaderRow);
                         announcementWrapper.appendChild(headerSeparator);
                         container.appendChild(announcementWrapper);
 
