@@ -880,11 +880,11 @@
 
                     if (headerMatch) {
                         if (announcementWrapper) {
-                            const separator = document.createElement("div");
-                            separator.style.display = "block";
-                            separator.style.borderBottom = "2px dashed #111";
-                            separator.style.margin = "8px 0";
-                            announcementWrapper.appendChild(separator);
+                            const bottomSeparator = document.createElement("div");
+                            bottomSeparator.style.display = "block";
+                            bottomSeparator.style.borderBottom = "2px dashed #111";
+                            bottomSeparator.style.margin = "8px 0";
+                            announcementWrapper.appendChild(bottomSeparator);
                         }
 
                         announcementWrapper = document.createElement("div");
@@ -912,7 +912,7 @@
                             killButton.className = "message-delete-button admin-only-feature";
 
                             killButton.addEventListener("click", () => {
-                                openDeleteModal(post.timestamp, announcementWrapper, post);
+                                openDeleteModal(post.timestamp, manualHeaderRow, post);
                             });
 
                             buttonWrapper.appendChild(killButton);
@@ -935,21 +935,26 @@
                         manualHeader.style.display = "block";
                         manualHeader.style.flex = "1 1 0";
                         manualHeader.style.minWidth = "0";
+                        manualHeader.style.textDecoration = "underline 1.5px black";
                         manualHeader.style.textAlign = "center";
                         manualHeader.style.fontWeight = "bold";
                         manualHeader.style.margin = "4px 0 8px 0";
                         manualHeader.style.userSelect = "none";
+                        manualHeader.style.color = "#111";
+                        manualHeader.style.textDecoration = "underline";
                         manualHeader.textContent = `[!] ${headerMatch[1].trim()} [!]`;
 
                         manualHeaderRow.appendChild(manualHeader);
 
-                        const separator = document.createElement("div");
-                        separator.style.display = "block";
-                        separator.style.borderBottom = "2px dashed #111";
-                        separator.style.margin = "0 0 8px 0";
-
+                        announcementWrapper.appendChild(topSeparator);
                         announcementWrapper.appendChild(manualHeaderRow);
-                        announcementWrapper.appendChild(separator);
+
+                        const headerSeparator = document.createElement("div");
+                        headerSeparator.style.display = "block";
+                        headerSeparator.style.borderBottom = "2px dashed #111";
+                        headerSeparator.style.margin = "0 0 8px 0";
+
+                        announcementWrapper.appendChild(headerSeparator);
                         container.appendChild(announcementWrapper);
 
                         return;
