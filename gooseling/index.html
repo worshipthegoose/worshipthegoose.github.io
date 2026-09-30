@@ -1002,18 +1002,16 @@
                     const announcementWrapper = document.createElement("div");
                     announcementWrapper.style.display = "block";
                     announcementWrapper.style.width = "auto";
-                    announcementWrapper.style.margin = "0 8px 8px 8px";
+                    announcementWrapper.style.margin = "0 0 8px 0";
                     announcementWrapper.style.boxSizing = "border-box";
 
                     const manualHeaderRow = document.createElement("div");
-                    manualHeaderRow.style.position = "relative";
                     manualHeaderRow.style.display = "flex";
                     manualHeaderRow.style.alignItems = "center";
                     manualHeaderRow.style.width = "100%";
                     manualHeaderRow.style.borderBottom = "2px dashed #111";
-                    manualHeaderRow.style.margin = "3px 0 8px 0";
+                    manualHeaderRow.style.margin = "3px 0 8px 0"
                     manualHeaderRow.style.boxSizing = "border-box";
-                    manualHeaderRow.style.minHeight = "31px";
 
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
@@ -1048,17 +1046,17 @@
                     }
 
                     const manualHeader = document.createElement("div");
-                    manualHeader.style.position = "absolute";
-                    manualHeader.style.left = "50%";
-                    manualHeader.style.transform = "translateX(-50%)";
-                    manualHeader.style.width = "max-content";
+                    manualHeader.style.display = "block";
+                    manualHeader.style.flex = "1 1 0";
+                    manualHeader.style.minWidth = "0";
                     manualHeader.style.textAlign = "center";
                     manualHeader.style.fontWeight = "bold";
-                    manualHeader.style.margin = "0";
+                    manualHeader.style.margin = "4px 0 px 0";
                     manualHeader.style.userSelect = "none";
                     manualHeader.style.color = "#111";
                     manualHeader.style.fontSize = "17px";
                     manualHeader.style.paddingBottom = "8px";
+                    manualHeader.textContent = `[!] ${section.headerText} [!]`;
 
                     manualHeaderRow.appendChild(manualHeader);
                     announcementWrapper.appendChild(manualHeaderRow);
