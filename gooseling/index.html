@@ -873,7 +873,9 @@
 
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
-                    msgDiv.style.display = "block";
+                    msgDiv.style.display = "flex";
+                    msgDiv.style.alignItems = "flex-start";
+                    msgDiv.style.flexWrap = "wrap";
                     msgDiv.style.width = "100%";
                     msgDiv.style.maxWidth = "100%";
                     msgDiv.style.minWidth = "0";
@@ -929,8 +931,11 @@
 
 
                     const textSpan = document.createElement("span");
+                    textSpan.style.flex = "1 1 0";
+                    textSpan.style.minWidth = "0";
                     textSpan.style.overflowWrap = "anywhere";
-                    textSpan.style.wordBreak = "break-word";
+                    textSpan.style.wordBreak = "break-all";
+
                     let ifUsername;
 
                     if (post.username === getCookie("dev-username")) {
