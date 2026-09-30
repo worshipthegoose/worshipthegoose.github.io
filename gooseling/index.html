@@ -891,6 +891,11 @@
                     let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
 
                     if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-block";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+
                         const killButton = document.createElement("button");
                         killButton.type = "button";
                         killButton.innerHTML = "✦ 🗑";
@@ -900,7 +905,7 @@
                             openDeleteModal(post.timestamp, msgDiv, post);
                         });
 
-                        msgDiv.appendChild(killButton);
+                        buttonWrapper.appendChild(killButton);
 
                         const editButton = document.createElement("button");
                         editButton.type = "button";
@@ -912,7 +917,8 @@
                             openEditModal(post);
                         });
 
-                        msgDiv.appendChild(editButton);
+                        buttonWrapper.appendChild(editButton);
+                        msgDiv.appendChild(buttonWrapper)
                     }
 
 
