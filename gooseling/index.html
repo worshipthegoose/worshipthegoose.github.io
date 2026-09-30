@@ -874,6 +874,11 @@
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
 
+                    msgDiv.style.display = "flex";
+                    msgDiv.style.flexWrap = "nowrap";
+                    msgDiv.style.whiteSpace = "nowrap";
+                    msgDiv.className = "chatbox-message-parent"
+
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
                     });
