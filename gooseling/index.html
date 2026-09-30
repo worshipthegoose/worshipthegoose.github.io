@@ -930,6 +930,7 @@
 
                     const textSpan = document.createElement("span");
                     textSpan.style.overflowWrap = "anywhere";
+                    textSpan.style.wordBreak = "break-word";
                     let ifUsername;
 
                     if (post.username === getCookie("dev-username")) {
