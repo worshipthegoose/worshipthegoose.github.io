@@ -874,9 +874,13 @@
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
                     msgDiv.style.display = "block";
+                    msgDiv.style.width = "100%";
+                    msgDiv.style.maxWidth = "100%";
+                    msgDiv.style.minWidth = "0";
+                    msgDiv.style.boxSizing = "border-box";
                     msgDiv.style.overflowWrap = "anywhere";
                     msgDiv.style.wordBreak = "break-word";
-                    msgDiv.className = "chatbox-message-parent"
+                    msgDiv.className = "chatbox-message-parent";
 
                     const msgDivButtons = document.querySelectorAll(`.${msgDiv.className} button`);
                     msgDivButtons.forEach((msgDivButton) => {
