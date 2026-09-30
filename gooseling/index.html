@@ -873,11 +873,17 @@
 
                     const msgDiv = document.createElement("div");
                     msgDiv.style.marginBottom = "8px";
-
-                    msgDiv.style.display = "flex";
-                    msgDiv.style.flexWrap = "nowrap";
-                    // msgDiv.style.whiteSpace = "nowrap";
+                    msgDiv.style.display = "block";
                     msgDiv.className = "chatbox-message-parent"
+
+                    const msgDivButtons = document.querySelectorAll(`.${msgDiv.className} button`);
+                    msgDivButtons.forEach((msgDivButton) => {
+                        msgDivButton.style.display = "inline-block";
+                        msgDivButton.style.verticalAlign = "top";
+                    });
+
+                    const msgText = document.querySelector(".chatbox-message-parent")
+                    msgText.style.overflowWrap = "anywhere";
 
                     const fullTimeText = msgDateObj.toLocaleString("en-US", {
                         timeZone: "America/Los_Angeles"
