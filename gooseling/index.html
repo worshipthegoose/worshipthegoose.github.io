@@ -973,9 +973,12 @@
 
                     const usernameSpan = document.createElement("span");
                     usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
-                    usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+                    usernameSpan.textContent = `${hyperTag}@${post.username}`;
 
+                    const usernameColon = document.createElement("span");
+                    usernameColon.textContent = ":";
                     usernameStrong.appendChild(usernameSpan);
+                    usernameStrong.appendChild(usernameColon);
                     textSpan.appendChild(usernameStrong);
 
                     textSpan.appendChild(renderChatMessage(post.message || ""));
