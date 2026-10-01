@@ -915,7 +915,7 @@
 
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : ""; // Nayeon from TWICE is the face
 
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
@@ -1910,7 +1910,7 @@
                 <h2>The Goose Chatbox</h2>
                 <p>For gooselings only. No goosinners ever.</p>
                 <center>
-                    <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
+                    <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.<br>While the preferred languages are Goose Latin and Goseish, it is okay to speak other languages (such as English, French, Lao) if you do not know them.</span>
                     <br>
                     <span class="fine-print-admin admin-only-feature" style="display:none !important;opacity:0;">You currently have admin mode <span class="admin-feature-status"></span>. To toggle it <span class="admin-feature-status-opp">off</span>, please click <a href = "javascript:document.querySelector('#show-admin-features').click()">here</a>. </span>
                 </center>
