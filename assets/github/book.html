@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif !important;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+}
+
+.book {
+    position: relative;
+    width: 800px;
+    height: 520px;
+    perspective: 2000px;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+}
+
+.cover-back-panel {
+    position: absolute;
+    top: -8px;
+    left: 400px;
+    width: 416px;
+    height: 536px;
+    background: rgb(70, 6, 70) !important;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 5px 5px 20px rgba(0,0,0,.4);
+    z-index: 1;
+}
+
+.cover,
+.page {
+    position: absolute;
+    top: 0;
+    left: 400px;
+    width: 400px;
+    height: 520px;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1);
+    cursor: pointer;
+}
+
+.cover {
+    top: -8px;
+    width: 416px;
+    height: 536px;
+    z-index: 600;
+}
+
+.cover.flipped,
+.page.flipped {
+    transform: rotateY(-180deg);
+}
+
+.cover-front,
+.cover-back,
+.page-front,
+.page-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,.2);
+    border: 1px solid #ccc;
+}
+
+.cover-front {
+    background: rgb(72, 10, 72);
+    color: white;
+    display: flex;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    flex-direction: column;
+    border: none;
+    box-shadow: 5px 5px 20px rgba(0,0,0,.4);
+    border-radius: 0 4px 4px 0;
+    transform: rotateY(0deg) translateZ(1px);
+}
+
+.cover-front h1 {
+    font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif;
+    font-size: 48px;
+    margin: 0;
+}
+
+.cover-front p {
+    font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif;
+    font-size: 18px;
+}
+
+.cover-back {
+    background: #fffdf5;
+    border-radius: 4px 0 0 4px;
+    transform: rotateY(180deg) translateZ(1px);
+}
+
+.page-front {
+    background: #fffdf5;
+    transform: rotateY(0deg) translateZ(1px); 
+}
+
+.page-back {
+    background: #fffdf5;
+    transform: rotateY(180deg) translateZ(1px);
+}
+
+.page-content {
+    width: 100%;
+    height: 100%;
+    padding: 40px;
+    /*
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    */
+}
+
+.page-content h1 {
+    font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif;
+    font-size: 36px;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    text-align: center !important;
+    
+}
+
+.page-content p, h2{
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.page-content p {
+    font-size: 18px;
+}
+.spine {
+    position: absolute;
+    left: 394px;
+    top: -8px;
+    width: 12px;
+    height: 536px;
+    background: rgb(62, 14, 62);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.controls {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2000;
+}
+
+button {
+    padding: 12px 24px;
+    border: 0;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ddd;
+}
+</style>
+</head>
+
+<body>
+
+<div class="book">
+
+    <div class="cover-back-panel"></div>
+
+    <div class="cover" id="cover">
+        <div class="cover-front">
+            <h1>Goose Latin: Introduction for new Gooselings.</h1>
+            <p><strong>By St. Duck</strong></p>
+            <p>Goosetown Press<br>3411 Postgarden Avenue, Goosetown, Goosecountry</p>
+        </div>
+        <div class="cover-back"></div>
+    </div>
+
+    <div class="page" data-page="0">
+        <div class="page-front">
+            <div class="page-content">
+                <h2>1. What is Goose Latin?</h2>
+                <p>Goose Latin <em>(GÜS-LAH-TEN)</em> is the second most spoken goose language after Goseish. <em>(GO-SISH)</em> It is mandated, so all gooselings speak it. It is the simplest of the three Holy Gooselingo <em>(GOO-SEL-INGO)</em> and is often the first language new gooselings are taught.<br>Heavily inspired by the pseudolanguage Pig Latin, Goose Latin has the same writing style and phonetics. Even though all gooselings are fluent, you'll rarely here it spoken unless you're talking to a new gooseling. This is mainly due to it not being <em>too pleasant</em> to speak (more on </p>
+            </div>
+        </div>
+        <div class="page-back">
+            <div class="page-content">
+                <p>this later) but it can be decrypted easily unlike structured goose languages such as Goseish. <em>(lingua sangose)</em><br>Even with all these downsides, Goose Latin is still considered part of the Holy Gooselingo. The only prerequisite language is English, making it simple to speak and understand.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" data-page="1">
+        <div class="page-front">
+            <div class="page-content">
+                <h2>2. Common Uses</h2>
+                <p>This language's most common use is to communicate easily with new gooselings <em>(Goosist Novus)</em> while keeping conversations discreet. It is also beneficial for everyday conversation if a word in Goseish <em>(lingua sangose)</em> or Gooseglish does not exist.</p><br>
+                <p>Example use in Goseish: <i>Ellex antus sanctus mustos dia. Ellex antus amorus et antus sangoose, <u>erplexedpduck</u> antus ellex.</i></p>
+                <br><p>Translation: We worship every day. We love you goose, I don't get confused like they do.</p>
+            </div>
+        </div>
+        <div class="page-back">
+            <div class="page-content">
+                <p>Goose Latin is also great for casual conversations from gooseling to gooseling that don't require complex phonics or complete encryption. An example would be talking to a friend about My Little Pony gooses.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" data-page="2">
+        <div class="page-front">
+            <div class="page-content">
+                <h2>3. Let's Speak!</h2>
+                <h3>PRE: Overview & Fact</h3>
+                <p>Believe it or not: This language only takes 5 minutes to start writing, 10 minutes to start reading, an hour to start speaking, and a week to be fluent. It is that simple and for this reason we teach it to new gooselings.</p>
+                <h3>3a. Writing</h3>
+                <p><b>This will only take five minutes at max.</b> Start by taking an English word, move its first letter to the end, and add "honk". Yes, we know that sounds</p>
+            </div>
+        </div>
+        <div class="page-back">
+            <div class="page-content">
+                <p>like a lot but we will do it step by step.</p>
+                <ol>
+                    <li>
+                        <p>Take an English word: "plant"</p>
+                    </li>
+                    <li>
+                        <p>Move the first letter to the end: "lantp"</p>
+                    </li>
+                    <li>
+                        <p>Add "honk" to the end: "lantphonk"</p>
+                    </li>
+                    <li>
+                        <p>Construct a sentence with the steps above, but every even word needs to have its "honk" be replaced by "duck": "Hethonk lantpduck aswhonk ittingsduck nohonk aduck indowsillwhonk."</p>
+                    </li>
+                </ol>
+                <p>That's it.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" data-page="3">
+        <div class="page-front">
+            <div class="page-content">
+                <h3>3b. Reading & Understanding</h3>
+                <p>The following steps will help you read and understand Goose Latin:</p>
+                <ol>
+                    <li>
+                        <p>Take a Goose Latin word or sentence: "Ihonk ovelduck Hethonk Oosegduck.</p>
+                    </li>
+                    <li>
+                        <p>Remove all instances of "honk" or "duck": "I ovel Het Ooosg"</p>
+                    </li>
+                    <li>
+                        <p>Reorder last letter to front: "I love The Goose"</p>
+                    </li>
+                </ol>
+                <p>As stated earlier, this may take twice as long as the writing section mainly due to the <em>unique</em> phonetics.</p>
+            </div>
+        </div>
+        <div class="page-back">
+            <div class="page-content">
+                <h2>4. Conclusion & End</h2>
+                <p>Goose Latin, hereafter referred to as GL, is more a game than it is a language. That doesn't mean there are no practical uses for it, though. As stated earlier in this short read, it can be used as a placeholder for a word that doesn't exist in Goseish.</p><br>
+                <p><em>Et quanndo antus offendus antus quandus sangose tallentus ellex antus. <u>Owwhonk</u>, Elleo sono sanctus!</em></p><br>
+                <p>Overall, Goose Latin is an easy and fun language to learn for gooseling-to-gooseling communication.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="spine"></div>
+
+</div>
+
+
+<script>
+const cover = document.getElementById("cover");
+const pages = [...document.querySelectorAll(".page")];
+
+let currentPage = -1;
+
+function updateBookState() {
+    if (currentPage === -1) {
+        cover.classList.remove("flipped");
+        cover.style.zIndex = 600;
+    } else {
+        cover.classList.add("flipped");
+        cover.style.zIndex = 10;
+    }
+
+    pages.forEach((page, index) => {
+        if (index < currentPage) {
+            page.classList.add("flipped");
+            page.style.zIndex = 100 + index;
+        } else if (index === currentPage) {
+            page.classList.remove("flipped");
+            page.style.zIndex = 400;
+        } else {
+            page.classList.remove("flipped");
+            page.style.zIndex = 90 - index;
+        }
+    });
+}
+
+function nextPage() {
+    if (currentPage === -1) {
+        currentPage = 0;
+        updateBookState();
+        return;
+    }
+    if (currentPage < pages.length) {
+        pages[currentPage].classList.add("flipped");
+        currentPage++;
+        setTimeout(updateBookState, 100);
+    }
+}
+
+function previousPage() {
+    if (currentPage === 0) {
+        currentPage = -1;
+        updateBookState();
+        return;
+    }
+    if (currentPage > 0) {
+        currentPage--;
+        pages[currentPage].classList.remove("flipped");
+        updateBookState();
+    }
+}
+
+updateBookState();
+
+cover.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (currentPage === -1) {
+        nextPage();
+    } else if (currentPage === 0) {
+        previousPage();
+    }
+});
+
+pages.forEach((page, index) => {
+    page.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (index === currentPage - 1) {
+            previousPage();
+        } else if (index === currentPage) {
+            nextPage();
+        }
+    });
+});
+</script>
+
+</body>
+</html>

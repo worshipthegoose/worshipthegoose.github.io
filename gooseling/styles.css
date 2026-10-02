@@ -33,6 +33,33 @@ div.panel {
     font-size: 18px;
     user-select: none;
 }
+.idiv {
+  position: relative;
+  width: 400px;       
+  height: 300px;     
+  display:flex;
+  justify-content: center;
+  align-items: center; 
+  text-align: center;
+  overflow: hidden;   
+}
+
+.idiv iframe {
+  position: absolute;
+  
+  /* Adjust these negative pixels to slide the page and frame the book */
+  top: -100px;        
+  left: -150px;       
+  
+  /* Increased sizing to prevent blank white edges when shifting */
+  width: 400%;        
+  height: 400%;       
+  
+  transform-origin: top left; 
+  transform: scale(0.4); 
+  border: none;
+}
+
 
 .admin-toggle input {
     display: none;
