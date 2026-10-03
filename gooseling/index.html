@@ -757,6 +757,8 @@
             }
         }
     }
+    
+    
         async function loadMessages(isInitialLoad = false) {
             const container = document.getElementById("message-container");
             if (!container) return;
@@ -834,22 +836,35 @@
                 data.forEach(post => {
                     const headerMatch = String(post.message || "").match(/^\[header=([^\]]+)\]$/i);
 
+                    const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
+                    const postDateString = postDate.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
                     if (headerMatch) {
                         currentSection = {
                             header: post,
                             headerText: headerMatch[1].trim(),
-                            messages: []
+                            messages: [],
+                            dateString: postDateString
                         };
 
                         sections.push(currentSection);
-                    } else if (currentSection) {
+                    } else if (
+                        currentSection &&
+                        currentSection.header &&
+                        currentSection.dateString === postDateString
+                    ) {
                         currentSection.messages.push(post);
                     } else {
-                        sections.push({
+                        currentSection = {
                             header: null,
                             headerText: "",
-                            messages: [post]
-                        });
+                            messages: [post],
+                            dateString: postDateString
+                        };
+
+                        sections.push(currentSection);
                     }
                 });
 
@@ -1011,7 +1026,7 @@
                     manualHeaderRow.style.alignItems = "center";
                     manualHeaderRow.style.width = "calc(100% - 16px)";
                     manualHeaderRow.style.margin = "8px 0 8px 0";
-                    manualHeaderRow.style.borderBottom = "2px dashed #111";
+                    manualHeaderRow.style.borderBottom = "4px dotted #111";
                     manualHeaderRow.style.boxSizing = "border-box";
                     manualHeaderRow.style.minHeight = "31px";
 
@@ -1021,6 +1036,7 @@
                         buttonWrapper.style.flex = "0 0 auto";
                         buttonWrapper.style.whiteSpace = "nowrap";
                         buttonWrapper.style.verticalAlign = "top";
+                        buttonWrapper.style.marginBottom = "3px";
 
                         const killButton = document.createElement("button");
                         killButton.type = "button";
@@ -1167,7 +1183,7 @@
 
                     const bottomSeparator = document.createElement("div");
                     bottomSeparator.style.display = "block";
-                    bottomSeparator.style.borderBottom = "2px dashed #111";
+                    bottomSeparator.style.borderBottom = "3px dashed #111";
                     bottomSeparator.style.margin = "8px 0";
 
                     announcementWrapper.appendChild(bottomSeparator);
@@ -1181,6 +1197,7 @@
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
             }
         }
+
 
         document.addEventListener("DOMContentLoaded", function() {
 
