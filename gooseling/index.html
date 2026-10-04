@@ -18,7 +18,8 @@
         // I did NOT use comments for the default script for that reason.
 
         // Constants
-        
+
+        /// Well this aged well :/
 
     </script>
     <script class="default">
@@ -1195,6 +1196,7 @@
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+                loadMessages(false);
             }
         }
 
