@@ -1476,15 +1476,12 @@ function closeEditModal() {
             const chatForm = document.getElementById("chat-form");
 
             if (chatForm) {
-                const chatInput = document.getElementById("chat-input");
-                if (chatInput) {
-                    chatInput.addEventListener("keydown", (e) => {
+                    chatForm.addEventListener("keydown", (e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             chatForm.requestSubmit();
                         }
                     });
-                }
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
 
