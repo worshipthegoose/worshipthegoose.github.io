@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", function(){
         window.location.replace('/gooseling');
     }
 
+
     const eye1 = document.querySelector('#eye-1');
     const eye2 = document.querySelector('#eye-2');
 

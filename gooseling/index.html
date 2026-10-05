@@ -18,8 +18,7 @@
         // I did NOT use comments for the default script for that reason.
 
         // Constants
-
-        /// Well this aged well :/
+        
 
     </script>
     <script class="default">
@@ -35,6 +34,7 @@
         let pendingClearChat = false;
         const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"]
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
+        const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
 
         function getCookie(name) {
             let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -57,6 +57,7 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;");
+
         }
 
         function isAdmin() {
@@ -76,8 +77,30 @@
 
             if (admin && enabled) {
                 document.querySelector(".admin-feature-status").textContent = "on";
+
+                const oldInput = document.getElementById("chat-input");
+
+                if (oldInput) {
+                    oldInput.remove();
+                }
+
+                document.querySelector("#chat-form").insertAdjacentHTML(
+                    "afterbegin",
+                    '<textarea maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;"></textarea>'
+                );
             } else if (admin && !enabled) {
                 document.querySelector(".admin-feature-status").textContent = "off";
+
+                const oldInput = document.getElementById("chat-input");
+
+                if (oldInput) {
+                    oldInput.remove();
+                }
+
+                document.querySelector("#chat-form").insertAdjacentHTML(
+                    "afterbegin",
+                    '<input maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">'
+                );
             }
 
             if (toggleContainer) {
@@ -103,6 +126,9 @@
             if (addImage) {
                 addImage.style.display = enabled ? "inline-block" : "none";
             }
+            
+            document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
+            
         }
 
         function generateBadgedFavicon() {
@@ -272,7 +298,7 @@
             if (!overlay || !input) return;
 
             editingMessageTimestamp = post.timestamp;
-            input.value = post.message || "";
+            input.value = (post.message || "")
 
             const authorElement = overlay.querySelector(".disclaimer-fine-author");
             if (authorElement) {
@@ -287,7 +313,7 @@
             }, 50);
         }
 
-        function closeEditModal() {
+function closeEditModal() {
             const overlay = document.getElementById("edit-modal-overlay");
 
             if (overlay) {
@@ -443,6 +469,7 @@
 
             pendingImageFilename = null;
         }
+        
         async function pushEditedMessage() {
             if (!editingMessageTimestamp) return;
 
@@ -458,6 +485,8 @@
                 return;
             }
 
+            const messageToSend = newMessage.replace(/\r?\n/g, "[newline]");
+
             pushButton.disabled = true;
             input.disabled = true;
             pushButton.textContent = "Pushing...";
@@ -472,7 +501,7 @@
                     body: JSON.stringify({
                         action: "edit",
                         timestamp: editingMessageTimestamp,
-                        message: newMessage
+                        message: messageToSend
                     })
                 });
 
@@ -496,57 +525,26 @@
                 pushButton.textContent = "Push";
             }
         }
-        async function confirmClearChat() {
-        if (!pendingClearChat) return;
 
-        const clearButton = document.getElementById("clear-confirm-button");
 
-        if (!clearButton) return;
 
-        clearButton.disabled = true;
-        clearButton.textContent = "Clearing...";
+    function renderChatMessage(message) {
+        const fragment = document.createDocumentFragment();
+        const regex = /\[image=([^\]]+)\]|\[newline\]/gi;
 
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8"
-                },
-                body: JSON.stringify({
-                    action: "clear"
-                })
-            });
+        let lastIndex = 0;
+        let match;
 
-            if (!response.ok) {
-                throw new Error(`HTTP Error! Status: ${response.status}`);
+        while ((match = regex.exec(message)) !== null) {
+            const textBefore = message.slice(lastIndex, match.index);
+
+            if (textBefore) {
+                fragment.appendChild(document.createTextNode(textBefore));
             }
 
-            closeClearModal();
-
-            lastMessageData = "";
-            await loadMessages(false);
-
-        } catch (err) {
-            console.error("Failed to clear messages:", err);
-        } finally {
-            clearButton.disabled = false;
-            clearButton.textContent = "Clear All";
-        }
-    }
-    function renderChatMessage(message) {
-            const fragment = document.createDocumentFragment();
-            const regex = /\[image=([^\]]+)\]/gi;
-
-            let lastIndex = 0;
-            let match;
-
-            while ((match = regex.exec(message)) !== null) {
-                const textBefore = message.slice(lastIndex, match.index);
-                if (textBefore) {
-                    fragment.appendChild(document.createTextNode(textBefore));
-                }
-
+            if (match[0].toLowerCase() === "[newline]") {
+                fragment.appendChild(document.createElement("br"));
+            } else {
                 const filename = match[1].trim();
 
                 if (
@@ -570,17 +568,21 @@
                         document.createTextNode(match[0])
                     );
                 }
-
-                lastIndex = regex.lastIndex;
             }
 
-            const remaining = message.slice(lastIndex);
-            if (remaining) {
-                fragment.appendChild(document.createTextNode(remaining));
-            }
-
-            return fragment;
+            lastIndex = regex.lastIndex;
         }
+
+        const remaining = message.slice(lastIndex);
+
+        if (remaining) {
+            fragment.appendChild(document.createTextNode(remaining));
+        }
+
+        return fragment;
+    }
+
+
     async function insertImageToken() {
         const IMG_GAS = "https://script.google.com/macros/s/AKfycbzBjj4EGfXq0aO7Zw1tPvV-qxKXjMfiK_TJT8rS7pPNJGe__e1TQ6Bdz_K_0IVZkg2_Yg/exec";
 
@@ -758,9 +760,8 @@
             }
         }
     }
-    
-    
-        async function loadMessages(isInitialLoad = false) {
+
+        async function loadMessages(isInitialLoad = false){
             const container = document.getElementById("message-container");
             if (!container) return;
 
@@ -832,10 +833,15 @@
                 container.innerHTML = "";
 
                 const sections = [];
+                const headers = [];
                 let currentSection = null;
+                let explicitlyEnteredHeader = false;
 
                 data.forEach(post => {
-                    const headerMatch = String(post.message || "").match(/^\[header=([^\]]+)\]$/i);
+                    const rawMessage = String(post.message || "").trim();
+                    const headerMatch = rawMessage.match(/^\[header=([^\]]+)\]$/i);
+                    const exitMatch = rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i);
+                    const enterMatch = rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i);
 
                     const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
                     const postDateString = postDate.toLocaleDateString("en-US", {
@@ -847,13 +853,72 @@
                             header: post,
                             headerText: headerMatch[1].trim(),
                             messages: [],
-                            dateString: postDateString
+                            dateString: postDateString,
+                            headerNumber: headers.length + 1,
+                            closed: false
                         };
 
+                        headers.push(currentSection);
                         sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
+                    } else if (exitMatch) {
+                        const requestedNumber = exitMatch[1] ? Number(exitMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = true;
+                        }
+
+                        currentSection = null;
+                        explicitlyEnteredHeader = false;
+
+                        const exitMessage = {
+                            ...post,
+                            message: exitMatch[2].trim(),
+                            headerCommand: rawMessage
+                        };
+
+                        sections.push({
+                            header: null,
+                            headerText: "",
+                            messages: [exitMessage],
+                            dateString: postDateString
+                        });
+                    } else if (enterMatch) {
+                        const requestedNumber = enterMatch[1] ? Number(enterMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = false;
+                            currentSection = targetHeader;
+                            explicitlyEnteredHeader = true;
+
+                            if (enterMatch[2] && enterMatch[2].trim()) {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: enterMatch[2].trim(),
+                                    headerCommand: rawMessage
+                                });
+                            } else {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: "",
+                                    headerCommand: rawMessage,
+                                    hiddenHeaderCommand: true
+                                });
+                            }
+                        } else {
+                            currentSection = null;
+                            explicitlyEnteredHeader = false;
+                        }
                     } else if (
                         currentSection &&
                         currentSection.header &&
+                        !currentSection.closed &&
                         currentSection.dateString === postDateString
                     ) {
                         currentSection.messages.push(post);
@@ -866,6 +931,7 @@
                         };
 
                         sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
                     }
                 });
 
@@ -912,6 +978,41 @@
                 };
 
                 const appendMessage = (post, parent) => {
+                    if (post.hiddenHeaderCommand) {
+                        if (showAdminFeatures()) {
+                            const hiddenMsgDiv = document.createElement("div");
+                            hiddenMsgDiv.style.display = "flex";
+                            hiddenMsgDiv.style.width = "100%";
+                            hiddenMsgDiv.style.boxSizing = "border-box";
+                            hiddenMsgDiv.style.marginBottom = "8px";
+                            hiddenMsgDiv.className = "chatbox-message-parent";
+
+                            const buttonWrapper = document.createElement("span");
+                            buttonWrapper.style.display = "inline-flex";
+                            buttonWrapper.style.flex = "0 0 auto";
+                            buttonWrapper.style.whiteSpace = "nowrap";
+                            buttonWrapper.style.verticalAlign = "top";
+
+                            const editButton = document.createElement("button");
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.style.marginRight = "6px";
+                            editButton.classList.add("admin-only-feature");
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand
+                                });
+                            });
+
+                            buttonWrapper.appendChild(editButton);
+                            hiddenMsgDiv.appendChild(buttonWrapper);
+                            parent.appendChild(hiddenMsgDiv);
+                        }
+                        return;
+                    }
+
                     const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
 
                     appendDateHeader(post);
@@ -958,7 +1059,10 @@
                         editButton.classList.add("admin-only-feature");
 
                         editButton.addEventListener("click", () => {
-                            openEditModal(post);
+                            openEditModal({
+                                ...post,
+                                message: post.headerCommand || post.message
+                            });
                         });
 
                         buttonWrapper.appendChild(editButton);
@@ -996,6 +1100,20 @@
 
                     textSpan.appendChild(renderChatMessage(post.message || ""));
 
+                    const timestampSpan = document.createElement("span");
+                    timestampSpan.style.color = "#444";
+                    timestampSpan.style.setProperty('font-size', '10px', 'important');
+                    timestampSpan.style.marginLeft = "5px";
+                    timestampSpan.style.setProperty('font-family', "'Comic Sans MS', 'Chalkboard', 'sans-serif'");
+                    timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true
+                    });
+
+                    textSpan.appendChild(timestampSpan);
+
                     msgDiv.appendChild(textSpan);
                     parent.appendChild(msgDiv);
                 };
@@ -1010,8 +1128,6 @@
 
                         return;
                     }
-
-                    const headerDate = section.header.timestamp ? new Date(section.header.timestamp) : new Date();
 
                     appendDateHeader(section.header);
 
@@ -1098,6 +1214,41 @@
                             lastHeaderDate = dateHeaderString;
                         }
 
+                        if (post.hiddenHeaderCommand) {
+                            if (showAdminFeatures()) {
+                                const hiddenMsgDiv = document.createElement("div");
+                                hiddenMsgDiv.style.display = "flex";
+                                hiddenMsgDiv.style.width = "100%";
+                                hiddenMsgDiv.style.boxSizing = "border-box";
+                                hiddenMsgDiv.style.marginBottom = "8px";
+                                hiddenMsgDiv.className = "chatbox-message-parent";
+
+                                const buttonWrapper = document.createElement("span");
+                                buttonWrapper.style.display = "inline-flex";
+                                buttonWrapper.style.flex = "0 0 auto";
+                                buttonWrapper.style.whiteSpace = "nowrap";
+                                buttonWrapper.style.verticalAlign = "top";
+
+                                const editButton = document.createElement("button");
+                                editButton.type = "button";
+                                editButton.textContent = "✦ Edit";
+                                editButton.style.marginRight = "6px";
+                                editButton.classList.add("admin-only-feature");
+
+                                editButton.addEventListener("click", () => {
+                                    openEditModal({
+                                        ...post,
+                                        message: post.headerCommand
+                                    });
+                                });
+
+                                buttonWrapper.appendChild(editButton);
+                                hiddenMsgDiv.appendChild(buttonWrapper);
+                                announcementWrapper.appendChild(hiddenMsgDiv);
+                            }
+                            return;
+                        }
+
                         const msgDiv = document.createElement("div");
                         msgDiv.style.marginBottom = "8px";
                         msgDiv.style.display = "flex";
@@ -1140,7 +1291,10 @@
                             editButton.classList.add("admin-only-feature");
 
                             editButton.addEventListener("click", () => {
-                                openEditModal(post);
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand || post.message
+                                });
                             });
 
                             buttonWrapper.appendChild(editButton);
@@ -1178,6 +1332,19 @@
 
                         textSpan.appendChild(renderChatMessage(post.message || ""));
 
+                        const timestampSpan = document.createElement("span");
+                        timestampSpan.style.color = "#444";
+                        timestampSpan.style.marginLeft = "5px";
+                        timestampSpan.style.setProperty('font-size', '10px', 'important');
+                        timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                            timeZone: "America/Los_Angeles",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true
+                        });
+
+                        textSpan.appendChild(timestampSpan);
+
                         msgDiv.appendChild(textSpan);
                         announcementWrapper.appendChild(msgDiv);
                     });
@@ -1196,17 +1363,60 @@
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
-                loadMessages(false);
             }
+        
+
         }
+
+        async function confirmClearChat() {
+        if (!pendingClearChat) return;
+
+        const clearButton = document.getElementById("clear-confirm-button");
+
+        if (!clearButton) return;
+
+        clearButton.disabled = true;
+        clearButton.textContent = "Clearing...";
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "clear"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+
+            closeClearModal();
+
+            lastMessageData = "";
+            await loadMessages(false);
+
+        } catch (err) {
+            console.error("Failed to clear messages:", err);
+        } finally {
+            clearButton.disabled = false;
+            clearButton.textContent = "Clear All";
+        }
+    }
 
 
         document.addEventListener("DOMContentLoaded", function() {
 
             let disclaimerTextContent;
 
+
             if (isAdmin()) {
                 disclaimerTextContent = getCookie('dev-username');
+                // if (document.querySelector('input#chat-input') && getCookie('show-admin-features') === 'true') { document.querySelector('input#chat-input').remove(); document.querySelector("#chat-form").insertAdjacentHTML('afterbegin', '<textarea maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;"></textarea>')}
+                
             } else {
                 disclaimerTextContent = "There was an error. Please refresh, gooseling.";
             }
@@ -1216,9 +1426,6 @@
             document.querySelectorAll(".disclaimer-find-admin").forEach((element) => {
                 element.textContent = disclaimerTextContent;
             });
-
-            const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
-            document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
 
             generateBadgedFavicon();
 
@@ -1269,6 +1476,15 @@
             const chatForm = document.getElementById("chat-form");
 
             if (chatForm) {
+                const chatInput = document.getElementById("chat-input");
+                if (chatInput) {
+                    chatInput.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            chatForm.requestSubmit();
+                        }
+                    });
+                }
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
 
@@ -1280,6 +1496,8 @@
                     let messageText = input.value.trim();
 
                     messageText = messageText
+                        .replace(/\r?\n/g, "[newline]")
+                        .replace(/\[goose\]/g, "𓅬")
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
                         .replace(/\baarya\b/gi, "@agooseworshipper")
                         .replace(/\bsaam\b/gi, "saam");
@@ -1938,7 +2156,7 @@
                 <div id="message-container"></div>
 
                 <form id="chat-form">
-                    <input type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
+                    <input maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;"></textarea>
                     <button type="submit" id="send-message" style="padding: 8px;">Send</button>
                     <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear</button>
                     <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
@@ -1978,7 +2196,7 @@
         <div id="edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
             <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
             <h2 id="edit-modal-title">Edit Message</h2>
-            <input maxLength="150" id="edit-message-input" rows="5" maxlength="1000" placeholder="Edit the message..."></input>
+            <input maxlength="255" id="edit-message-input" rows="5" placeholder="Edit the message..."></input>
             <div class="edit-modal-buttons">
                 <button type="button" id="edit-cancel-button">Cancel</button>
                 <button type="button" id="edit-push-button">Push</button>

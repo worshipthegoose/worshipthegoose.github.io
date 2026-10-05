@@ -45,29 +45,18 @@
     </nav>
     <main>
         <div class="panel">
-            <h1>The Gooseling Panel</h1>
-            <p>This holy goose page known as The Gooseling Panel is for gooselings only and is unlisted from the main site. 
-            <br>If you are a gooseling AND have an account, authenticate below.
-            <br>If not, please <a href="/">exit this page</a> as there is absolutely nothing to see here.</p>
-        <form class="authentication" id="auth" onsubmit="return false;">
-            <h2>Gooseling Authentication</h2>
-            <p>Please verify that you are a gooseling.</p>
-            
-            <label>Username: 
-                <input name="username" id="username" autocomplete="username" class="input-username" type="text" required>
-                <img src="/pages/welcome/icons/eyebrow.png" id="eye-1" style="display:none;"></img>
-            </label>
-            
-            <label>Password: 
-                <input name="passcode" id="passcode" class="input-passcode" autocomplete="current-password" type="password" required>
-                <img src="/pages/welcome/icons/eyebrow.png" id="eye-2"></img>
-            </label>
+            <h1>Request a Gooseling Account</h1>
+            <p>Please fill out the questionnaire below in order to request your account.</p>
 
-            <button style="color:white !important" type="submit">Sign In</button>
-        
-            <p style="text-align: center;font-size:14px;" >No gooseling account? <a href="javascript:void(0)" hreftemu="/gooseling/authentication/request-account">Request one here!</a></p>
-        </form>
-
+            <pseudoform id="whimpers" style="display: block" class="authentication">
+                <h2>Questionnaire</h2>
+                <br>
+                <label>Desired Username: <input type="text" required></input></label><br>
+                <label>Desired Password: &nbsp;<input type="password" required></input></label><br>
+                <label>Confirm Password: &nbsp;<input type="password" required></input></label><br>
+                <label><input type="checkbox"></input> Odduck ouyhonk otnling peaksduck ooseghonk atinlduck? (not required)</label>
+                <label></label>
+            </pseudoform>
         </div>
     </main>
     <footer>

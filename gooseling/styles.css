@@ -25,6 +25,9 @@ div.panel {
     transition: background-color 0.2s ease-in-out, color 0.2s ease;
     margin-right:6px
 }
+.gooseling-span::before{
+    content:"" !important;
+}
 .admin-toggle {
     display: inline-flex;
     align-items: center;
@@ -98,7 +101,7 @@ div.panel {
     background-color: #8c232d !important;
     color:white !important
 }
-#auth {
+.authentication {
     margin: 9px auto;
     display: flex;
     padding: 15px;
@@ -137,6 +140,25 @@ div.panel {
     text-align: left;
 }
 
+.authentication label input[type="checkbox"] {
+    width: auto !important;
+    box-shadow: none !important;
+    margin-right: 8px;
+    cursor: url('/assets/cursors/pointer.png'), pointer;
+}
+
+
+#whimpers label {
+    text-align: left;
+    font-size: 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    color: black;
+    font-weight: bold;
+}
+
 #account {
     display: flex;
     flex-direction: column;
@@ -147,7 +169,7 @@ div.panel {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.9) !important
 }
 
-#auth label input {
+.authentication label input {
     font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif, serif;
     padding: 5px;
     border: 0px solid transparent;
@@ -158,14 +180,14 @@ div.panel {
     transition: background-color 0.5s ease-in-out;
 }
 
-#auth label img {
+.authentication label img {
     width: 24px;
     height: 24px;
     cursor: url('/assets/cursors/pointer.png'), pointer;
     justify-self: center;
 }
 
-#auth button, #account button{
+.authentication button, #account button{
     width:fit-content;
     text-align: center;
     margin:0 auto;
@@ -179,24 +201,34 @@ div.panel {
     transition:background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
-#auth button:hover{
+.authentication button:hover{
     background-color: royalblue !important;
     transform: scale(1.1);
 }
 
-#auth button:active {
+.authentication button:active {
     background-color: rgba(212, 226, 239, 0.7);
 }
 
-.panel p, #auth p, #auth h2 {
+.panel p, .authentication p, .authentication h2 {
     margin:0;
     padding: 0;
 }
 
-#auth label input:hover, #auth label input:active, #auth label input:focus{
+.authentication label input:hover, .authentication label input:active, .authentication label input:focus{
     background-color: rgb(238, 241, 244);
 }
-
+input[type='checkbox'] {
+    background-color: none;
+    box-shadow:none !important
+}
+#whimpers {
+    padding:10px;
+    margin:15px auto;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
 #message-container{
     width:auto;
     height:250px;
@@ -238,10 +270,22 @@ main{
     gap:7px;
 }
 
-#chat-form input, form button {
+#chat-form input, form button, #chat-form textarea {
     border:none;
     box-shadow: 3px 4px 10px rgba(53, 53, 53, 0.5);
     transition: background-color 0.3s ease-in-out;
+}
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  height: auto;
+  line-height: 1.2;
+  max-height:34px; 
+  width:auto;
+  box-sizing: border-box;
+  resize: vertical; 
+  overflow:hidden;
 }
 
 #chat-form button#send-message {
@@ -276,11 +320,11 @@ main{
     color:white !important;
 }
 
-#chat-form input {
+#chat-form input, #chat-form textarea {
     background-color:white;
 }
 
-#chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus{
+#chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):hover{
     background-color: #eee;
     cursor:text !important;
 }
