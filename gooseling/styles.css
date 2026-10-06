@@ -229,7 +229,7 @@ input[type='checkbox'] {
     justify-content: center;
     flex-direction: column;
 }
-#message-container{
+#message-container, #loser-message-container{
     width:auto;
     height:250px;
     padding:7px;
@@ -309,22 +309,24 @@ textarea {
     color:#222 !important;
     transition:background-color 0.3s ease-in-out, color 0.3s ease;
 }
-#chat-form button#send-message:hover{
+#chat-form button#send-message:hover, #chat-form button#send-message-loser:hover{
     background-color: royalblue !important;
 }
-#chat-form button#add-image:hover{
+#chat-form button#add-image:hover, #chat-form button#add-image-loser:hover{
     background-color:palevioletred !important;
 }
-#chat-form button#clear-chat:hover{
+#chat-form button#clear-chat:hover, #chat-form button#clear-chat-loser:hover{
     background-color:#498a72!important;
     color:white !important;
 }
 
-#chat-form input, #chat-form textarea {
+#chat-form input, #chat-form textarea, #loser-chat-input {
+    transition:background-color 0.3s ease;
     background-color:white;
+    border:none;
 }
 
-#chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):hover{
+#chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):hover, #loser-chat-input:hover, #loser-chat-input:focus{
     background-color: #eee;
     cursor:text !important;
 }
@@ -452,4 +454,54 @@ textarea {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+.chatbox-tabs-layout {
+    display: flex;
+    width: 100%;
+    min-height: 400px;
+    box-sizing: border-box;
+}
+
+.chatbox-tab-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 150px;
+    flex: 0 0 150px;
+    border-right: 1px solid #ccc;
+    background-color: #e2dddd;
+}
+
+.chatbox-tab-button {
+    width: 100%;
+    padding: 14px 10px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    background-color: inherit;
+    cursor: pointer;
+    text-align: left;
+    font-size: 17px;
+    transition: background-color 0.2s ease;
+}
+
+.chatbox-tab-button:hover {
+    background-color: #ccc;
+}
+
+.chatbox-tab-button.active {
+    background-color: gainsboro;
+    font-weight: bold;
+    box-shadow: inset -4px 0 0 steelblue;
+}
+
+.chatbox-tab-pages {
+    flex: 1;
+    min-width: 0;
+    padding-left: 15px;
+    box-sizing: border-box;
+}
+
+.chatbox-tab-page {
+    width: 100%;
+    box-sizing: border-box;
 }

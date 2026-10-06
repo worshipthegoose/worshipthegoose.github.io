@@ -13,8 +13,8 @@ function superShift(str, type) {
     }).join('');
 }
 
-const usernames = ["thenumberonegooseling", "thegoose",  "agooseworshipper", "thenumberonestandard", "antigooseling"];
-const crypt = ["omwozixpgbwbpmowwam", "acxmzowwamtqvoawvtglwvwbkizm", "xtmiamkpivombpqaowwam", "omwozixpgbwbpmowwamiluqv", "ugtqbbtmxwvgqaiemawumowwam"];
+const usernames = ["thenumberonegooseling", "thegoose",  "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline"];
+const crypt = ["omwozixpgbwbpmowwam", "acxmzowwamtqvoawvtglwvwbkizm", "xtmiamkpivombpqaowwam", "omwozixpgbwbpmowwamiluqv", "ugtqbbtmxwvgqaiemawumowwam", 'ntgqvokiba'];
 const passwords = crypt.map(item => superShift(item, false));
 
 function getCookie(name) {
