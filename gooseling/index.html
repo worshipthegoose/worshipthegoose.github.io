@@ -501,6 +501,7 @@ function closeEditModal() {
 
                 if (!response.ok) {
                     throw new Error(`HTTP Error! Status: ${response.status}`);
+                    loadMessages(false)
                 }
 
                 if (pendingDeleteElement) {
@@ -1497,6 +1498,7 @@ function closeEditModal() {
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+                loadMessages(false);
             }
 
         }
