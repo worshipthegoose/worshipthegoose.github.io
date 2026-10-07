@@ -13,9 +13,7 @@
     <link rel="stylesheet" href="/powerpoint/styles.css">
     <link rel="stylesheet" href="/cursor.css">
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
-    <script>
 
-    </script>
     <script class="default">
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
         const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbz-nFj6GvWLOrZ5q2bfQlRT_9cpPXAGjPZMDX_PewD3PtnSnDxBvORKPdt24B-g5IUG/exec';
@@ -35,11 +33,23 @@
         let pendingDeleteBackendUrl = GAS_URL;
         let imageTargetInputId = "chat-input";
         const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"]
+        const deluxeUsers = ["thenumberonestandard"]
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
 
         function manonIsNotComingBack(){
             console.log(`Manon removed Katseye out of her IG Bio`)
+        }
+
+        function handleAccountType(){
+            const accountType = document.querySelector("span.acctype");
+            if (admins.includes(getCookie('dev-username'))) {
+                accountType.textContent = "✦ Admin Gooseling Account";
+            } else if (deluxeUsers.includes(getCookie('dev-username'))) {
+                accountType.textContent = "✹ Deluxe Gooseling Account";
+            } else {
+                accountType.textContent = "𓅬 Standard Gooseling Account"
+            }
         }
 
         function getCookie(name) {
@@ -730,7 +740,14 @@ function closeEditModal() {
             return;
         }
 
-        const input = document.getElementById("chat-input");
+        let input;
+
+        if (document.getElementById("loser-chat-input"))
+            input = document.getElementById("loser-chat-input");
+        else if (document.getElementById("chat-input")) {
+            input = document.getElementById("chat-input");
+        }
+
         const filenameInput = document.getElementById("image-filename-input");
         const fileInput = document.getElementById("image-file-input");
         const insertButton = document.getElementById("image-insert-button");
@@ -2182,6 +2199,8 @@ function closeEditModal() {
             
             let disclaimerTextContent;
 
+            handleAccountType();
+
             if (isAdmin()) {
                 disclaimerTextContent = getCookie('dev-username');
                 
@@ -2711,7 +2730,7 @@ function closeEditModal() {
             height:310px;
         }
         #loser-message-container{
-            background: #cbaaf0 !important;
+            background: #c2bbca !important;
         }
         #message-container div button[type="button"],
         #loser-message-container div button[type="button"] {
@@ -3152,7 +3171,7 @@ function closeEditModal() {
         }
 
         .admin-toggle input:checked + .admin-toggle-slider {
-            background-color: orangered;
+            background-color:olivedrab;
         }
 
         .admin-toggle input:checked + .admin-toggle-slider::before {
@@ -3657,12 +3676,16 @@ function closeEditModal() {
                 <h2>Test: Goose Latin Book</h2>
                 <center><div class="idiv"><iframe src="/assets/github/book.html"></iframe></div></center>
                 <h2>Test: Goose Latin to English Translator</h2>
-                <p>Coming soon... October 2</p>
+                <p>Coming soon...</p>
             </div>
 
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
                 <div id="notifbox" style="display:flex;gap:15px;flex-direction: column;">
+                    <div>
+                        <p><strong>[Highlighted by @thegoose] Try GooseGum - Goosism's Leading Chewing Gum & Breath Mint Brand • @goosegum-worshippromotions</strong></p>
+                        <p>Attention gooselings, this is the moment all of you have been waiting for! GooseGum is out now! We are starting out with five types: GooseGum Saver, (cheap vanilla) GooseGum Standard, (fresh mint) GooseGum Deluxe, (fresh herbal oils, mint, and real digestable gold) GooseGum Opal, (features an apple-like mint refreshing taste with gold) and GooseGum Premium. (contains real gold, diamond, sapphire, ruby, and emerald while offering the herbal taste) Get them in packs of 24 while they last!</p>
+                    </div>
                     <div>
                         <p><strong>[SPONSORED] Enjoy 20% off at Saint Duck's Restaurant and Gastropub • @officialsaintduck</strong></p>
                         <p>Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's! Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.</p>
@@ -3764,7 +3787,7 @@ function closeEditModal() {
                             <form id="chat-form">
                                 <input maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                                 <button type="submit" id="send-message" style="padding: 8px;">Send</button>
-                                <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Clear</button>
+                                <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Wipe</button>
                                 <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
                             </form>
                         </div>
@@ -3774,7 +3797,7 @@ function closeEditModal() {
                             <form id="loser-chat-form">
                                 <input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                                 <button type="submit" id="send-message-loser" style="padding: 8px;">Send</button>
-                                <button type="button" id="clear-chat-loser" class="admin-only-feature" style="padding: 8px;display:none;">✦ Clear</button>
+                                <button type="button" id="clear-chat-loser" class="admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
                                 <button type="button" id="add-image-loser" class="admin-only-feature" style="padding: 8px;display:none">✦ Image</button>
                             </form>
                         </div>
@@ -3786,8 +3809,11 @@ function closeEditModal() {
                 <h2>Account</h2>
 
                 <p>
-                    <strong>Your account username: <span class="name"></span></strong>
+                    <u>Your account username</u>: <span class="name"></span>
                     <button title="Click to copy..."  onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent = 'Copy'}, 3000)" class="copy-account-btn">Copy</button>
+                    <br>
+                    <u>Your account type</u>: <span class="acctype"></span>
+                    
                 </p>
 
                 <p>Manage your gooseling account here.</p>
@@ -3838,11 +3864,11 @@ function closeEditModal() {
     <div id="clear-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="clear-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
             <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
-            <h2 id="clear-modal-title">Clear Chat</h2>
+            <h2 id="clear-modal-title">Wipe Chat</h2>
             <p>Are you sure you want to clear all chat messages?</p>
             <div class="edit-modal-buttons">
                 <button type="button" id="clear-cancel-button">Cancel</button>
-                <button type="button" id="clear-confirm-button">Clear Everything</button>
+                <button type="button" id="clear-confirm-button">Wipe Everything</button>
             </div>
         </div>
     </div>
