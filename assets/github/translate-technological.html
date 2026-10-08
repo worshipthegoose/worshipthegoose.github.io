@@ -3,9 +3,20 @@
 <head>
     <link rel="stylesheet" href="/cursor.css">
 <style>
-    * {
+    *:not(.translator-content button) {
         font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif;
+      background-color: transparent !important;;
+      background-image: none !important;
+      background: none !important;
     }
+    body{
+      background:none !important;
+      display:flex;
+      justify-content: center;
+      align-items: center;
+      transform:scale(1.)
+    }
+    
 textarea {
 	width:300px !important;
     height:300px !important;
@@ -15,9 +26,9 @@ textarea {
 textarea.translated {
     cursor:text !important;
     user-select: text; 
-    user-drag: none; 
+    /* user-drag: none; Did y'all know sophia went on hiatus??? gws!!! */
     -webkit-user-drag: none;
-    background-color: #f9f9f9;
+    background-color: transparent !important;
     color: #333;
 }
 textarea.translator:focus{
@@ -35,13 +46,13 @@ textarea.translator:focus{
 }
 .translator-container { gap:15px; }
 .translated-container{
-    background-color: white;
+    background-color: transparent !important;
     width:fit-content;
     padding:2%;
     position:fixed;
     top:50%;
     left:50%;
-    transform:translate(-50%, -50%)
+    transform: translate(-50%, -50%);
 }
 .translated-container button {
 	width:fit-content;
@@ -50,7 +61,7 @@ textarea.translator:focus{
     padding:4.5px 6px;
     font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard', 'Chalkboard SE', sans-serif;
     font-size:23px;
-    background: steelblue;
+    background: steelblue !important;
     color:white;
     border:none;
     border-radius:7px;
@@ -61,52 +72,155 @@ textarea.translator:focus{
 }
 </style>
 <script>
+function hasCapitalLetter(str) {
+  return /[A-Z]/.test(str);
+}
+
+const punctuationList = ['.', '!', '?', ',', '/', '[', ']', ')', '('];
+
 document.addEventListener('DOMContentLoaded', function(){
   const translator = document.querySelector("textarea.translator");
   const translated = document.querySelector("textarea.translated");
   
+  var cachedEnglishTo = [];
+  var cachedGoseTo = [];
+
+  var swapButton = document.querySelector(".swap-button")
+  var langStatus = false;
+
   translator.addEventListener("input", function() {
     translated.value = "";
-    let content = translator.value;
-    let translateList = content.split(' ');
-    
-    for (let latinWord of translateList) {
-      if (latinWord.length === 0) continue;
+
+    if (!langStatus) {
+      let content = translator.value;
+      let translateList = content.split(' ');
       
-      let lastChar = latinWord.charAt(latinWord.length - 1);
-      let hasPunctuation = ['.', '!', '?'].includes(lastChar);
-      let cleanWord = hasPunctuation ? latinWord.slice(0, -1) : latinWord;
-      
-      if (cleanWord.length === 0) {
-        if (translated.value.length === 0) {
-          translated.value = lastChar;
-        } else {
-          translated.value += ` ${lastChar}`;
+      for (let latinWord of translateList) {
+        if (latinWord.length === 0) continue;
+        
+        let lastChar = latinWord.charAt(latinWord.length - 1);
+        let hasPunctuation = punctuationList.includes(lastChar);
+        let cleanWord = hasPunctuation ? latinWord.slice(0, -1) : latinWord;
+        
+        if (cleanWord.length === 0) {
+          if (translated.value.length === 0) {
+            translated.value = lastChar;
+          } else {
+            translated.value += ` ${lastChar}`;
+          }
+          continue;
         }
-        continue;
+        
+        let firstLetter = cleanWord.charAt(0);
+        let remainingWord = cleanWord.slice(1);
+        let tempWord = `${remainingWord}${firstLetter}`;
+
+        const existing = translated.value.trim();
+        const wordIdx = existing === "" ? 0 : existing.split(/\s+/).length;
+
+
+        if (wordIdx % 2 === 0) {
+          tempWord += 'honk';
+        } else {
+          tempWord += 'duck';
+        }
+        
+        if (hasPunctuation) {
+          tempWord += lastChar; // I mean what the fu
+        }
+        if (hasCapitalLetter(tempWord)) tempWord = tempWord.charAt(0).toUpperCase() + tempWord.slice(1).toLowerCase();
+
+        if (translated.value.length === 0) {
+          translated.value = tempWord;
+        } else {
+          translated.value += ` ${tempWord}`;
+        }
       }
-      
-      let firstLetter = cleanWord.charAt(0);
-      let remainingWord = cleanWord.slice(1);
-      let tempWord = `${remainingWord}${firstLetter}`;
-      
-      if (tempWord.length % 2 !== 0) {
-        tempWord += 'honk';
-      } else {
-        tempWord += 'duck';
-      }
-      
-      if (hasPunctuation) {
-        tempWord += lastChar;
-      }
-      
-      if (translated.value.length === 0) {
-        translated.value = tempWord;
-      } else {
-        translated.value += ` ${tempWord}`;
+    } else {
+      var toBeAnglicised = translator.value;
+      var angloList = toBeAnglicised.split(' ');
+
+      for (let gooseWord of angloList) {
+        if (gooseWord.length === 0) continue;
+
+        let lastChar = gooseWord.charAt(gooseWord.length - 1);
+        let hasPunctuation = punctuationList.includes(lastChar);
+        let cleanWord = hasPunctuation ? gooseWord.slice(0, -1) : gooseWord;
+
+        let englishWord;
+
+        if (cleanWord.length === 0) {
+          englishWord = lastChar;
+        } else if (cleanWord.length < 5) {
+          englishWord = gooseWord;
+        } else {
+          let stripped = cleanWord.slice(0, -4);
+          englishWord = stripped.charAt(stripped.length - 1) + stripped.slice(0, -1);
+
+          if (cleanWord.charAt(0) === cleanWord.charAt(0).toUpperCase() && cleanWord.charAt(0) !== cleanWord.charAt(0).toLowerCase()) {
+            englishWord = englishWord.charAt(0).toUpperCase() + englishWord.slice(1).toLowerCase();
+          }
+
+          if (hasPunctuation) {
+            englishWord += lastChar;
+          }
+        }
+
+        if (translated.value.length === 0) {
+          translated.value = englishWord;
+        } else {
+          translated.value += ` ${englishWord}`;
+        }
       }
     }
   });
+  
+
+  swapButton.onclick = function(e){
+    e.preventDefault();
+    if (!langStatus) { 
+      cachedEnglishTo = [translator.value, translated.value]
+    } else {
+      cachedGoseTo = [translator.value, translated.value]
+    }
+
+    langStatus = !langStatus;
+    
+    var language1 = document.querySelector(".lang-1");
+    var language2 = document.querySelector(".lang-2");
+    
+
+    if (langStatus) {
+      language1.textContent = "Goose Latin";
+      language2.textContent = "English";
+
+      translator.placeholder = "Nterehonk Oosegduck Atinlhonk Erehduck...";
+      translated.placeholder = "English Appears Here...";
+
+      if (cachedGoseTo.length > 0){
+        translated.value = cachedGoseTo[0];
+        translator.value = cachedGoseTo[1];
+      } else {
+        translator.value = "";
+        translated.value = "";
+      }
+
+    } else {
+      language1.textContent = "English";
+      language2.textContent = "Goose Latin";
+
+      translator.placeholder = "Enter English Here..."
+      translated.placeholder = "Goose Latin Appears Here..."
+    
+      if (cachedEnglishTo.length > 0){
+        translated.value = cachedEnglishTo[0];
+        translator.value = cachedEnglishTo[1];
+      } else {
+        translator.value = "";
+        translated.value = "";
+      }
+    }
+  }
 });
 
 </script>
@@ -115,15 +229,15 @@ document.addEventListener('DOMContentLoaded', function(){
 <div class="translated-container">
   <div class="translator-container">
       <div class="translator-content">
-      <p><strong>Goose Latin</strong></p>
-        <textarea class="translator" placeholder="Enter Goose Latin Here" width="500" height="500"></textarea>
+      <p><strong class="lang-1">English</strong></p>
+        <textarea class="translator" placeholder="Enter English Here..." width="500" height="500"></textarea>
       </div>
       <div class="translator-content">
-        <p><strong>English</strong></p>
-        <textarea class="translated" placeholder="English Will Appear Here" width="500" height="500" readonly onfocus="this.select()"></textarea>
+        <p><strong class="lang-2">Goose Latin</strong></p>
+        <textarea class="translated" placeholder="Goose Latin Appears Here..." width="500" height="500" readonly onfocus="this.select()"></textarea>
       </div>
   </div>
-  <button type="button">Swap!</button>
+  <button class="swap-button" type="button">Swap!</button>
 </div>
 
 </body>

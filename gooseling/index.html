@@ -36,6 +36,7 @@
         const deluxeUsers = ["thenumberonestandard"]
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
+        let newMessageAux = new Audio('/assets/new-message.wav')
 
         function manonIsNotComingBack(){
             console.log(`Manon removed Katseye out of her IG Bio`)
@@ -963,6 +964,7 @@ function closeEditModal() {
                 if (!isInitialLoad && data.length > lastKnownMessageCount) {
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
+                    newMessageAux.play();
 
                     if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
@@ -1570,6 +1572,7 @@ function closeEditModal() {
                 if (!isInitialLoad && data.length > loserLastKnownMessageCount) {
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
+                    newMessageAux.play();
 
                     if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
@@ -2974,7 +2977,8 @@ function closeEditModal() {
         #add-image,
         #send-message-loser,
         #clear-chat-loser,
-        #add-image-loser {
+        #add-image-loser, 
+        #pause-chat-loser {
             padding: 8px !important;
             border: none;
             border-radius: 7px;
@@ -2991,8 +2995,9 @@ function closeEditModal() {
         #add-image:hover,
         #send-message-loser:hover,
         #clear-chat-loser:hover,
-        #add-image-loser:hover {
-            background: rgb(126, 179, 223) !important;
+        #add-image-loser:hover,
+        #pause-chat-loser:hover {
+            background: rgb(126, 179, 223);
             color: #222 !important;
             box-shadow: 0 4px 10px rgba(51, 51, 51, 0.5);
         }
@@ -3002,7 +3007,8 @@ function closeEditModal() {
         #add-image:disabled,
         #send-message-loser:disabled,
         #clear-chat-loser:disabled,
-        #add-image-loser:disabled {
+        #add-image-loser:disabled,
+        #pause-chat-loser:disabled {
             opacity: 0.6;
             cursor: wait;
         }
@@ -3045,6 +3051,9 @@ function closeEditModal() {
         #send-message-loser:hover {
             background-color: royalblue !important;
             color: white !important;
+        }
+        #pause-chat-loser {
+            background-color: rgb(177, 127, 61);
         }
         #clear-chat-loser {
             background-color: #75baa1 !important;
@@ -3119,7 +3128,7 @@ function closeEditModal() {
             font-size: 18px;
             user-select: none;
         }
-        .idiv {
+        .idiv, .udiv {
         position: relative;
         width: 400px;       
         height: 300px;     
@@ -3129,8 +3138,12 @@ function closeEditModal() {
         text-align: center;
         overflow: hidden;   
         }
-
-        .idiv iframe {
+        .udiv iframe {
+            
+        width: 400%;        
+        height: 400%;
+        }
+        .idiv iframe, .udiv iframe {
         position: absolute;
 
         top: -100px;        
@@ -3392,6 +3405,10 @@ function closeEditModal() {
         }
         #chat-form button#add-image:hover, #chat-form button#add-image-loser:hover{
             background-color:palevioletred !important;
+        }
+        button#pause-chat-loser:hover {
+            background-color: burlywood !important;
+            color:black !important
         }
         #chat-form button#clear-chat:hover, #chat-form button#clear-chat-loser:hover{
             background-color:#498a72!important;
@@ -3675,8 +3692,8 @@ function closeEditModal() {
                 <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
                 <h2>Test: Goose Latin Book</h2>
                 <center><div class="idiv"><iframe src="/assets/github/book.html" allowfullscreen></iframe></div></center>
-                <h2>Test: Goose Latin to English Translator</h2>
-                <p>Coming soon...</p>
+                <center><h2>Test: Goose Latin to English Translator</h2>
+                <div class="udiv"><iframe style="margin:0 auto;display:inline-block" src="/assets/github/translate-technological.html" allowfullscreen></iframe></div></center>
             </div>
 
             <div id="notifications" class="tabcontent">
@@ -3798,7 +3815,7 @@ function closeEditModal() {
                                 <input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                                 <button type="submit" id="send-message-loser" style="padding: 8px;">Send</button>
                                 <button type="button" id="clear-chat-loser" class="admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
-                                <button type="button" id="add-image-loser" class="admin-only-feature" style="padding: 8px;display:none">✦ Image</button>
+                                <button type="button" id="pause-chat-loser" class="admin-only-feature" disabled style="padding: 8px;display:none">✦ Pause</button>
                             </form>
                         </div>
                     </div>
