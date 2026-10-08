@@ -18,6 +18,7 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
         const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbz-nFj6GvWLOrZ5q2bfQlRT_9cpPXAGjPZMDX_PewD3PtnSnDxBvORKPdt24B-g5IUG/exec';
         const ORIGINAL_FAVICON = "../favicon.ico";
+        const newMessageAux = new Audio('/assets/new-message.wav')
         let badgedFaviconDataUrl = null;
         let lastKnownMessageCount = 0;
         let hasUnreadMessages = false;
@@ -36,7 +37,6 @@
         const deluxeUsers = ["thenumberonestandard"]
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
-        let newMessageAux = new Audio('/assets/new-message.wav')
 
         function manonIsNotComingBack(){
             console.log(`Manon removed Katseye out of her IG Bio`)
