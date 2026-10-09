@@ -16,7 +16,7 @@
 
     <script class="default">
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
-        const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbz-nFj6GvWLOrZ5q2bfQlRT_9cpPXAGjPZMDX_PewD3PtnSnDxBvORKPdt24B-g5IUG/exec';
+        const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbw3_51lSzgsgnoIvpEQGf3rJv36SHA5JLrsDMroJTgmpiwynIJzjkiGTQsBKTD4yI_x/exec';
         const ORIGINAL_FAVICON = "../favicon.ico";
         const newMessageAux = new Audio('/assets/new-message.wav')
         let badgedFaviconDataUrl = null;
@@ -33,13 +33,18 @@
         let editingMessageBackendUrl = GAS_URL;
         let pendingDeleteBackendUrl = GAS_URL;
         let imageTargetInputId = "chat-input";
-        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"]
-        const deluxeUsers = ["thenumberonestandard", "coopergooser"]
+        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"] // Pre: Update this in the GAS aarya if you see this
+        const deluxeUsers = ["goosercooper"]
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
-
+        var pauseGooseChat = false;
+        
         function manonIsNotComingBack(){
             console.log(`Manon removed Katseye out of her IG Bio`)
+        }
+
+        function canUseHeaders(username) {
+            return admins.includes(username) || deluxeUsers.includes(username);
         }
 
         function handleAccountType(){
@@ -113,6 +118,10 @@
         }
 
         function isAdmin() {
+            return admins.includes(getCookie("dev-username"));
+        }
+
+        function isDeluxeUser() {
             return admins.includes(getCookie("dev-username"));
         }
 
@@ -229,8 +238,8 @@
                 addImage.style.display = enabled ? "inline-block" : "none";
             }
             
-            document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
-            document.querySelector("#loser-chat-input").placeholder = `${randomPlaceholder}`;
+            if (true) document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
+            if (true) document.querySelector("#loser-chat-input").placeholder = `${randomPlaceholder}`;
             
         }
 
@@ -743,7 +752,7 @@ function closeEditModal() {
 
         let input;
 
-        if (document.getElementById("loser-chat-input"))
+        if (document.getElementById("loser-chat-input") === "fubar")
             input = document.getElementById("loser-chat-input");
         else if (document.getElementById("chat-input")) {
             input = document.getElementById("chat-input");
@@ -993,9 +1002,10 @@ function closeEditModal() {
 
                 data.forEach(post => {
                     const rawMessage = String(post.message || "").trim();
-                    const headerMatch = rawMessage.match(/^\[header=([^\]]+)\]$/i);
-                    const exitMatch = rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i);
-                    const enterMatch = rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i);
+                    const headerAllowed = canUseHeaders(post.username);
+                    const headerMatch = headerAllowed ? rawMessage.match(/^\[header=([^\]]+)\]$/i) : null;
+                    const exitMatch = headerAllowed ? rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i) : null;
+                    const enterMatch = headerAllowed ? rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i) : null;
 
                     const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
                     const postDateString = postDate.toLocaleDateString("en-US", {
@@ -1005,7 +1015,7 @@ function closeEditModal() {
                     if (headerMatch) {
                         currentSection = {
                             header: post,
-                            headerText: headerMatch[1].trim(),
+                            headerText: `𓅼 ${headerMatch[1].trim()} 𓅼`,
                             messages: [],
                             dateString: postDateString,
                             headerNumber: headers.length + 1,
@@ -1186,7 +1196,16 @@ function closeEditModal() {
 
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+                    let hyperTag;
+                    if (post.username === 'thegoose') {
+                        hyperTag = "[OMNISCIENT] "
+                    } else if (admins.includes(post.username) && false) {
+                        hyperTag = "✦ "
+                    } else if (deluxeUsers.includes(post.username) && false) {
+                        hyperTag = "✷ "
+                    } else {
+                        hyperTag = ""
+                    }
 
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
@@ -1396,9 +1415,10 @@ function closeEditModal() {
                                     });
                                 });
 
+                                
                                 buttonWrapper.appendChild(editButton);
                                 hiddenMsgDiv.appendChild(buttonWrapper);
-                                announcementWrapper.appendChild(hiddenMsgDiv);
+                                if (isAdmin() || isDeluxeUser()) announcementWrapper.appendChild(hiddenMsgDiv);
                             }
                             return;
                         }
@@ -1418,7 +1438,16 @@ function closeEditModal() {
 
                         msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                        let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+                        let hyperTag;
+                        if (post.username === 'thegoose') {
+                            hyperTag = "[OMNISCIENT] "
+                        } else if (admins.includes(post.username) && false) {
+                            hyperTag = "✦ "
+                        } else if (deluxeUsers.includes(post.username) && false) {
+                            hyperTag = "✷ "
+                        } else {
+                            hyperTag = ""
+                        }
 
                         if (showAdminFeatures()) {
                             const buttonWrapper = document.createElement("span");
@@ -1561,6 +1590,19 @@ function closeEditModal() {
 
                 const data = await response.json();
 
+                if (data && !Array.isArray(data) && data.paused === true) {
+                    pauseGooseChat = true;
+                    loserLastMessageData = "";
+                    updatePauseUI();
+                    return;
+                }
+
+                if (pauseGooseChat) {
+                    pauseGooseChat = false;
+                    loserLastMessageData = "";
+                    updatePauseUI();
+                }
+
                 if (!Array.isArray(data)) {
                     container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
                     return;
@@ -1601,9 +1643,10 @@ function closeEditModal() {
 
                 data.forEach(post => {
                     const rawMessage = String(post.message || "").trim();
-                    const headerMatch = rawMessage.match(/^\[header=([^\]]+)\]$/i);
-                    const exitMatch = rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i);
-                    const enterMatch = rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i);
+                    const headerAllowed = canUseHeaders(post.username);
+                    const headerMatch = headerAllowed ? rawMessage.match(/^\[header=([^\]]+)\]$/i) : null;
+                    const exitMatch = headerAllowed ? rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i) : null;
+                    const enterMatch = headerAllowed ? rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i) : null;
 
                     const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
                     const postDateString = postDate.toLocaleDateString("en-US", {
@@ -1613,7 +1656,7 @@ function closeEditModal() {
                     if (headerMatch) {
                         currentSection = {
                             header: post,
-                            headerText: headerMatch[1].trim(),
+                            headerText: `𓅼 ${headerMatch[1].trim()} 𓅼`,
                             messages: [],
                             dateString: postDateString,
                             headerNumber: headers.length + 1,
@@ -1805,7 +1848,16 @@ function closeEditModal() {
 
                     msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                    let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+                    let hyperTag;
+                    if (post.username === 'thegoose') {
+                        hyperTag = "[OMNISCIENT] "
+                    } else if (admins.includes(post.username) && false) {
+                        hyperTag = "✦ "
+                    } else if (deluxeUsers.includes(post.username) && false) {
+                        hyperTag = "✷ "
+                    } else {
+                        hyperTag = ""
+                    }
 
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
@@ -2048,7 +2100,16 @@ function closeEditModal() {
 
                         msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
 
-                        let hyperTag = post.username === "thegoose" ? "[OMNISCIENT] " : "";
+                        let hyperTag;
+                        if (post.username === 'thegoose') {
+                            hyperTag = "[OMNISCIENT] "
+                        } else if (admins.includes(post.username) && false) {
+                            hyperTag = "✦ "
+                        } else if (deluxeUsers.includes(post.username) && false) {
+                            hyperTag = "✷ "
+                        } else {
+                            hyperTag = ""
+                        }
 
                         if (showAdminFeatures()) {
                             const buttonWrapper = document.createElement("span");
@@ -2147,7 +2208,22 @@ function closeEditModal() {
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+            } finally {
+                if (pauseGooseChat) {
+                    if (true) { 
+                        document.querySelector("#loser-chat-input").disabled = true;
+                        document.querySelector("#send-message-loser").disabled = true;
+                        document.querySelector("#clear-chat-loser").disabled = true;
+                        if (false) document.querySelector("#loser-chat-input").placeholder = "";
+                    }
+                    container.innerHTML = "<p style='color:#222'>The Goose Chatbox has been paused by the administrators due to an unknown reason. We're sorry for the inconvenience, and it should be up and running soon.</p>"
+                } else {
+                    document.querySelector("#clear-chat-loser").disabled = false;
+                    document.querySelector("#loser-chat-input").disabled = false;
+                    document.querySelector("#send-message-loser").disabled = false;
+                }
             }
+            
 
         }
 
@@ -2197,6 +2273,99 @@ function closeEditModal() {
             clearButton.textContent = "Clear All";
         }
     }
+
+        function updatePauseUI() {
+            const pauseButton = document.getElementById("pause-chat-loser");
+            const title = document.getElementById("pause-modal-title");
+            const text = document.getElementById("pause-modal-text");
+            const confirmButton = document.getElementById("pause-confirm-button");
+
+            if (pauseButton) {
+                pauseButton.textContent = pauseGooseChat ? "✦ Resume" : "✦ Pause";
+            }
+
+            if (title) {
+                title.textContent = pauseGooseChat ? "Resume Chat" : "Pause Chat";
+            }
+
+            if (text) {
+                text.textContent = pauseGooseChat
+                    ? "Are you sure you want to resume the Goose Chat?"
+                    : "Are you sure you want to pause the Goose Chat?";
+            }
+
+            if (confirmButton) {
+                confirmButton.textContent = pauseGooseChat ? "Resume" : "Pause";
+            }
+        }
+
+        function openPauseModal() {
+            if (!isAdmin()) return;
+
+            const overlay = document.getElementById("pause-modal-overlay");
+
+            if (!overlay) return;
+
+            updatePauseUI();
+            overlay.style.display = "flex";
+        }
+
+        function closePauseModal() {
+            const overlay = document.getElementById("pause-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+        }
+
+        async function confirmPauseChat() {
+            if (!isAdmin()) return;
+
+            var confirmBtn = document.querySelector('#pause-confirm-button');
+            confirmBtn.disabled = true;
+            if (pauseGooseChat) {
+                confirmBtn.textContent = "Resuming..."
+            } else {
+                confirmBtn.textContent = "Pausing..."
+            }
+
+            try {
+                const response = await fetch(LOSER_GAS_URL, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        action: "pause",
+                        paused: !pauseGooseChat,
+                        username: getCookie("dev-username")
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status !== "success") {
+                    throw new Error(result.message || "Failed to change pause state.");
+                }
+
+                pauseGooseChat = result.paused === true;
+            } catch (err) {
+                console.error("Failed to change pause state:", err);
+                alert("Failed to change pause state: " + err.message);
+            }
+
+            closePauseModal();
+            updatePauseUI();
+            confirmBtn.disabled = false;
+
+            loserLastMessageData = "";
+            await loadLoserMessages(false);
+        }
 
         document.addEventListener("DOMContentLoaded", function() {
             
@@ -2255,6 +2424,7 @@ function closeEditModal() {
 
             updateAdminFeatures();
             selectDefaultChatbox();
+            updatePauseUI();
 
             const clearBtn = document.getElementById("clear-chat");
 
@@ -2269,6 +2439,14 @@ function closeEditModal() {
             if (loserClearBtn && isAdmin()) {
                 loserClearBtn.addEventListener("click", async () => {
                     openClearModal(LOSER_GAS_URL);
+                });
+            }
+
+            const pauseBtn = document.getElementById("pause-chat-loser");
+
+            if (pauseBtn && isAdmin()) {
+                pauseBtn.addEventListener("click", () => {
+                    openPauseModal();
                 });
             }
 
@@ -2543,11 +2721,32 @@ function closeEditModal() {
                 });
             }
 
+            const pauseCancelButton = document.getElementById("pause-cancel-button");
+            const pauseConfirmButton = document.getElementById("pause-confirm-button");
+            const pauseOverlay = document.getElementById("pause-modal-overlay");
+
+            if (pauseCancelButton) {
+                pauseCancelButton.addEventListener("click", closePauseModal);
+            }
+
+            if (pauseConfirmButton) {
+                pauseConfirmButton.addEventListener("click", confirmPauseChat);
+            }
+
+            if (pauseOverlay) {
+                pauseOverlay.addEventListener("click", function(e) {
+                    if (e.target === pauseOverlay) {
+                        closePauseModal();
+                    }
+                });
+            }
+
             document.addEventListener("keydown", function(e) {
                 if (e.key === "Escape") {
                     closeEditModal();
                     closeDeleteModal();
                     closeClearModal();
+                    closePauseModal();
                     closeImageModal();
                     closeImageViewer();
                 }
@@ -2787,6 +2986,7 @@ function closeEditModal() {
         #edit-cancel-button,
         #delete-cancel-button,
         #clear-cancel-button,
+        #pause-cancel-button,
         #image-cancel-button {
             background: #ccc;
             color: #444 !important;
@@ -2796,6 +2996,7 @@ function closeEditModal() {
         #edit-cancel-button:hover,
         #delete-cancel-button:hover,
         #clear-cancel-button:hover,
+        #pause-cancel-button:hover,
         #image-cancel-button:hover {
             background: #bbb;
             color: #222 !important;
@@ -2804,6 +3005,7 @@ function closeEditModal() {
         #edit-push-button,
         #delete-confirm-button,
         #clear-confirm-button,
+        #pause-confirm-button,
         #image-insert-button {
             background: steelblue;
             color: #eee !important;
@@ -2813,6 +3015,7 @@ function closeEditModal() {
         #edit-push-button:hover,
         #delete-confirm-button:hover,
         #clear-confirm-button:hover,
+        #pause-confirm-button:hover,
         #image-insert-button:hover {
             background: rgb(126, 179, 223);
             color: #222 !important;
@@ -2821,9 +3024,10 @@ function closeEditModal() {
         #edit-push-button:disabled,
         #delete-confirm-button:disabled,
         #clear-confirm-button:disabled,
+        #pause-confirm-button:disabled,
         #image-insert-button:disabled {
             opacity: 0.6;
-            cursor: wait;
+            cursor: wait !important;
         }
 
         span.modal-disclaimer-fine {
@@ -3010,7 +3214,7 @@ function closeEditModal() {
         #add-image-loser:disabled,
         #pause-chat-loser:disabled {
             opacity: 0.6;
-            cursor: wait;
+            cursor: not-allowed;
         }
 
         #chat-form,
@@ -3053,7 +3257,8 @@ function closeEditModal() {
             color: white !important;
         }
         #pause-chat-loser {
-            background-color: rgb(177, 127, 61);
+            background-color: #ad749e;
+            color:whitesmoke !important;
         }
         #clear-chat-loser {
             background-color: #75baa1 !important;
@@ -3064,11 +3269,11 @@ function closeEditModal() {
             color: white !important;
         }
         #add-image-loser {
-            background-color: rgb(231, 168, 179) !important;
+            background-color:#db8cc9!important;
             color: #222 !important;
         }
         #add-image-loser:hover {
-            background-color: palevioletred !important;
+            background-color: #bf7fb0 !important;
             color: #222 !important;
         }
         #send-message-loser,
@@ -3084,7 +3289,8 @@ function closeEditModal() {
         }
         #send-message-loser:disabled,
         #clear-chat-loser:disabled,
-        #add-image-loser:disabled {
+        #add-image-loser:disabled
+         {
             opacity: 0.6;
             cursor: wait;
         }
@@ -3407,7 +3613,7 @@ function closeEditModal() {
             background-color:palevioletred !important;
         }
         button#pause-chat-loser:hover {
-            background-color: burlywood !important;
+            background-color: #df9cd0 !important;
             color:black !important
         }
         #chat-form button#clear-chat:hover, #chat-form button#clear-chat-loser:hover{
@@ -3815,7 +4021,7 @@ function closeEditModal() {
                                 <input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
                                 <button type="submit" id="send-message-loser" style="padding: 8px;">Send</button>
                                 <button type="button" id="clear-chat-loser" class="admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
-                                <button type="button" id="pause-chat-loser" class="admin-only-feature" disabled style="padding: 8px;display:none">✦ Pause</button>
+                                <button type="button" id="pause-chat-loser" class="admin-only-feature" style="padding: 8px;display:none">✦ Pause</button>
                             </form>
                         </div>
                     </div>
@@ -3886,6 +4092,18 @@ function closeEditModal() {
             <div class="edit-modal-buttons">
                 <button type="button" id="clear-cancel-button">Cancel</button>
                 <button type="button" id="clear-confirm-button">Wipe Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="pause-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+            <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <h2 id="pause-modal-title">Pause Chat</h2>
+            <p id="pause-modal-text">Are you sure you want to pause The Goose Chatbox - Goose Chat?</p>
+            <div class="edit-modal-buttons">
+                <button type="button" id="pause-cancel-button">Cancel</button>
+                <button type="button" id="pause-confirm-button">Pause</button>
             </div>
         </div>
     </div>
