@@ -2560,12 +2560,19 @@ function closeEditModal() {
 
                     if (!input || !input.value.trim() || !sendButton) return;
 
-                    const messageText = input.value.trim()
+                        const messages = input.value.trim()
                         .replace(/\r?\n/g, "[newline]")
                         .replace(/\[goose\]/g, "𓅬")
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
                         .replace(/\baarya\b/gi, "@agooseworshipper")
-                        .replace(/\bsaam\b/gi, "saam");
+                        .replace(/\bsaam\b/gi, "The 2oose")
+                        .replace(/\bcora\b/gi, "@laureline")
+                        .replace(/\bcrow\b/gi, "@laureline")
+                        .replace(/\brhodes\b/gi, "@robogoose")
+                        .replace(/\beshi\b/gi, "@eshigoose")
+                        .replace(/\bjohan\b/gi, "@goseultimate")
+                        .replace(/\bcooper\b/gi, "@goosercooper")
+                        .replace(/\bhatethegoose\b/gi, "lovethegoose");
 
                     input.value = "";
                     input.disabled = true;
