@@ -2560,7 +2560,7 @@ function closeEditModal() {
 
                     if (!input || !input.value.trim() || !sendButton) return;
 
-                        const messages = input.value.trim()
+                        const messageText = input.value.trim()
                         .replace(/\r?\n/g, "[newline]")
                         .replace(/\[goose\]/g, "𓅬")
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
