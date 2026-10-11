@@ -684,60 +684,138 @@ function closeEditModal() {
             }
         }
 
-    function renderChatMessage(message) {
-        const fragment = document.createDocumentFragment();
-        const regex = /\[image=([^\]]+)\]|\[newline\]/gi;
+    function createReplyButton(post, inputId) {
+        if (!canUseHeaders(getCookie("dev-username"))) {
+            return document.createDocumentFragment();
+        }   
+        
+        const wrapper = document.createElement("span");
+        wrapper.style.display = "inline-flex";
+        wrapper.style.flex = "0 0 auto";
+        wrapper.style.whiteSpace = "nowrap";
+        wrapper.style.verticalAlign = "top";
 
-        let lastIndex = 0;
-        let match;
+        const replyButton = document.createElement("button");
+        replyButton.type = "button";
+        replyButton.textContent = "+";
+        replyButton.title = `Reply to @${post.username}`;
+        replyButton.className = "message-reply-button";
+        replyButton.style.marginRight = "6px";
 
-        while ((match = regex.exec(message)) !== null) {
-            const textBefore = message.slice(lastIndex, match.index);
+        replyButton.addEventListener("click", () => {
+            insertReply(post, inputId);
+        });
 
-            if (textBefore) {
-                fragment.appendChild(document.createTextNode(textBefore));
-            }
-
-            if (match[0].toLowerCase() === "[newline]") {
-                fragment.appendChild(document.createElement("br"));
-            } else {
-                const filename = match[1].trim();
-
-                if (
-                    filename &&
-                    !/[\\/:?#]/.test(filename) &&
-                    /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)
-                ) {
-                    const link = document.createElement("a");
-                    link.href = "#";
-                    link.className = "image-chat-link";
-                    link.textContent = `goosefile:${filename}`;
-
-                    link.addEventListener("click", (event) => {
-                        event.preventDefault();
-                        openImageViewer(filename);
-                    });
-
-                    fragment.appendChild(link);
-                } else {
-                    fragment.appendChild(
-                        document.createTextNode(match[0])
-                    );
-                }
-            }
-
-            lastIndex = regex.lastIndex;
-        }
-
-        const remaining = message.slice(lastIndex);
-
-        if (remaining) {
-            fragment.appendChild(document.createTextNode(remaining));
-        }
-
-        return fragment;
+        wrapper.appendChild(replyButton);
+        return wrapper;
     }
 
+    function buildQuote(message) {
+        let quote = String(message || "")
+            .replace(/\[reply=[^\]]*\]/gi, "")
+            .replace(/\[image=[^\]]*\]/gi, "(image)")
+            .replace(/\[newline\]/gi, " ")
+            .replace(/[\[\]]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (quote.length > 60) {
+            quote = quote.slice(0, 60).trim() + "...";
+        }
+
+        return quote;
+    }
+
+    function insertReply(post, inputId) {
+        const input = document.getElementById(inputId);
+        if (!input || input.disabled) return;
+
+        let token = `[reply=@${post.username}] `;
+
+        if (canUseHeaders(getCookie("dev-username"))) {
+            const quote = buildQuote(post.message);
+            if (quote) {
+                token = `[reply=@${post.username} quote=${quote}] `;
+            }
+        }
+
+        const cleaned = input.value.replace(/^\[reply=[^\]]*\]\s*/i, "");
+        input.value = token + cleaned;
+
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+}
+
+    function renderChatMessage(message, username) {
+    const fragment = document.createDocumentFragment();
+    const regex = /\[image=([^\]]+)\]|\[reply=(@?[^\s\]]+)(?:\s+quote=([^\]]*))?\]|\[newline\]/gi;
+
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(message)) !== null) {
+        const textBefore = message.slice(lastIndex, match.index);
+
+        if (textBefore) {
+            fragment.appendChild(document.createTextNode(textBefore));
+        }
+
+        if (match[0].toLowerCase() === "[newline]") {
+            fragment.appendChild(document.createElement("br"));
+        } else if (match[2]) {
+            const replyTag = document.createElement("span");
+            replyTag.className = "reply-tag";
+            replyTag.textContent = `⤷ ${match[2].trim()}`;
+
+            const quote = match[3] ? match[3].trim() : "";
+
+            if (quote && canUseHeaders(username)) {
+                const quoteElement = document.createElement("em");
+                quoteElement.className = "reply-quote";
+                quoteElement.textContent = ` "${quote}"`;
+                replyTag.appendChild(quoteElement);
+            }
+
+            fragment.appendChild(replyTag);
+        } else {
+            const filename = match[1].trim();
+
+            if (
+                filename &&
+                !/[\\/:?#]/.test(filename) &&
+                /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)
+            ) {
+                const link = document.createElement("a");
+                link.href = "#";
+                link.className = "image-chat-link";
+                link.textContent = `goosefile:${filename}`;
+
+                link.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    openImageViewer(filename);
+                });
+
+                fragment.appendChild(link);
+            } else {
+                fragment.appendChild(
+                    document.createTextNode(match[0])
+                );
+            }
+        }
+
+        lastIndex = regex.lastIndex;
+    }
+
+    const remaining = message.slice(lastIndex);
+
+    if (remaining) {
+        fragment.appendChild(document.createTextNode(remaining));
+    }
+
+    return fragment;
+}
     async function insertImageToken() {
         //const IMG_GAS = "https:
 
@@ -1207,6 +1285,8 @@ function closeEditModal() {
                         hyperTag = ""
                     }
 
+                    msgDiv.appendChild(createReplyButton(post, "chat-input"));
+
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
                         buttonWrapper.style.display = "inline-flex";
@@ -1271,7 +1351,7 @@ function closeEditModal() {
                     usernameStrong.appendChild(usernameSpan);
                     textSpan.appendChild(usernameStrong);
 
-                    textSpan.appendChild(renderChatMessage(post.message || ""));
+                    textSpan.appendChild(renderChatMessage(post.message || "", post.username));
 
                     const timestampSpan = document.createElement("span");
                     timestampSpan.style.color = "#444";
@@ -1449,6 +1529,8 @@ function closeEditModal() {
                             hyperTag = ""
                         }
 
+                        msgDiv.appendChild(createReplyButton(post, "chat-input"));
+
                         if (showAdminFeatures()) {
                             const buttonWrapper = document.createElement("span");
                             buttonWrapper.style.display = "inline-flex";
@@ -1513,7 +1595,7 @@ function closeEditModal() {
                         usernameStrong.appendChild(usernameSpan);
                         textSpan.appendChild(usernameStrong);
 
-                        textSpan.appendChild(renderChatMessage(post.message || ""));
+                        textSpan.appendChild(renderChatMessage(post.message || "", post.username));
 
                         const timestampSpan = document.createElement("span");
                         timestampSpan.style.color = "#444";
@@ -1859,6 +1941,8 @@ function closeEditModal() {
                         hyperTag = ""
                     }
 
+                    msgDiv.appendChild(createReplyButton(post, "loser-chat-input"));
+
                     if (showAdminFeatures()) {
                         const buttonWrapper = document.createElement("span");
                         buttonWrapper.style.display = "inline-flex";
@@ -1923,7 +2007,7 @@ function closeEditModal() {
                     usernameStrong.appendChild(usernameSpan);
                     textSpan.appendChild(usernameStrong);
 
-                    textSpan.appendChild(renderChatMessage(post.message || ""));
+                    textSpan.appendChild(renderChatMessage(post.message || "", post.username));
 
                     const timestampSpan = document.createElement("span");
                     timestampSpan.style.color = "#444";
@@ -2111,6 +2195,8 @@ function closeEditModal() {
                             hyperTag = ""
                         }
 
+                        msgDiv.appendChild(createReplyButton(post, "loser-chat-input"));
+
                         if (showAdminFeatures()) {
                             const buttonWrapper = document.createElement("span");
                             buttonWrapper.style.display = "inline-flex";
@@ -2175,7 +2261,7 @@ function closeEditModal() {
                         usernameStrong.appendChild(usernameSpan);
                         textSpan.appendChild(usernameStrong);
 
-                        textSpan.appendChild(renderChatMessage(post.message || ""));
+                        textSpan.appendChild(renderChatMessage(post.message || "", post.username));
 
                         const timestampSpan = document.createElement("span");
                         timestampSpan.style.color = "#444";
@@ -2216,7 +2302,7 @@ function closeEditModal() {
                         document.querySelector("#clear-chat-loser").disabled = true;
                         if (false) document.querySelector("#loser-chat-input").placeholder = "";
                     }
-                    container.innerHTML = "<p style='color:#222'>The Goose Chatbox has been paused by the administrators due to an unknown reason. We're sorry for the inconvenience, and we look forward to it being up and running again.</p>"
+                    container.innerHTML = "<p style='color:#222'>The Goose Chatbox has been paused by the administrators due to an unknown reason. We're sorry for the inconvenience, and it should be up and running soon.</p>"
                 } else {
                     document.querySelector("#clear-chat-loser").disabled = false;
                     document.querySelector("#loser-chat-input").disabled = false;
@@ -2482,14 +2568,10 @@ function closeEditModal() {
                         .replace(/\[goose\]/g, "𓅬")
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
                         .replace(/\baarya\b/gi, "@agooseworshipper")
-                        .replace(/\bsaam\b/gi, "@antigooseling")
+                        .replace(/\bsaam\b/gi, "The 2oose")
                         .replace(/\bcora\b/gi, "@laureline")
                         .replace(/\bcrow\b/gi, "@laureline")
-                        .replace(/\brhodes\b/gi, "@robogoose")
-                        .replace(/\beshi\b/gi, "@eshigoose")
-                        .replace(/\bjohan\b/gi, "@goseultimate")
-                        .replace(/\bcooper\b/gi, "@goosercooper")
-                        .replace(/\bhatethegoose\b/gi, "lovethegoose");
+                        .replace(/\brhodes\b/gi, "@robogoose");
 
                     input.value = "";
 
@@ -2560,19 +2642,12 @@ function closeEditModal() {
 
                     if (!input || !input.value.trim() || !sendButton) return;
 
-                        const messageText = input.value.trim()
+                    const messageText = input.value.trim()
                         .replace(/\r?\n/g, "[newline]")
                         .replace(/\[goose\]/g, "𓅬")
                         .replace(/\briker\b/gi, "@thenumberonegooseling")
                         .replace(/\baarya\b/gi, "@agooseworshipper")
-                        .replace(/\bsaam\b/gi, "@antigooseling")
-                        .replace(/\bcora\b/gi, "@laureline")
-                        .replace(/\bcrow\b/gi, "@laureline")
-                        .replace(/\brhodes\b/gi, "@robogoose")
-                        .replace(/\beshi\b/gi, "@eshigoose")
-                        .replace(/\bjohan\b/gi, "@goseultimate")
-                        .replace(/\bcooper\b/gi, "@goosercooper")
-                        .replace(/\bhatethegoose\b/gi, "lovethegoose");
+                        .replace(/\bsaam\b/gi, "saam");
 
                     input.value = "";
                     input.disabled = true;
@@ -3817,6 +3892,33 @@ function closeEditModal() {
         }
         .message-containers textarea {
             min-width:500px !important;
+        }
+
+        #message-container div button.message-reply-button[type="button"],
+        #loser-message-container div button.message-reply-button[type="button"] {
+            background-color: #d17af9 !important;
+            color: white !important;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+
+        #message-container div button.message-reply-button[type="button"]:hover,
+        #loser-message-container div button.message-reply-button[type="button"]:hover {
+            background-color: #b971da !important;
+            color: white !important;
+        }
+
+        .reply-tag {
+            display: inline-block;
+            padding: 0 5px;
+            margin-right: 0px;
+            border-radius: 4px;
+            background-color: #b971da75;
+            font-weight: bold;
+            font-size: 0.9em;
         }
 
     </style>
