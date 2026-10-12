@@ -685,7 +685,7 @@ function closeEditModal() {
         }
 
     function createReplyButton(post, inputId) {
-        if (!canUseHeaders(getCookie("dev-username"))) {
+        if (!canUseHeaders(getCookie("dev-username")) || (isAdmin() && !showAdminFeatures())) {
             return document.createDocumentFragment();
         }   
         
@@ -697,7 +697,7 @@ function closeEditModal() {
 
         const replyButton = document.createElement("button");
         replyButton.type = "button";
-        replyButton.textContent = "+";
+        replyButton.textContent = "⤷";
         replyButton.title = `Reply to @${post.username}`;
         replyButton.className = "message-reply-button";
         replyButton.style.marginRight = "6px";
@@ -732,7 +732,7 @@ function closeEditModal() {
 
         let token = `[reply=@${post.username}] `;
 
-        if (canUseHeaders(getCookie("dev-username"))) {
+        if ((canUseHeaders(getCookie("dev-username"))) || (isAdmin() && !showAdminFeatures())) {
             const quote = buildQuote(post.message);
             if (quote) {
                 token = `[reply=@${post.username} quote=${quote}] `;
