@@ -1,0 +1,4264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="/cookie-management.js"></script>
+    <script type="module" src="/login.js"></script>
+    <link rel="stylesheet" href="/nav.css">
+    <link rel="stylesheet" href="/footer.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/gooseling/styles.css">
+    <link rel="stylesheet" href="/powerpoint/styles.css">
+    <link rel="stylesheet" href="/cursor.css">
+    <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
+
+    <!-- Worship a goose for life -->
+    <script class="default">
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
+        const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbwm1axiGpenudATQGniRz7DCEJOMk5QOAS7_XSD9WnDT1WDl7YraG5gl0Q-BpinSFff/exec';
+        const ORIGINAL_FAVICON = "../favicon.ico";
+        const newMessageAux = new Audio('/assets/new-message.wav')
+        let badgedFaviconDataUrl = null;
+        let lastKnownMessageCount = 0;
+        let hasUnreadMessages = false;
+        let lastMessageData = "";
+        let loserLastKnownMessageCount = 0;
+        let loserLastMessageData = "";
+        let editingMessageTimestamp = null;
+        let pendingDeleteTimestamp = null;
+        let pendingDeleteElement = null;
+        let pendingClearChat = false;
+        let pendingClearBackendUrl = GAS_URL;
+        let editingMessageBackendUrl = GAS_URL;
+        let pendingDeleteBackendUrl = GAS_URL;
+        let imageTargetInputId = "chat-input";
+        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"] // Pre: Update this in the GAS aarya if you see this
+        const deluxeUsers = ["goosercooper", "laureline"]
+        const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
+        const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
+        var pauseGooseChat = false;
+        
+        function manonIsNotComingBack(){
+            console.log(`Manon removed Katseye out of her IG Bio`)
+        }
+
+        function canUseHeaders(username) {
+            return admins.includes(username) || deluxeUsers.includes(username);
+        }
+
+        function handleAccountType(){
+            const accountType = document.querySelector("span.acctype");
+            if (admins.includes(getCookie('dev-username'))) {
+                accountType.textContent = "✦ Admin Gooseling Account";
+            } else if (deluxeUsers.includes(getCookie('dev-username'))) {
+                accountType.textContent = "✹ Deluxe Gooseling Account";
+            } else {
+                accountType.textContent = "𓅬 Standard Gooseling Account"
+            }
+        }
+
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        function openChatboxTab(evt, tabId) {
+            if (tabId === "chatbox-main" && !showAdminFeatures()) {
+                tabId = "chatbox-goose";
+            }
+
+            const pages = document.getElementsByClassName("chatbox-tab-page");
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.display = "none";
+            }
+
+            const buttons = document.getElementsByClassName("chatbox-tab-button");
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove("active");
+            }
+
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.style.display = "block";
+            }
+
+            const defaultButton = document.querySelector('.chatbox-tab-button[onclick*="' + tabId + '"]');
+            if (defaultButton) {
+                defaultButton.classList.add("active");
+            }
+
+            if (evt && evt.currentTarget && evt.currentTarget === defaultButton) {
+                evt.currentTarget.classList.add("active");
+            }
+        }
+
+        function selectDefaultChatbox() {
+            const adminEnabled = showAdminFeatures();
+            const targetId = adminEnabled ? "chatbox-main" : "chatbox-goose";
+            openChatboxTab(null, targetId);
+        }
+        if (getCookie('dev-username') === 'testaccount' && "ignore-this" === "ignore-that") {
+            const textInput = document.querySelector("#chat-form input");
+            const textButton = document.querySelector("#chat-form button[type='submit']");
+
+            textInput.disabled = 'true';
+            textInput.placeholder = "The gosedevs have seized your ability to chat.";
+            textButton.style.display = "none";
+        }
+
+        function escapeHtml(str) {
+            return String(str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+
+        }
+
+        function isAdmin() {
+            return admins.includes(getCookie("dev-username"));
+        }
+
+        function isDeluxeUser() {
+            return admins.includes(getCookie("dev-username"));
+        }
+
+        function showAdminFeatures() {
+            const toggle = document.getElementById("show-admin-features");
+            return isAdmin() && toggle && toggle.checked;
+        }
+
+        function updateAdminFeatures(forceChatSelection = true) {
+            const admin = isAdmin();
+            const enabled = showAdminFeatures();
+
+            const toggleContainer = document.getElementById("admin-feature-toggle-container");
+            const chatboxLayout = document.querySelector(".chatbox-tabs-layout");
+            const chatboxTabButtons = document.querySelector(".chatbox-tab-buttons");
+            const chatboxTabPages = document.querySelector(".chatbox-tab-pages");
+
+            if (admin && enabled) {
+                document.querySelector(".admin-feature-status").textContent = "on";
+
+                const oldInput = document.getElementById("chat-input");
+
+                if (oldInput) {
+                    oldInput.remove();
+                }
+
+                document.querySelector("#chat-form").insertAdjacentHTML(
+                    "afterbegin",
+                    '<textarea maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;"></textarea>'
+                );
+            } else if (admin && !enabled) {
+                document.querySelector(".admin-feature-status").textContent = "off";
+
+                const oldInput = document.getElementById("chat-input");
+
+                if (oldInput) {
+                    oldInput.remove();
+                }
+
+                document.querySelector("#chat-form").insertAdjacentHTML(
+                    "afterbegin",
+                    '<input maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">'
+                );
+            }
+
+            if (chatboxLayout && chatboxTabButtons && chatboxTabPages) {
+                if (enabled) {
+                    chatboxLayout.classList.add("admin-tabs-active");
+                    chatboxTabButtons.style.display = "flex";
+                    chatboxTabPages.style.paddingLeft = "15px";
+                    if (forceChatSelection) {
+                        openChatboxTab(null, "chatbox-main");
+                    }
+                } else {
+                    chatboxLayout.classList.remove("admin-tabs-active");
+                    chatboxTabButtons.style.display = "none";
+                    chatboxTabPages.style.paddingLeft = "0";
+                    if (forceChatSelection) {
+                        openChatboxTab(null, "chatbox-goose");
+                    }
+                }
+            }
+
+            const loserForm = document.getElementById("loser-chat-form");
+            if (loserForm) {
+                const oldLoserInput = document.getElementById("loser-chat-input");
+                if (oldLoserInput) {
+                    const loserInputValue = oldLoserInput.value;
+                    oldLoserInput.remove();
+                    loserForm.insertAdjacentHTML(
+                        "afterbegin",
+                        admin && enabled
+                            ? '<textarea maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;"></textarea>'
+                            : '<input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">'
+                    );
+                    const newLoserInput = document.getElementById("loser-chat-input");
+                    if (newLoserInput) {
+                        newLoserInput.value = loserInputValue;
+                    }
+                }
+            }
+
+            const loserInput = document.getElementById("loser-chat-input");
+            if (loserInput) {
+                loserInput.placeholder = `${randomPlaceholder}`;
+            }
+
+            if (toggleContainer) {
+                toggleContainer.style.display = admin ? "block" : "none";
+            }
+
+            const clearButton = document.getElementById("clear-chat");
+            const loserClearButton = document.getElementById("clear-chat-loser");
+
+            if (clearButton) {
+                clearButton.style.display = enabled ? "inline-block" : "none";
+            }
+
+            if (loserClearButton) {
+                loserClearButton.style.display = enabled ? "inline-block" : "none";
+            }
+
+            document.querySelectorAll(".fine-print-admin").forEach(element => {
+                element.style.display = enabled ? "" : "none";
+            });
+
+            document.querySelectorAll(".admin-only-feature").forEach(element => {
+                element.style.display = enabled ? "" : "none";
+            });
+
+            const addImage = document.getElementById("add-image");
+
+            if (addImage) {
+                addImage.style.display = enabled ? "inline-block" : "none";
+            }
+            
+            if (true) document.querySelector("#chat-input").placeholder = `${randomPlaceholder}`;
+            if (true) document.querySelector("#loser-chat-input").placeholder = `${randomPlaceholder}`;
+            
+        }
+
+        function generateBadgedFavicon() {
+            const img = new Image();
+            img.src = ORIGINAL_FAVICON;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 32;
+                canvas.height = 32;
+                const ctx = canvas.getContext("2d");
+
+                ctx.drawImage(img, 0, 0, 32, 32);
+
+                ctx.beginPath();
+                ctx.arc(24, 24, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "#FF0000";
+                ctx.fill();
+
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.stroke();
+
+                badgedFaviconDataUrl = canvas.toDataURL("image/png");
+                if (hasUnreadMessages) {
+                    updateFavicon(true);
+                }
+            };
+        }
+
+        function updateFavicon(showBadge) {
+            let favicon = document.getElementById("favicon");
+            if (favicon) {
+                favicon.remove();
+            }
+
+            favicon = document.createElement("link");
+            favicon.id = "favicon";
+            favicon.rel = "icon";
+
+            if (showBadge && badgedFaviconDataUrl) {
+                favicon.type = "image/png";
+                favicon.href = badgedFaviconDataUrl;
+            } else {
+                favicon.type = "image/x-icon";
+                favicon.href = ORIGINAL_FAVICON;
+            }
+
+            document.head.appendChild(favicon);
+        }
+
+        function setUnreadStatus(showBadge) {
+            hasUnreadMessages = showBadge;
+            updateFavicon(showBadge);
+        }
+
+        function ensureGuidelinesTabButton() {
+            let tabContainer = document.querySelector(".tab");
+            if (!tabContainer) return null;
+
+            let existingBtn = document.getElementById("guidelines-tab-btn");
+
+            if (!existingBtn) {
+                existingBtn = document.createElement("button");
+                existingBtn.id = "guidelines-tab-btn";
+                existingBtn.className = "tablinks";
+                existingBtn.textContent = "Guidelines";
+                existingBtn.onclick = (e) => openTab(e, 'Guidelines');
+                tabContainer.appendChild(existingBtn);
+            }
+            return existingBtn;
+        }
+
+        function removeGuidelinesTabButton() {
+            let existingBtn = document.getElementById("guidelines-tab-btn");
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+        }
+
+        function handleRoute() {
+            let rawHash = window.location.hash.replace(/^#\/?/, "").toLowerCase();
+
+            if (rawHash === "guidelines" || rawHash === "chatbox/guidelines") {
+                openTab(null, 'Guidelines');
+            } else if (rawHash === "notifications") {
+                openTab(null, 'Notifications');
+            } else if (rawHash === "chatbox") {
+                openTab(null, 'Chatbox');
+            } else if (rawHash === "account") {
+                openTab(null, 'Account');
+            } else {
+                openTab(null, 'Dashboard');
+            }
+        }
+
+        function openChatboxTab(evt, tabId) {
+            if (tabId === "chatbox-main" && !showAdminFeatures()) {
+                tabId = "chatbox-goose";
+            }
+
+            const pages = document.getElementsByClassName("chatbox-tab-page");
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.display = "none";
+            }
+
+            const buttons = document.getElementsByClassName("chatbox-tab-button");
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].className = buttons[i].className.replace(" active", "");
+            }
+
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.style.display = "block";
+            }
+
+            const defaultButton = document.querySelector('.chatbox-tab-button[onclick*="' + tabId + '"]');
+            if (defaultButton) {
+                defaultButton.className += " active";
+            }
+        }
+
+        function openTab(evt, cityName) {
+            var i, tabcontent, tablinks;
+
+            var targetId = cityName.toLowerCase();
+
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            if (targetId === "guidelines" || targetId === "chatbox/guidelines") {
+                targetId = "guidelines";
+                if (window.location.hash !== "#/chatbox/guidelines" && window.location.hash !== "#guidelines") {
+                    window.location.hash = `#/chatbox/guidelines`;
+                }
+                const btn = ensureGuidelinesTabButton();
+                if (btn) {
+                    btn.className += " active";
+                }
+            } else {
+                if (window.location.hash !== `#/${targetId}`) {
+                    window.location.hash = `#/${targetId}`;
+                }
+                removeGuidelinesTabButton();
+            }
+
+            document.querySelector('title').textContent = `Gooseling ${targetId.charAt(0).toUpperCase() + targetId.slice(1)} - The Goose Site`;
+
+            if (targetId === "chatbox") {
+                setUnreadStatus(false);
+            }
+
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.style.display = targetId === "account" ? "flex" : "block";
+            }
+
+            if (targetId !== "guidelines") {
+                if (evt && evt.currentTarget) {
+                    evt.currentTarget.className += " active";
+                } else {
+                    var buttons = document.getElementsByClassName("tablinks");
+                    for (i = 0; i < buttons.length; i++) {
+                        if (buttons[i].textContent.trim().toLowerCase() === targetId) {
+                            buttons[i].className += " active";
+                        }
+                    }
+                }
+            }
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                console.log('Text successfully copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        }
+
+        function openEditModal(post, backendUrl = GAS_URL) {
+            if (!isAdmin()) return;
+
+            editingMessageBackendUrl = backendUrl;
+
+            const overlay = document.getElementById("edit-modal-overlay");
+            const input = document.getElementById("edit-message-input");
+
+            if (!overlay || !input) return;
+
+            editingMessageTimestamp = post.timestamp;
+            input.value = String(post.message || "").replace(/\[newline\]/gi, "\n")
+
+            const authorElement = overlay.querySelector(".disclaimer-fine-author");
+            if (authorElement) {
+                authorElement.textContent = post.username || "Unknown";
+            }
+
+            overlay.style.display = "flex";
+
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
+        }
+
+function closeEditModal() {
+            const overlay = document.getElementById("edit-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+
+            editingMessageTimestamp = null;
+            editingMessageBackendUrl = GAS_URL;
+        }
+
+        function openDeleteModal(timestamp, msgDiv, post, backendUrl = GAS_URL) {
+            if (!isAdmin()) return;
+
+            pendingDeleteBackendUrl = backendUrl;
+
+            const overlay = document.getElementById("delete-modal-overlay");
+
+            if (!overlay) return;
+
+            pendingDeleteTimestamp = timestamp;
+            pendingDeleteElement = msgDiv;
+
+            const authorElement = overlay.querySelector(".disclaimer-fine-author");
+            if (authorElement) {
+                authorElement.textContent = post.username || "Unknown";
+            }
+
+            overlay.style.display = "flex";
+        }
+
+        function closeDeleteModal() {
+            const overlay = document.getElementById("delete-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+
+            pendingDeleteTimestamp = null;
+            pendingDeleteElement = null;
+            pendingDeleteBackendUrl = GAS_URL;
+        }
+
+        async function confirmDeleteMessage() {
+            if (!pendingDeleteTimestamp) return;
+
+            const deleteButton = document.getElementById("delete-confirm-button");
+
+            if (!deleteButton) return;
+
+            deleteButton.disabled = true;
+            deleteButton.textContent = "Deleting...";
+
+            try {
+                const response = await fetch(pendingDeleteBackendUrl || GAS_URL, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        action: "delete",
+                        timestamp: pendingDeleteTimestamp
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                    loadMessages(false)
+                }
+
+                if (pendingDeleteElement) {
+                    pendingDeleteElement.remove();
+                }
+
+                const deleteBackend = pendingDeleteBackendUrl || GAS_URL;
+                closeDeleteModal();
+
+                lastMessageData = "";
+                if (deleteBackend === LOSER_GAS_URL) {
+                    await loadLoserMessages(false);
+                } else {
+                    await loadMessages(false);
+                }
+
+            } catch (err) {
+                console.error("Failed to delete message:", err);
+                alert("Failed to delete message.");
+            } finally {
+                deleteButton.disabled = false;
+                deleteButton.textContent = "Delete";
+            }
+        }
+
+        function openClearModal(backendUrl = GAS_URL) {
+            if (!isAdmin()) return;
+
+            pendingClearBackendUrl = backendUrl;
+
+            const overlay = document.getElementById("clear-modal-overlay");
+
+            if (!overlay) return;
+
+            pendingClearChat = true;
+            overlay.style.display = "flex";
+        }
+
+        function closeClearModal() {
+            const overlay = document.getElementById("clear-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+
+            pendingClearChat = false;
+            pendingClearBackendUrl = GAS_URL;
+        }
+
+        let pendingImageFilename = null;
+
+        function openImageModal() {
+            if (!isAdmin()) return;
+
+            const overlay = document.getElementById("image-modal-overlay");
+            const input = document.getElementById("image-filename-input");
+
+            if (!overlay || !input) return;
+
+            input.value = "";
+            overlay.style.display = "flex";
+
+            setTimeout(() => {
+                input.focus();
+            }, 50);
+        }
+        function openImageViewer(filename) {
+            const overlay = document.getElementById("image-viewer-overlay");
+            const image = document.getElementById("image-viewer-image");
+            const filenameElement = document.getElementById("image-viewer-filename");
+
+            if (!overlay || !image || !filenameElement) return;
+
+            filenameElement.textContent = filename;
+
+            image.src = `/assets/images/${encodeURIComponent(filename)}`;
+
+            image.alt = filename;
+
+            overlay.style.display = "flex";
+        }
+
+        function closeImageViewer() {
+            const overlay = document.getElementById("image-viewer-overlay");
+            const image = document.getElementById("image-viewer-image");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+            if (image) image.src = ``;
+        }
+        function closeImageModal() {
+            const overlay = document.getElementById("image-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+
+            pendingImageFilename = null;
+        }
+        
+        async function pushEditedMessage() {
+            if (!editingMessageTimestamp) return;
+
+            const input = document.getElementById("edit-message-input");
+            const pushButton = document.getElementById("edit-push-button");
+
+            if (!input || !pushButton) return;
+
+            const newMessage = input.value.trim();
+
+            if (!newMessage) {
+                alert("The message cannot be empty.");
+                return;
+            }
+
+            const messageToSend = newMessage.replace(/\r?\n/g, "[newline]");
+
+            pushButton.disabled = true;
+            input.disabled = true;
+            pushButton.textContent = "Pushing...";
+
+            try {
+                const response = await fetch(editingMessageBackendUrl || GAS_URL, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        action: "edit",
+                        timestamp: editingMessageTimestamp,
+                        message: messageToSend
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status !== "success") {
+                    throw new Error(result.message || "Failed to edit message.");
+                }
+
+                const editBackend = editingMessageBackendUrl || GAS_URL;
+                closeEditModal();
+
+                lastMessageData = "";
+                if (editBackend === LOSER_GAS_URL) {
+                    await loadLoserMessages(false);
+                } else {
+                    await loadMessages(false);
+                }
+
+            } catch (err) {
+                console.error("Failed to edit message:", err);
+                alert("Failed to edit message: " + err.message);
+            } finally {
+                pushButton.disabled = false;
+                input.disabled = false;
+                pushButton.textContent = "Push";
+            }
+        }
+
+    function createReplyButton(post, inputId) {
+        if (!canUseHeaders(getCookie("dev-username")) || (isAdmin() && !showAdminFeatures())) {
+            return document.createDocumentFragment();
+        }   
+        
+        const wrapper = document.createElement("span");
+        wrapper.style.display = "inline-flex";
+        wrapper.style.flex = "0 0 auto";
+        wrapper.style.whiteSpace = "nowrap";
+        wrapper.style.verticalAlign = "top";
+
+        const replyButton = document.createElement("button");
+        replyButton.type = "button";
+        replyButton.textContent = "⤷";
+        replyButton.title = `Reply to @${post.username}`;
+        replyButton.className = "message-reply-button";
+        replyButton.style.marginRight = "6px";
+
+        replyButton.addEventListener("click", () => {
+            insertReply(post, inputId);
+        });
+
+        wrapper.appendChild(replyButton);
+        return wrapper;
+    }
+
+    function buildQuote(message) {
+        let quote = String(message || "")
+            .replace(/\[reply=[^\]]*\]/gi, "")
+            .replace(/\[image=[^\]]*\]/gi, "(image)")
+            .replace(/\[newline\]/gi, " ")
+            .replace(/[\[\]]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (quote.length > 60) {
+            quote = quote.slice(0, 60).trim() + "...";
+        }
+
+        return quote;
+    }
+
+    function insertReply(post, inputId) {
+        const input = document.getElementById(inputId);
+        if (!input || input.disabled) return;
+
+        let token = `[reply=@${post.username}] `;
+
+        if ((canUseHeaders(getCookie("dev-username"))) || (isAdmin() && !showAdminFeatures())) {
+            const quote = buildQuote(post.message);
+            if (quote) {
+                token = `[reply=@${post.username} quote=${quote}] `;
+            }
+        }
+
+        const cleaned = input.value.replace(/^\[reply=[^\]]*\]\s*/i, "");
+        input.value = token + cleaned;
+
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+}
+
+    function renderChatMessage(message, username) {
+    const fragment = document.createDocumentFragment();
+    const regex = /\[image=([^\]]+)\]|\[reply=(@?[^\s\]]+)(?:\s+quote=([^\]]*))?\]|\[newline\]/gi;
+
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(message)) !== null) {
+        const textBefore = message.slice(lastIndex, match.index);
+
+        if (textBefore) {
+            fragment.appendChild(document.createTextNode(textBefore));
+        }
+
+        if (match[0].toLowerCase() === "[newline]") {
+            fragment.appendChild(document.createElement("br"));
+        } else if (match[2]) {
+            const replyTag = document.createElement("span");
+            replyTag.className = "reply-tag";
+            replyTag.textContent = `⤷ ${match[2].trim()}`;
+
+            const quote = match[3] ? match[3].trim() : "";
+
+            if (quote && canUseHeaders(username)) {
+                const quoteElement = document.createElement("em");
+                quoteElement.className = "reply-quote";
+                quoteElement.textContent = ` "${quote}"`;
+                replyTag.appendChild(quoteElement);
+            }
+
+            fragment.appendChild(replyTag);
+        } else {
+            const filename = match[1].trim();
+
+            if (
+                filename &&
+                !/[\\/:?#]/.test(filename) &&
+                /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)
+            ) {
+                const link = document.createElement("a");
+                link.href = "#";
+                link.className = "image-chat-link";
+                link.textContent = `goosefile:${filename}`;
+
+                link.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    openImageViewer(filename);
+                });
+
+                fragment.appendChild(link);
+            } else {
+                fragment.appendChild(
+                    document.createTextNode(match[0])
+                );
+            }
+        }
+
+        lastIndex = regex.lastIndex;
+    }
+
+    const remaining = message.slice(lastIndex);
+
+    if (remaining) {
+        fragment.appendChild(document.createTextNode(remaining));
+    }
+
+    return fragment;
+}
+    async function insertImageToken() {
+        //const IMG_GAS = "https:
+
+        if (!isAdmin()) {
+            const status = document.querySelector(".image-modal-status");
+            if (status) {
+                status.textContent =
+                    "Hackers fortunately cannot insert images...";
+            }
+            return;
+        }
+
+        let input;
+
+        if (document.getElementById("loser-chat-input") === "fubar")
+            input = document.getElementById("loser-chat-input");
+        else if (document.getElementById("chat-input")) {
+            input = document.getElementById("chat-input");
+        }
+
+        const filenameInput = document.getElementById("image-filename-input");
+        const fileInput = document.getElementById("image-file-input");
+        const insertButton = document.getElementById("image-insert-button");
+        const status = document.querySelector(".image-modal-status");
+
+        if (!input || !filenameInput) return;
+
+        const filename = filenameInput.value.trim();
+        const file = fileInput?.files?.[0] || null;
+
+        if (!filename) {
+            status.textContent =
+                "Please enter an actual file name, goose you.";
+            return;
+        }
+
+        if (
+            filename.includes("/") ||
+            filename.includes("\\") ||
+            filename.includes("..")
+        ) {
+            status.textContent =
+                "Sorry! You can't add your own images to avoid inappropriate content.";
+            return;
+        }
+
+        if (!/^[^?#%]+\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename)) {
+            status.textContent = "Invalid. Just invalid.";
+            return;
+        }
+
+        if (!file) {
+            const token = `[image=${filename}] `;
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+
+            input.value =
+                input.value.slice(0, start) +
+                token +
+                input.value.slice(end);
+
+            input.focus();
+
+            const newCursorPosition = start + token.length;
+
+            input.setSelectionRange(
+                newCursorPosition,
+                newCursorPosition
+            );
+
+            status.textContent = "Image token inserted!";
+
+            closeImageModal();
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            status.textContent =
+                "That isn't an image, goose.";
+            return;
+        }
+
+        const MAX_SIZE = 10 * 1024 * 1024;
+
+        if (file.size > MAX_SIZE) {
+            status.textContent =
+                "That image is too large. Maximum size is 10 MB.";
+            return;
+        }
+
+        if (insertButton) {
+            insertButton.disabled = true;
+            insertButton.textContent = "Uploading...";
+        }
+
+        try {
+            const base64Content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    const result = reader.result;
+
+                    if (typeof result !== "string") {
+                        reject(new Error("Could not convert image."));
+                        return;
+                    }
+
+                    const base64 = result.split(",")[1];
+
+                    if (!base64) {
+                        reject(new Error("Could not convert image."));
+                        return;
+                    }
+
+                    resolve(base64);
+                };
+
+                reader.onerror = () => {
+                    reject(new Error("Could not read image."));
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            /* const response = await fetch(IMG_GAS, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "upload-image",
+                    fileName: filename,
+                    content: base64Content
+                })
+            }); */
+
+            const result = await response.json();
+
+            if (!response.ok || result.status !== "success") {
+                throw new Error(
+                    result.message ||
+                    result.error ||
+                    "Image upload failed."
+                );
+            }
+
+            const token = `[image='${filename}'] `;
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+
+            input.value =
+                input.value.slice(0, start) +
+                token +
+                input.value.slice(end);
+
+            input.focus();
+
+            const newCursorPosition = start + token.length;
+
+            input.setSelectionRange(
+                newCursorPosition,
+                newCursorPosition
+            );
+
+            status.textContent = "Image uploaded!";
+
+            closeImageModal();
+
+        } catch (err) {
+            console.error("Image upload failed:", err);
+
+            status.textContent =
+                "Upload failed: " + err.message;
+
+        } finally {
+            if (insertButton) {
+                insertButton.disabled = false;
+                insertButton.textContent = "Insert";
+            }
+        }
+    }
+
+        async function loadMessages(isInitialLoad = false){
+            const container = document.getElementById("message-container");
+            if (!container) return;
+
+            if (isInitialLoad) {
+                let inlineStyles;
+                if (getCookie('canada_goose') === "true") {
+                    inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                } else {
+                    inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                }
+                container.innerHTML = `<center><span style="${inlineStyles}">Loading...</span></center>`;
+            }
+
+            if (getCookie('is-developer') !== 'true') {
+                window.location.replace('/gooseling/authentication');
+                return;
+            }
+
+            const username = getCookie("dev-username");
+
+            if (username) {
+                document.querySelectorAll(".name").forEach((name) => {
+                    name.textContent = decodeURIComponent(username);
+                });
+            }
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: "GET",
+                    redirect: "follow"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
+                    return;
+                }
+
+                const devUsername = getCookie("dev-username");
+                const currentMessageData = JSON.stringify(data);
+
+                if (!isInitialLoad && data.length > lastKnownMessageCount) {
+                    const latestMessage = data[data.length - 1];
+                    const currentTabHash = window.location.hash.toLowerCase();
+                    newMessageAux.play();
+
+                    if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
+                        setUnreadStatus(true);
+                    }
+                }
+
+                lastKnownMessageCount = data.length;
+
+                if (!isInitialLoad && currentMessageData === lastMessageData) {
+                    return;
+                }
+
+                lastMessageData = currentMessageData;
+
+                if (data.length === 0) {
+                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                const sections = [];
+                const headers = [];
+                let currentSection = null;
+                let explicitlyEnteredHeader = false;
+
+                data.forEach(post => {
+                    const rawMessage = String(post.message || "").trim();
+                    const headerAllowed = canUseHeaders(post.username);
+                    const headerMatch = headerAllowed ? rawMessage.match(/^\[header=([^\]]+)\]$/i) : null;
+                    const exitMatch = headerAllowed ? rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i) : null;
+                    const enterMatch = headerAllowed ? rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i) : null;
+
+                    const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
+                    const postDateString = postDate.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
+                    if (headerMatch) {
+                        currentSection = {
+                            header: post,
+                            headerText: `𓅼 ${headerMatch[1].trim()} 𓅼`,
+                            messages: [],
+                            dateString: postDateString,
+                            headerNumber: headers.length + 1,
+                            closed: false
+                        };
+
+                        headers.push(currentSection);
+                        sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
+                    } else if (exitMatch) {
+                        const requestedNumber = exitMatch[1] ? Number(exitMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = true;
+                        }
+
+                        currentSection = null;
+                        explicitlyEnteredHeader = false;
+
+                        const exitMessage = {
+                            ...post,
+                            message: exitMatch[2].trim(),
+                            headerCommand: rawMessage
+                        };
+
+                        sections.push({
+                            header: null,
+                            headerText: "",
+                            messages: [exitMessage],
+                            dateString: postDateString
+                        });
+                    } else if (enterMatch) {
+                        const requestedNumber = enterMatch[1] ? Number(enterMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = false;
+                            currentSection = targetHeader;
+                            explicitlyEnteredHeader = true;
+
+                            if (enterMatch[2] && enterMatch[2].trim()) {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: enterMatch[2].trim(),
+                                    headerCommand: rawMessage
+                                });
+                            } else {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: "",
+                                    headerCommand: rawMessage,
+                                    hiddenHeaderCommand: true
+                                });
+                            }
+                        } else {
+                            currentSection = null;
+                            explicitlyEnteredHeader = false;
+                        }
+                    } else if (
+                        currentSection &&
+                        currentSection.header &&
+                        !currentSection.closed &&
+                        currentSection.dateString === postDateString
+                    ) {
+                        currentSection.messages.push(post);
+                    } else {
+                        currentSection = {
+                            header: null,
+                            headerText: "",
+                            messages: [post],
+                            dateString: postDateString
+                        };
+
+                        sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
+                    }
+                });
+
+                const displaySections = [...sections].reverse();
+
+                let lastHeaderDate = "";
+
+                const appendDateHeader = (post) => {
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
+
+                    if (dateHeaderString === lastHeaderDate) {
+                        return;
+                    }
+
+                    lastHeaderDate = dateHeaderString;
+
+                    const headerDiv = document.createElement("div");
+                    headerDiv.style.fontWeight = "bold";
+                    headerDiv.style.textAlign = "center";
+                    headerDiv.style.padding = "8px 0";
+                    headerDiv.style.margin = "0 8px 8px 8px";
+                    headerDiv.style.fontSize = "19.5px";
+
+                    if (getCookie('canada_goose') === 'true') {
+                        headerDiv.style.borderBottom = "2px ridge white";
+                        headerDiv.style.color = "white";
+                    } else {
+                        headerDiv.style.borderBottom = "2px ridge #111";
+                        headerDiv.style.color = "#111";
+                    }
+
+                    headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                    headerDiv.style.userSelect = "none";
+
+                    container.appendChild(headerDiv);
+                };
+
+                const appendMessage = (post, parent) => {
+                    if (post.hiddenHeaderCommand) {
+                        if (showAdminFeatures()) {
+                            const hiddenMsgDiv = document.createElement("div");
+                            hiddenMsgDiv.style.display = "flex";
+                            hiddenMsgDiv.style.width = "100%";
+                            hiddenMsgDiv.style.boxSizing = "border-box";
+                            hiddenMsgDiv.style.marginBottom = "8px";
+                            hiddenMsgDiv.className = "chatbox-message-parent";
+
+                            const buttonWrapper = document.createElement("span");
+                            buttonWrapper.style.display = "inline-flex";
+                            buttonWrapper.style.flex = "0 0 auto";
+                            buttonWrapper.style.whiteSpace = "nowrap";
+                            buttonWrapper.style.verticalAlign = "top";
+
+                            const editButton = document.createElement("button");
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.style.marginRight = "6px";
+                            editButton.classList.add("admin-only-feature");
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand
+                                });
+                            });
+
+                            buttonWrapper.appendChild(editButton);
+                            hiddenMsgDiv.appendChild(buttonWrapper);
+                            parent.appendChild(hiddenMsgDiv);
+                        }
+                        return;
+                    }
+
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                    appendDateHeader(post);
+
+                    const msgDiv = document.createElement("div");
+                    msgDiv.style.marginBottom = "8px";
+                    msgDiv.style.display = "flex";
+                    msgDiv.style.alignItems = "flex-start";
+                    msgDiv.style.flexWrap = "wrap";
+                    msgDiv.style.width = "100%";
+                    msgDiv.style.boxSizing = "border-box";
+                    msgDiv.className = "chatbox-message-parent";
+
+                    const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
+                    msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+
+                    let hyperTag;
+                    if (post.username === 'thegoose') {
+                        hyperTag = "[OMNISCIENT] "
+                    } else if (admins.includes(post.username) && false) {
+                        hyperTag = "✦ "
+                    } else if (deluxeUsers.includes(post.username) && false) {
+                        hyperTag = "✷ "
+                    } else {
+                        hyperTag = ""
+                    }
+
+                    msgDiv.appendChild(createReplyButton(post, "chat-input"));
+
+                    if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, msgDiv, post);
+                        });
+
+                        buttonWrapper.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal({
+                                ...post,
+                                message: post.headerCommand || post.message
+                            });
+                        });
+
+                        buttonWrapper.appendChild(editButton);
+                        msgDiv.appendChild(buttonWrapper);
+                    }
+
+                    const textSpan = document.createElement("span");
+                    textSpan.style.flex = "1 1 0";
+                    textSpan.style.minWidth = "0";
+                    textSpan.style.overflowWrap = "anywhere";
+                    textSpan.style.wordBreak = "break-all";
+
+                    let ifUsername;
+
+                    if (post.username === getCookie("dev-username")) {
+                        if (getCookie("canada_goose") === "true") {
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                        } else {
+                            ifUsername = " style='color:#222'";
+                        }
+                    } else {
+                        ifUsername = "";
+                    }
+
+                    const usernameStrong = document.createElement("strong");
+                    usernameStrong.style.userSelect = "none";
+                    usernameStrong.style.marginRight = "3px";
+
+                    const usernameSpan = document.createElement("span");
+                    usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                    usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+
+                    usernameStrong.appendChild(usernameSpan);
+                    textSpan.appendChild(usernameStrong);
+
+                    textSpan.appendChild(renderChatMessage(post.message || "", post.username));
+
+                    const timestampSpan = document.createElement("span");
+                    timestampSpan.style.color = "#444";
+                    timestampSpan.style.setProperty('font-size', '10px', 'important');
+                    timestampSpan.style.marginLeft = "5px";
+                    timestampSpan.style.setProperty('font-family', "'Comic Sans MS', 'Chalkboard', 'sans-serif'");
+                    timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true
+                    });
+
+                    textSpan.appendChild(timestampSpan);
+
+                    msgDiv.appendChild(textSpan);
+                    parent.appendChild(msgDiv);
+                };
+
+                displaySections.forEach(section => {
+                    if (!section.header) {
+                        const messages = [...section.messages].reverse();
+
+                        messages.forEach(post => {
+                            appendMessage(post, container);
+                        });
+
+                        return;
+                    }
+
+                    appendDateHeader(section.header);
+
+                    const announcementWrapper = document.createElement("div");
+                    announcementWrapper.style.display = "block";
+                    announcementWrapper.style.width = "auto";
+                    announcementWrapper.style.margin = "0 0 8px 0";
+                    announcementWrapper.style.boxSizing = "border-box";
+
+                    const manualHeaderRow = document.createElement("div");
+                    manualHeaderRow.style.position = "relative";
+                    manualHeaderRow.style.display = "flex";
+                    manualHeaderRow.style.alignItems = "center";
+                    manualHeaderRow.style.width = "calc(100% - 16px)";
+                    manualHeaderRow.style.margin = "8px 0 8px 0";
+                    manualHeaderRow.style.borderBottom = "4px dotted #111";
+                    manualHeaderRow.style.boxSizing = "border-box";
+                    manualHeaderRow.style.minHeight = "31px";
+
+                    if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+                        buttonWrapper.style.marginBottom = "3px";
+
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(section.header.timestamp, manualHeaderRow, section.header);
+                        });
+
+                        buttonWrapper.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal(section.header);
+                        });
+
+                        buttonWrapper.appendChild(editButton);
+                        manualHeaderRow.appendChild(buttonWrapper);
+                    }
+
+                    const manualHeader = document.createElement("div");
+                    manualHeader.style.position = "absolute";
+                    manualHeader.style.left = "50%";
+                    manualHeader.style.transform = "translateX(-50%)";
+                    manualHeader.style.width = "max-content";
+                    manualHeader.style.textAlign = "center";
+                    manualHeader.style.fontWeight = "bold";
+                    manualHeader.style.margin = "0";
+                    manualHeader.style.userSelect = "none";
+                    manualHeader.style.color = "#111";
+                    manualHeader.style.fontSize = "17px";
+                    manualHeader.style.paddingBottom = "8px";
+                    manualHeader.textContent = section.headerText;
+
+                    manualHeaderRow.appendChild(manualHeader);
+                    announcementWrapper.appendChild(manualHeaderRow);
+
+                    const messages = [...section.messages].reverse();
+
+                    messages.forEach(post => {
+                        const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                        const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                            timeZone: "America/Los_Angeles",
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric"
+                        });
+
+                        if (dateHeaderString !== lastHeaderDate) {
+                            lastHeaderDate = dateHeaderString;
+                        }
+
+                        if (post.hiddenHeaderCommand) {
+                            if (showAdminFeatures()) {
+                                const hiddenMsgDiv = document.createElement("div");
+                                hiddenMsgDiv.style.display = "flex";
+                                hiddenMsgDiv.style.width = "100%";
+                                hiddenMsgDiv.style.boxSizing = "border-box";
+                                hiddenMsgDiv.style.marginBottom = "8px";
+                                hiddenMsgDiv.className = "chatbox-message-parent";
+
+                                const buttonWrapper = document.createElement("span");
+                                buttonWrapper.style.display = "inline-flex";
+                                buttonWrapper.style.flex = "0 0 auto";
+                                buttonWrapper.style.whiteSpace = "nowrap";
+                                buttonWrapper.style.verticalAlign = "top";
+
+                                const editButton = document.createElement("button");
+                                editButton.type = "button";
+                                editButton.textContent = "✦ Edit";
+                                editButton.style.marginRight = "6px";
+                                editButton.classList.add("admin-only-feature");
+
+                                editButton.addEventListener("click", () => {
+                                    openEditModal({
+                                        ...post,
+                                        message: post.headerCommand
+                                    });
+                                });
+
+                                
+                                buttonWrapper.appendChild(editButton);
+                                hiddenMsgDiv.appendChild(buttonWrapper);
+                                if (isAdmin() || isDeluxeUser()) announcementWrapper.appendChild(hiddenMsgDiv);
+                            }
+                            return;
+                        }
+
+                        const msgDiv = document.createElement("div");
+                        msgDiv.style.marginBottom = "8px";
+                        msgDiv.style.display = "flex";
+                        msgDiv.style.alignItems = "flex-start";
+                        msgDiv.style.flexWrap = "wrap";
+                        msgDiv.style.width = "100%";
+                        msgDiv.style.boxSizing = "border-box";
+                        msgDiv.className = "chatbox-message-parent";
+
+                        const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                            timeZone: "America/Los_Angeles"
+                        });
+
+                        msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+
+                        let hyperTag;
+                        if (post.username === 'thegoose') {
+                            hyperTag = "[OMNISCIENT] "
+                        } else if (admins.includes(post.username) && false) {
+                            hyperTag = "✦ "
+                        } else if (deluxeUsers.includes(post.username) && false) {
+                            hyperTag = "✷ "
+                        } else {
+                            hyperTag = ""
+                        }
+
+                        msgDiv.appendChild(createReplyButton(post, "chat-input"));
+
+                        if (showAdminFeatures()) {
+                            const buttonWrapper = document.createElement("span");
+                            buttonWrapper.style.display = "inline-flex";
+                            buttonWrapper.style.flex = "0 0 auto";
+                            buttonWrapper.style.whiteSpace = "nowrap";
+                            buttonWrapper.style.verticalAlign = "top";
+
+                            const killButton = document.createElement("button");
+                            killButton.type = "button";
+                            killButton.innerHTML = "✦ 🗑";
+                            killButton.className = "message-delete-button admin-only-feature";
+
+                            killButton.addEventListener("click", () => {
+                                openDeleteModal(post.timestamp, msgDiv, post);
+                            });
+
+                            buttonWrapper.appendChild(killButton);
+
+                            const editButton = document.createElement("button");
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.style.marginRight = "6px";
+                            editButton.classList.add("admin-only-feature");
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand || post.message
+                                });
+                            });
+
+                            buttonWrapper.appendChild(editButton);
+                            msgDiv.appendChild(buttonWrapper);
+                        }
+
+                        const textSpan = document.createElement("span");
+                        textSpan.style.flex = "1 1 0";
+                        textSpan.style.minWidth = "0";
+                        textSpan.style.overflowWrap = "anywhere";
+                        textSpan.style.wordBreak = "break-all";
+
+                        let ifUsername;
+
+                        if (post.username === getCookie("dev-username")) {
+                            if (getCookie("canada_goose") === "true") {
+                                ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                            } else {
+                                ifUsername = " style='color:#222'";
+                            }
+                        } else {
+                            ifUsername = "";
+                        }
+
+                        const usernameStrong = document.createElement("strong");
+                        usernameStrong.style.userSelect = "none";
+                        usernameStrong.style.marginRight = "3px";
+
+                        const usernameSpan = document.createElement("span");
+                        usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                        usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+
+                        usernameStrong.appendChild(usernameSpan);
+                        textSpan.appendChild(usernameStrong);
+
+                        textSpan.appendChild(renderChatMessage(post.message || "", post.username));
+
+                        const timestampSpan = document.createElement("span");
+                        timestampSpan.style.color = "#444";
+                        timestampSpan.style.marginLeft = "5px";
+                        timestampSpan.style.setProperty('font-size', '10px', 'important');
+                        timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                            timeZone: "America/Los_Angeles",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true
+                        });
+
+                        textSpan.appendChild(timestampSpan);
+
+                        msgDiv.appendChild(textSpan);
+                        announcementWrapper.appendChild(msgDiv);
+                    });
+
+                    const bottomSeparator = document.createElement("div");
+                    bottomSeparator.style.display = "block";
+                    bottomSeparator.style.borderBottom = "3px dashed #111";
+                    bottomSeparator.style.margin = "8px 0";
+
+                    announcementWrapper.appendChild(bottomSeparator);
+                    container.appendChild(announcementWrapper);
+                });
+
+                updateAdminFeatures(false);
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+                loadMessages(false);
+            }
+
+        }
+
+        async function loadLoserMessages(isInitialLoad = false){
+            const container = document.getElementById("loser-message-container");
+            if (!container) return;
+
+            if (isInitialLoad) {
+                let inlineStyles;
+                if (getCookie('canada_goose') === "true") {
+                    inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                } else {
+                    inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                }
+                container.innerHTML = `<center><span style="${inlineStyles}">Loading...</span></center>`;
+            }
+
+            if (getCookie('is-developer') !== 'true') {
+                window.location.replace('/gooseling/authentication');
+                return;
+            }
+
+            const username = getCookie("dev-username");
+
+            if (username) {
+                document.querySelectorAll(".name").forEach((name) => {
+                    name.textContent = decodeURIComponent(username);
+                });
+            }
+
+            try {
+                const response = await fetch(LOSER_GAS_URL, {
+                    method: "GET",
+                    redirect: "follow"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data && !Array.isArray(data) && data.paused === true) {
+                    pauseGooseChat = true;
+                    loserLastMessageData = "";
+                    updatePauseUI();
+                    return;
+                }
+
+                if (pauseGooseChat) {
+                    pauseGooseChat = false;
+                    loserLastMessageData = "";
+                    updatePauseUI();
+                }
+
+                if (!Array.isArray(data)) {
+                    container.innerHTML = "<p style='color:red;-webkit-text-stroke:0.75px #111;'>Error: Invalid data structure received.</p>";
+                    return;
+                }
+
+                const devUsername = getCookie("dev-username");
+                const currentMessageData = JSON.stringify(data);
+
+                if (!isInitialLoad && data.length > loserLastKnownMessageCount) {
+                    const latestMessage = data[data.length - 1];
+                    const currentTabHash = window.location.hash.toLowerCase();
+                    newMessageAux.play();
+
+                    if (currentTabHash !== "#chatbox" && currentTabHash !== "#/chatbox" && latestMessage.username !== devUsername) {
+                        setUnreadStatus(true);
+                    }
+                }
+
+                loserLastKnownMessageCount = data.length;
+
+                if (!isInitialLoad && currentMessageData === loserLastMessageData) {
+                    return;
+                }
+
+                loserLastMessageData = currentMessageData;
+
+                if (data.length === 0) {
+                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                const sections = [];
+                const headers = [];
+                let currentSection = null;
+                let explicitlyEnteredHeader = false;
+
+                data.forEach(post => {
+                    const rawMessage = String(post.message || "").trim();
+                    const headerAllowed = canUseHeaders(post.username);
+                    const headerMatch = headerAllowed ? rawMessage.match(/^\[header=([^\]]+)\]$/i) : null;
+                    const exitMatch = headerAllowed ? rawMessage.match(/^\[header exit(?:=(\d+))?\]\s*(\S[\s\S]*)$/i) : null;
+                    const enterMatch = headerAllowed ? rawMessage.match(/^\[header enter(?:=(\d+))?\](?:\s+([\s\S]*))?$/i) : null;
+
+                    const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
+                    const postDateString = postDate.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
+                    if (headerMatch) {
+                        currentSection = {
+                            header: post,
+                            headerText: `𓅼 ${headerMatch[1].trim()} 𓅼`,
+                            messages: [],
+                            dateString: postDateString,
+                            headerNumber: headers.length + 1,
+                            closed: false
+                        };
+
+                        headers.push(currentSection);
+                        sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
+                    } else if (exitMatch) {
+                        const requestedNumber = exitMatch[1] ? Number(exitMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = true;
+                        }
+
+                        currentSection = null;
+                        explicitlyEnteredHeader = false;
+
+                        const exitMessage = {
+                            ...post,
+                            message: exitMatch[2].trim(),
+                            headerCommand: rawMessage
+                        };
+
+                        sections.push({
+                            header: null,
+                            headerText: "",
+                            messages: [exitMessage],
+                            dateString: postDateString
+                        });
+                    } else if (enterMatch) {
+                        const requestedNumber = enterMatch[1] ? Number(enterMatch[1]) : null;
+                        const targetHeader = requestedNumber
+                            ? headers.find(header => header.headerNumber === requestedNumber)
+                            : headers[headers.length - 1];
+
+                        if (targetHeader) {
+                            targetHeader.closed = false;
+                            currentSection = targetHeader;
+                            explicitlyEnteredHeader = true;
+
+                            if (enterMatch[2] && enterMatch[2].trim()) {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: enterMatch[2].trim(),
+                                    headerCommand: rawMessage
+                                });
+                            } else {
+                                currentSection.messages.push({
+                                    ...post,
+                                    message: "",
+                                    headerCommand: rawMessage,
+                                    hiddenHeaderCommand: true
+                                });
+                            }
+                        } else {
+                            currentSection = null;
+                            explicitlyEnteredHeader = false;
+                        }
+                    } else if (
+                        currentSection &&
+                        currentSection.header &&
+                        !currentSection.closed &&
+                        currentSection.dateString === postDateString
+                    ) {
+                        currentSection.messages.push(post);
+                    } else {
+                        currentSection = {
+                            header: null,
+                            headerText: "",
+                            messages: [post],
+                            dateString: postDateString
+                        };
+
+                        sections.push(currentSection);
+                        explicitlyEnteredHeader = false;
+                    }
+                });
+
+                const displaySections = [...sections].reverse();
+
+                let lastHeaderDate = "";
+
+                const appendDateHeader = (post) => {
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                    const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
+
+                    if (dateHeaderString === lastHeaderDate) {
+                        return;
+                    }
+
+                    lastHeaderDate = dateHeaderString;
+
+                    const headerDiv = document.createElement("div");
+                    headerDiv.style.fontWeight = "bold";
+                    headerDiv.style.textAlign = "center";
+                    headerDiv.style.padding = "8px 0";
+                    headerDiv.style.margin = "0 8px 8px 8px";
+                    headerDiv.style.fontSize = "19.5px";
+
+                    if (getCookie('canada_goose') === 'true') {
+                        headerDiv.style.borderBottom = "2px ridge white";
+                        headerDiv.style.color = "white";
+                    } else {
+                        headerDiv.style.borderBottom = "2px ridge #111";
+                        headerDiv.style.color = "#111";
+                    }
+
+                    headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                    headerDiv.style.userSelect = "none";
+
+                    container.appendChild(headerDiv);
+                };
+
+                const appendMessage = (post, parent) => {
+                    if (post.hiddenHeaderCommand) {
+                        if (showAdminFeatures()) {
+                            const hiddenMsgDiv = document.createElement("div");
+                            hiddenMsgDiv.style.display = "flex";
+                            hiddenMsgDiv.style.width = "100%";
+                            hiddenMsgDiv.style.boxSizing = "border-box";
+                            hiddenMsgDiv.style.marginBottom = "8px";
+                            hiddenMsgDiv.className = "chatbox-message-parent";
+
+                            const buttonWrapper = document.createElement("span");
+                            buttonWrapper.style.display = "inline-flex";
+                            buttonWrapper.style.flex = "0 0 auto";
+                            buttonWrapper.style.whiteSpace = "nowrap";
+                            buttonWrapper.style.verticalAlign = "top";
+
+                            const killButton = document.createElement("button");
+                            killButton.type = "button";
+                            killButton.innerHTML = "✦ 🗑";
+                            killButton.className = "message-delete-button admin-only-feature";
+
+                            killButton.addEventListener("click", () => {
+                                openDeleteModal(post.timestamp, hiddenMsgDiv, post, LOSER_GAS_URL);
+                            });
+
+                            buttonWrapper.appendChild(killButton);
+
+                            const editButton = document.createElement("button");
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.style.marginRight = "6px";
+                            editButton.classList.add("admin-only-feature");
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand
+                                }, LOSER_GAS_URL);
+                            });
+
+                            buttonWrapper.appendChild(editButton);
+                            hiddenMsgDiv.appendChild(buttonWrapper);
+                            parent.appendChild(hiddenMsgDiv);
+                        }
+                        return;
+                    }
+
+                    const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                    appendDateHeader(post);
+
+                    const msgDiv = document.createElement("div");
+                    msgDiv.style.marginBottom = "8px";
+                    msgDiv.style.display = "flex";
+                    msgDiv.style.alignItems = "flex-start";
+                    msgDiv.style.flexWrap = "wrap";
+                    msgDiv.style.width = "100%";
+                    msgDiv.style.boxSizing = "border-box";
+                    msgDiv.className = "chatbox-message-parent";
+
+                    const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                        timeZone: "America/Los_Angeles"
+                    });
+
+                    msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+
+                    let hyperTag;
+                    if (post.username === 'thegoose') {
+                        hyperTag = "[OMNISCIENT] "
+                    } else if (admins.includes(post.username) && false) {
+                        hyperTag = "✦ "
+                    } else if (deluxeUsers.includes(post.username) && false) {
+                        hyperTag = "✷ "
+                    } else {
+                        hyperTag = ""
+                    }
+
+                    msgDiv.appendChild(createReplyButton(post, "loser-chat-input"));
+
+                    if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(post.timestamp, msgDiv, post, LOSER_GAS_URL);
+                        });
+
+                        buttonWrapper.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal({
+                                ...post,
+                                message: post.headerCommand || post.message
+                            }, LOSER_GAS_URL);
+                        });
+
+                        buttonWrapper.appendChild(editButton);
+                        msgDiv.appendChild(buttonWrapper);
+                    }
+
+                    const textSpan = document.createElement("span");
+                    textSpan.style.flex = "1 1 0";
+                    textSpan.style.minWidth = "0";
+                    textSpan.style.overflowWrap = "anywhere";
+                    textSpan.style.wordBreak = "break-all";
+
+                    let ifUsername;
+
+                    if (post.username === getCookie("dev-username")) {
+                        if (getCookie("canada_goose") === "true") {
+                            ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                        } else {
+                            ifUsername = " style='color:#222'";
+                        }
+                    } else {
+                        ifUsername = "";
+                    }
+
+                    const usernameStrong = document.createElement("strong");
+                    usernameStrong.style.userSelect = "none";
+                    usernameStrong.style.marginRight = "3px";
+
+                    const usernameSpan = document.createElement("span");
+                    usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                    usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+
+                    usernameStrong.appendChild(usernameSpan);
+                    textSpan.appendChild(usernameStrong);
+
+                    textSpan.appendChild(renderChatMessage(post.message || "", post.username));
+
+                    const timestampSpan = document.createElement("span");
+                    timestampSpan.style.color = "#444";
+                    timestampSpan.style.setProperty('font-size', '10px', 'important');
+                    timestampSpan.style.marginLeft = "5px";
+                    timestampSpan.style.setProperty('font-family', "'Comic Sans MS', 'Chalkboard', 'sans-serif'");
+                    timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                        timeZone: "America/Los_Angeles",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true
+                    });
+
+                    textSpan.appendChild(timestampSpan);
+
+                    msgDiv.appendChild(textSpan);
+                    parent.appendChild(msgDiv);
+                };
+
+                displaySections.forEach(section => {
+                    if (!section.header) {
+                        const messages = [...section.messages].reverse();
+
+                        messages.forEach(post => {
+                            appendMessage(post, container);
+                        });
+
+                        return;
+                    }
+
+                    appendDateHeader(section.header);
+
+                    const announcementWrapper = document.createElement("div");
+                    announcementWrapper.style.display = "block";
+                    announcementWrapper.style.width = "auto";
+                    announcementWrapper.style.margin = "0 0 8px 0";
+                    announcementWrapper.style.boxSizing = "border-box";
+
+                    const manualHeaderRow = document.createElement("div");
+                    manualHeaderRow.style.position = "relative";
+                    manualHeaderRow.style.display = "flex";
+                    manualHeaderRow.style.alignItems = "center";
+                    manualHeaderRow.style.width = "calc(100% - 16px)";
+                    manualHeaderRow.style.margin = "8px 0 8px 0";
+                    manualHeaderRow.style.borderBottom = "4px dotted #111";
+                    manualHeaderRow.style.boxSizing = "border-box";
+                    manualHeaderRow.style.minHeight = "31px";
+
+                    if (showAdminFeatures()) {
+                        const buttonWrapper = document.createElement("span");
+                        buttonWrapper.style.display = "inline-flex";
+                        buttonWrapper.style.flex = "0 0 auto";
+                        buttonWrapper.style.whiteSpace = "nowrap";
+                        buttonWrapper.style.verticalAlign = "top";
+                        buttonWrapper.style.marginBottom = "3px";
+
+                        const killButton = document.createElement("button");
+                        killButton.type = "button";
+                        killButton.innerHTML = "✦ 🗑";
+                        killButton.className = "message-delete-button admin-only-feature";
+
+                        killButton.addEventListener("click", () => {
+                            openDeleteModal(section.header.timestamp, manualHeaderRow, section.header, LOSER_GAS_URL);
+                        });
+
+                        buttonWrapper.appendChild(killButton);
+
+                        const editButton = document.createElement("button");
+                        editButton.type = "button";
+                        editButton.textContent = "✦ Edit";
+                        editButton.style.marginRight = "6px";
+                        editButton.classList.add("admin-only-feature");
+
+                        editButton.addEventListener("click", () => {
+                            openEditModal(section.header, LOSER_GAS_URL);
+                        });
+
+                        buttonWrapper.appendChild(editButton);
+                        manualHeaderRow.appendChild(buttonWrapper);
+                    }
+
+                    const manualHeader = document.createElement("div");
+                    manualHeader.style.position = "absolute";
+                    manualHeader.style.left = "50%";
+                    manualHeader.style.transform = "translateX(-50%)";
+                    manualHeader.style.width = "max-content";
+                    manualHeader.style.textAlign = "center";
+                    manualHeader.style.fontWeight = "bold";
+                    manualHeader.style.margin = "0";
+                    manualHeader.style.userSelect = "none";
+                    manualHeader.style.color = "#111";
+                    manualHeader.style.fontSize = "17px";
+                    manualHeader.style.paddingBottom = "8px";
+                    manualHeader.textContent = section.headerText;
+
+                    manualHeaderRow.appendChild(manualHeader);
+                    announcementWrapper.appendChild(manualHeaderRow);
+
+                    const messages = [...section.messages].reverse();
+
+                    messages.forEach(post => {
+                        const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+
+                        const dateHeaderString = msgDateObj.toLocaleDateString("en-US", {
+                            timeZone: "America/Los_Angeles",
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric"
+                        });
+
+                        if (dateHeaderString !== lastHeaderDate) {
+                            lastHeaderDate = dateHeaderString;
+                        }
+
+                        if (post.hiddenHeaderCommand) {
+                            if (showAdminFeatures()) {
+                                const hiddenMsgDiv = document.createElement("div");
+                                hiddenMsgDiv.style.display = "flex";
+                                hiddenMsgDiv.style.width = "100%";
+                                hiddenMsgDiv.style.boxSizing = "border-box";
+                                hiddenMsgDiv.style.marginBottom = "8px";
+                                hiddenMsgDiv.className = "chatbox-message-parent";
+
+                                const buttonWrapper = document.createElement("span");
+                                buttonWrapper.style.display = "inline-flex";
+                                buttonWrapper.style.flex = "0 0 auto";
+                                buttonWrapper.style.whiteSpace = "nowrap";
+                                buttonWrapper.style.verticalAlign = "top";
+
+                                const killButton = document.createElement("button");
+                                killButton.type = "button";
+                                killButton.innerHTML = "✦ 🗑";
+                                killButton.className = "message-delete-button admin-only-feature";
+
+                                killButton.addEventListener("click", () => {
+                                    openDeleteModal(post.timestamp, hiddenMsgDiv, post, LOSER_GAS_URL);
+                                });
+
+                                buttonWrapper.appendChild(killButton);
+
+                                const editButton = document.createElement("button");
+                                editButton.type = "button";
+                                editButton.textContent = "✦ Edit";
+                                editButton.style.marginRight = "6px";
+                                editButton.classList.add("admin-only-feature");
+
+                                editButton.addEventListener("click", () => {
+                                    openEditModal({
+                                        ...post,
+                                        message: post.headerCommand
+                                    }, LOSER_GAS_URL);
+                                });
+
+                                buttonWrapper.appendChild(editButton);
+                                hiddenMsgDiv.appendChild(buttonWrapper);
+                                announcementWrapper.appendChild(hiddenMsgDiv);
+                            }
+                            return;
+                        }
+
+                        const msgDiv = document.createElement("div");
+                        msgDiv.style.marginBottom = "8px";
+                        msgDiv.style.display = "flex";
+                        msgDiv.style.alignItems = "flex-start";
+                        msgDiv.style.flexWrap = "wrap";
+                        msgDiv.style.width = "100%";
+                        msgDiv.style.boxSizing = "border-box";
+                        msgDiv.className = "chatbox-message-parent";
+
+                        const fullTimeText = msgDateObj.toLocaleString("en-US", {
+                            timeZone: "America/Los_Angeles"
+                        });
+
+                        msgDiv.setAttribute("title", `Sent on: ${fullTimeText} PT`);
+
+                        let hyperTag;
+                        if (post.username === 'thegoose') {
+                            hyperTag = "[OMNISCIENT] "
+                        } else if (admins.includes(post.username) && false) {
+                            hyperTag = "✦ "
+                        } else if (deluxeUsers.includes(post.username) && false) {
+                            hyperTag = "✷ "
+                        } else {
+                            hyperTag = ""
+                        }
+
+                        msgDiv.appendChild(createReplyButton(post, "loser-chat-input"));
+
+                        if (showAdminFeatures()) {
+                            const buttonWrapper = document.createElement("span");
+                            buttonWrapper.style.display = "inline-flex";
+                            buttonWrapper.style.flex = "0 0 auto";
+                            buttonWrapper.style.whiteSpace = "nowrap";
+                            buttonWrapper.style.verticalAlign = "top";
+
+                            const killButton = document.createElement("button");
+                            killButton.type = "button";
+                            killButton.innerHTML = "✦ 🗑";
+                            killButton.className = "message-delete-button admin-only-feature";
+
+                            killButton.addEventListener("click", () => {
+                                openDeleteModal(post.timestamp, msgDiv, post, LOSER_GAS_URL);
+                            });
+
+                            buttonWrapper.appendChild(killButton);
+
+                            const editButton = document.createElement("button");
+                            editButton.type = "button";
+                            editButton.textContent = "✦ Edit";
+                            editButton.style.marginRight = "6px";
+                            editButton.classList.add("admin-only-feature");
+
+                            editButton.addEventListener("click", () => {
+                                openEditModal({
+                                    ...post,
+                                    message: post.headerCommand || post.message
+                                }, LOSER_GAS_URL);
+                            });
+
+                            buttonWrapper.appendChild(editButton);
+                            msgDiv.appendChild(buttonWrapper);
+                        }
+
+                        const textSpan = document.createElement("span");
+                        textSpan.style.flex = "1 1 0";
+                        textSpan.style.minWidth = "0";
+                        textSpan.style.overflowWrap = "anywhere";
+                        textSpan.style.wordBreak = "break-all";
+
+                        let ifUsername;
+
+                        if (post.username === getCookie("dev-username")) {
+                            if (getCookie("canada_goose") === "true") {
+                                ifUsername = " style='border-bottom:1.7px solid white !important;'";
+                            } else {
+                                ifUsername = " style='color:#222'";
+                            }
+                        } else {
+                            ifUsername = "";
+                        }
+
+                        const usernameStrong = document.createElement("strong");
+                        usernameStrong.style.userSelect = "none";
+                        usernameStrong.style.marginRight = "3px";
+
+                        const usernameSpan = document.createElement("span");
+                        usernameSpan.setAttribute("style", ifUsername.match(/style='([^']*)'/)?.[1] || "");
+                        usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+
+                        usernameStrong.appendChild(usernameSpan);
+                        textSpan.appendChild(usernameStrong);
+
+                        textSpan.appendChild(renderChatMessage(post.message || "", post.username));
+
+                        const timestampSpan = document.createElement("span");
+                        timestampSpan.style.color = "#444";
+                        timestampSpan.style.marginLeft = "5px";
+                        timestampSpan.style.setProperty('font-size', '10px', 'important');
+                        timestampSpan.textContent = msgDateObj.toLocaleTimeString("en-US", {
+                            timeZone: "America/Los_Angeles",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true
+                        });
+
+                        textSpan.appendChild(timestampSpan);
+
+                        msgDiv.appendChild(textSpan);
+                        announcementWrapper.appendChild(msgDiv);
+                    });
+
+                    const bottomSeparator = document.createElement("div");
+                    bottomSeparator.style.display = "block";
+                    bottomSeparator.style.borderBottom = "3px dashed #111";
+                    bottomSeparator.style.margin = "8px 0";
+
+                    announcementWrapper.appendChild(bottomSeparator);
+                    container.appendChild(announcementWrapper);
+                });
+
+                updateAdminFeatures(false);
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+            } finally {
+                if (pauseGooseChat) {
+                    if (true) { 
+                        document.querySelector("#loser-chat-input").disabled = true;
+                        document.querySelector("#send-message-loser").disabled = true;
+                        document.querySelector("#clear-chat-loser").disabled = true;
+                        if (false) document.querySelector("#loser-chat-input").placeholder = "";
+                    }
+                    container.innerHTML = "<p style='color:#222'>The Goose Chatbox has been paused by the administrators due to an unknown reason. We're sorry for the inconvenience, and it should be up and running soon.</p>"
+                } else {
+                    document.querySelector("#clear-chat-loser").disabled = false;
+                    document.querySelector("#loser-chat-input").disabled = false;
+                    document.querySelector("#send-message-loser").disabled = false;
+                }
+            }
+            
+
+        }
+
+        async function confirmClearChat() {
+        if (!pendingClearChat) return;
+
+        const clearButton = document.getElementById("clear-confirm-button");
+
+        if (!clearButton) return;
+
+        clearButton.disabled = true;
+        clearButton.textContent = "Clearing...";
+
+        try {
+            const response = await fetch(pendingClearBackendUrl || GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "clear"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+
+            const clearBackend = pendingClearBackendUrl || GAS_URL;
+            closeClearModal();
+
+            if (clearBackend === LOSER_GAS_URL) {
+                loserLastMessageData = "";
+                loserLastKnownMessageCount = 0;
+                await loadLoserMessages(false);
+            } else {
+                lastMessageData = "";
+                lastKnownMessageCount = 0;
+                await loadMessages(false);
+            }
+
+        } catch (err) {
+            console.error("Failed to clear messages:", err);
+        } finally {
+            clearButton.disabled = false;
+            clearButton.textContent = "Clear All";
+        }
+    }
+
+        function updatePauseUI() {
+            const pauseButton = document.getElementById("pause-chat-loser");
+            const title = document.getElementById("pause-modal-title");
+            const text = document.getElementById("pause-modal-text");
+            const confirmButton = document.getElementById("pause-confirm-button");
+
+            if (pauseButton) {
+                pauseButton.textContent = pauseGooseChat ? "✦ Resume" : "✦ Pause";
+            }
+
+            if (title) {
+                title.textContent = pauseGooseChat ? "Resume Chat" : "Pause Chat";
+            }
+
+            if (text) {
+                text.textContent = pauseGooseChat
+                    ? "Are you sure you want to resume the Goose Chat?"
+                    : "Are you sure you want to pause the Goose Chat?";
+            }
+
+            if (confirmButton) {
+                confirmButton.textContent = pauseGooseChat ? "Resume" : "Pause";
+            }
+        }
+
+        function openPauseModal() {
+            if (!isAdmin()) return;
+
+            const overlay = document.getElementById("pause-modal-overlay");
+
+            if (!overlay) return;
+
+            updatePauseUI();
+            overlay.style.display = "flex";
+        }
+
+        function closePauseModal() {
+            const overlay = document.getElementById("pause-modal-overlay");
+
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+        }
+
+        async function confirmPauseChat() {
+            if (!isAdmin()) return;
+
+            var confirmBtn = document.querySelector('#pause-confirm-button');
+            confirmBtn.disabled = true;
+            if (pauseGooseChat) {
+                confirmBtn.textContent = "Resuming..."
+            } else {
+                confirmBtn.textContent = "Pausing..."
+            }
+
+            try {
+                const response = await fetch(LOSER_GAS_URL, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        action: "pause",
+                        paused: !pauseGooseChat,
+                        username: getCookie("dev-username")
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status !== "success") {
+                    throw new Error(result.message || "Failed to change pause state.");
+                }
+
+                pauseGooseChat = result.paused === true;
+            } catch (err) {
+                console.error("Failed to change pause state:", err);
+                alert("Failed to change pause state: " + err.message);
+            }
+
+            closePauseModal();
+            updatePauseUI();
+            confirmBtn.disabled = false;
+
+            loserLastMessageData = "";
+            await loadLoserMessages(false);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            let disclaimerTextContent;
+
+            handleAccountType();
+
+            if (isAdmin()) {
+                disclaimerTextContent = getCookie('dev-username');
+                
+            } else {
+                disclaimerTextContent = "There was an error. Please refresh, gooseling.";
+            }
+
+            document.querySelector(".image-viewer-close").addEventListener('click', closeImageViewer);
+
+            document.querySelectorAll(".disclaimer-find-admin").forEach((element) => {
+                element.textContent = disclaimerTextContent;
+            });
+
+            generateBadgedFavicon();
+
+            if (getCookie('is-developer') !== 'true') {
+                window.location.replace('/gooseling/authentication');
+                return;
+            }
+
+            const username = getCookie("dev-username");
+            const devUsername = getCookie("dev-username");
+
+            if (username) {
+                document.querySelectorAll(".name").forEach((name) => {
+                    name.textContent = decodeURIComponent(username);
+                });
+            }
+
+            handleRoute();
+            window.addEventListener("hashchange", handleRoute);
+
+            const adminFeatureToggle = document.getElementById("show-admin-features");
+
+            if (adminFeatureToggle) {
+                if (isAdmin()) {
+                    adminFeatureToggle.checked = getCookie("show-admin-features") === "true";
+
+                    adminFeatureToggle.addEventListener("change", () => {
+                        document.cookie = `show-admin-features=${adminFeatureToggle.checked}; expires=Thu, 31 Dec 2026 23:59:59 UTC; path=/`;
+                        updateAdminFeatures();
+                        lastMessageData = "";
+                        loadMessages(false);
+                    });
+                } else {
+                    adminFeatureToggle.checked = false;
+                }
+            }
+
+            updateAdminFeatures();
+            selectDefaultChatbox();
+            updatePauseUI();
+
+            const clearBtn = document.getElementById("clear-chat");
+
+            if (clearBtn && isAdmin()) {
+                clearBtn.addEventListener("click", async () => {
+                    openClearModal();
+                });
+            }
+
+            const loserClearBtn = document.getElementById("clear-chat-loser");
+
+            if (loserClearBtn && isAdmin()) {
+                loserClearBtn.addEventListener("click", async () => {
+                    openClearModal(LOSER_GAS_URL);
+                });
+            }
+
+            const pauseBtn = document.getElementById("pause-chat-loser");
+
+            if (pauseBtn && isAdmin()) {
+                pauseBtn.addEventListener("click", () => {
+                    openPauseModal();
+                });
+            }
+
+            const chatForm = document.getElementById("chat-form");
+
+            if (chatForm) {
+                chatForm.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        chatForm.requestSubmit();
+                    }
+                });
+
+                chatForm.addEventListener("input", (e) => {
+                    if (e.target && e.target.id === "chat-input" && e.target.tagName === "TEXTAREA") {
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                    }
+                });
+
+                chatForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const input = document.getElementById("chat-input");
+                    const sendButton = chatForm.querySelector("button[type='submit']");
+
+                    if (!input || !input.value.trim() || !sendButton) return;
+
+                    let messageText = input.value.trim();
+
+                    messageText = messageText
+                        .replace(/\r?\n/g, "[newline]")
+                        .replace(/\[goose\]/g, "𓅬")
+                        .replace(/\briker\b/gi, "@thenumberonegooseling")
+                        .replace(/\baarya\b/gi, "@agooseworshipper")
+                        .replace(/\bsaam\b/gi, "@antigooseling")
+                        .replace(/\bcora\b/gi, "@laureline")
+                        .replace(/\bcrow\b/gi, "@laureline")
+                        .replace(/\brhodes\b/gi, "@robogoose")
+                        .replace(/\bjohan\b/gi, "@goseultimate")
+                        .replace(/\beshi\b/gi, "@eshigoose")
+                        .replace(/\bcooper\b/gi, "@goosercooper")
+                        .replace(/\bryker\b/gi, "@thenumberonegooseling");
+
+                    input.value = "";
+
+                    input.disabled = true;
+                    input.classList.add("chat-input-active");
+                    sendButton.disabled = true;
+                    sendButton.style.backgroundColor = "rgb(118, 177, 226)";
+                    sendButton.textContent = "Sending...";
+                    sendButton.classList.add("send-button-active");
+
+                    try {
+                        const response = await fetch(GAS_URL, {
+                            method: "POST",
+                            mode: "cors",
+                            headers: {
+                                "Content-Type": "text/plain;charset=utf-8"
+                            },
+                            body: JSON.stringify({
+                                username: username || "Anonymous",
+                                message: messageText
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP Error! Status: ${response.status}`);
+                        }
+
+                        lastMessageData = "";
+                        await loadMessages(false);
+
+                    } catch (err) {
+                        console.error("Failed to send message:", err);
+                    } finally {
+                        input.disabled = false;
+                        input.classList.remove("chat-input-active");
+                        sendButton.disabled = false;
+                        sendButton.style.backgroundColor = "steelblue";
+                        sendButton.textContent = "Send";
+                        sendButton.classList.remove("send-button-active");
+                        input.focus();
+                    }
+                });
+            }
+
+            const loserChatForm = document.getElementById("loser-chat-form");
+
+            if (loserChatForm) {
+                loserChatForm.addEventListener("input", (e) => {
+                    if (e.target && e.target.id === "loser-chat-input" && e.target.tagName === "TEXTAREA") {
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                    }
+                });
+                loserChatForm.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        loserChatForm.requestSubmit();
+                    }
+                });
+
+                loserChatForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    if (!LOSER_GAS_URL) return;
+
+                    const input = document.getElementById("loser-chat-input");
+                    const sendButton = loserChatForm.querySelector("button[type='submit']");
+
+                    if (!input || !input.value.trim() || !sendButton) return;
+
+                    const messageText = input.value.trim()
+                        .replace(/\r?\n/g, "[newline]")
+                        .replace(/\[goose\]/g, "𓅬")
+                        .replace(/\bryker\b/gi, "@thenumberonegooseling")
+                        .replace(/\briker\b/gi, "@thenumberonegooseling")
+                        .replace(/\baarya\b/gi, "@agooseworshipper")
+                        .replace(/\bcrow\b/gi, "@laureline")
+                        .replace(/\bcora\b/gi, "@laureline")
+                        .replace(/\brhodes\b/gi, "@robogoose")
+                        .replace(/\bcooper\b/gi, "@goosercooper")
+                        .replace(/\bjohan\b/gi, "@goseultimate")
+                        .replace(/\beshi\b/gi, "@eshigoose") 
+                        .replace(/\bsaam\b/gi, "@antigooseling");
+
+                    input.value = "";
+                    input.disabled = true;
+                    input.classList.add("chat-input-active");
+                    sendButton.disabled = true;
+                    sendButton.style.backgroundColor = "rgb(118, 177, 226)";
+                    sendButton.textContent = "Sending...";
+                    sendButton.classList.add("send-button-active");
+
+                    try {
+                        const response = await fetch(LOSER_GAS_URL, {
+                            method: "POST",
+                            mode: "cors",
+                            headers: {
+                                "Content-Type": "text/plain;charset=utf-8"
+                            },
+                            body: JSON.stringify({
+                                username: username || "Anonymous",
+                                message: messageText
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP Error! Status: ${response.status}`);
+                        }
+
+                        await loadLoserMessages(false);
+                    } catch (err) {
+                        console.error("Failed to send Goose Chat message:", err);
+                    } finally {
+                        input.disabled = false;
+                        input.classList.remove("chat-input-active");
+                        sendButton.disabled = false;
+                        sendButton.style.backgroundColor = "steelblue";
+                        sendButton.textContent = "Send";
+                        sendButton.classList.remove("send-button-active");
+                        input.focus();
+                    }
+                });
+            }
+
+            const editCancelButton = document.getElementById("edit-cancel-button");
+            const editPushButton = document.getElementById("edit-push-button");
+            const editOverlay = document.getElementById("edit-modal-overlay");
+            const editMessageInput = document.getElementById("edit-message-input");
+
+            if (editCancelButton) {
+                editCancelButton.addEventListener("click", closeEditModal);
+            }
+
+            if (editPushButton) {
+                editPushButton.addEventListener("click", pushEditedMessage);
+            }
+
+            if (editMessageInput) {
+                editMessageInput.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        pushEditedMessage();
+                    }
+                });
+            }
+
+            if (editOverlay) {
+                editOverlay.addEventListener("click", function(e) {
+                    if (e.target === editOverlay) {
+                        closeEditModal();
+                    }
+                });
+            }
+
+            const imageCancelButton = document.getElementById("image-cancel-button");
+            const imageInsertButton = document.getElementById("image-insert-button");
+            const imageOverlay = document.getElementById("image-modal-overlay");
+            const addImageButton = document.getElementById("add-image");
+            const addImageLoserButton = document.getElementById("add-image-loser");
+            const imageFilenameInput = document.getElementById("image-filename-input");
+
+            if (addImageButton) {
+                addImageButton.addEventListener("click", () => {
+                    if (!isAdmin()) return;
+                    imageTargetInputId = "chat-input";
+                    openImageModal();
+                });
+            }
+
+            if (addImageLoserButton) {
+                addImageLoserButton.addEventListener("click", () => {
+                    if (!isAdmin()) return;
+                    imageTargetInputId = "loser-chat-input";
+                    openImageModal();
+                });
+            }
+
+            if (imageCancelButton) {
+                imageCancelButton.addEventListener("click", closeImageModal);
+            }
+
+            if (imageInsertButton) {
+                imageInsertButton.addEventListener("click", insertImageToken);
+            }
+
+            if (imageOverlay) {
+                imageOverlay.addEventListener("click", function(e) {
+                    if (e.target === imageOverlay) {
+                        closeImageModal();
+                    }
+                });
+            }
+
+            if (imageFilenameInput) {
+                imageFilenameInput.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        insertImageToken();
+                    }
+                });
+            }
+
+            const deleteCancelButton = document.getElementById("delete-cancel-button");
+            const deleteConfirmButton = document.getElementById("delete-confirm-button");
+            const deleteOverlay = document.getElementById("delete-modal-overlay");
+
+            if (deleteCancelButton) {
+                deleteCancelButton.addEventListener("click", closeDeleteModal);
+            }
+
+            if (deleteConfirmButton) {
+                deleteConfirmButton.addEventListener("click", confirmDeleteMessage);
+            }
+
+            if (deleteOverlay) {
+                deleteOverlay.addEventListener("click", function(e) {
+                    if (e.target === deleteOverlay) {
+                        closeDeleteModal();
+                    }
+                });
+            }
+
+            const clearCancelButton = document.getElementById("clear-cancel-button");
+            const clearConfirmButton = document.getElementById("clear-confirm-button");
+            const clearOverlay = document.getElementById("clear-modal-overlay");
+
+            if (clearCancelButton) {
+                clearCancelButton.addEventListener("click", closeClearModal);
+            }
+
+            if (clearConfirmButton) {
+                clearConfirmButton.addEventListener("click", confirmClearChat);
+            }
+
+            if (clearOverlay) {
+                clearOverlay.addEventListener("click", function(e) {
+                    if (e.target === clearOverlay) {
+                        closeClearModal();
+                    }
+                });
+            }
+
+            const pauseCancelButton = document.getElementById("pause-cancel-button");
+            const pauseConfirmButton = document.getElementById("pause-confirm-button");
+            const pauseOverlay = document.getElementById("pause-modal-overlay");
+
+            if (pauseCancelButton) {
+                pauseCancelButton.addEventListener("click", closePauseModal);
+            }
+
+            if (pauseConfirmButton) {
+                pauseConfirmButton.addEventListener("click", confirmPauseChat);
+            }
+
+            if (pauseOverlay) {
+                pauseOverlay.addEventListener("click", function(e) {
+                    if (e.target === pauseOverlay) {
+                        closePauseModal();
+                    }
+                });
+            }
+
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    closeEditModal();
+                    closeDeleteModal();
+                    closeClearModal();
+                    closePauseModal();
+                    closeImageModal();
+                    closeImageViewer();
+                }
+            });
+
+            loadMessages(true);
+            loadLoserMessages(true);
+            setInterval(() => loadMessages(false), 1000);
+            setInterval(() => loadLoserMessages(false), 1000);
+        });
+    </script>
+
+    <style>
+        .chatbox-tabs-layout{
+            margin:7px 0px;
+            border-top:2px dashed black !important;
+            padding-top:9px !important;
+        }
+        .copy-account-btn{
+            margin-left:6px;border:none;font-size:17px;box-shadow:0px 4px 10px rgba(51, 51, 51,0.5);background-color: olivedrab !important;color:white !important;
+            transition:background-color 0.2s ease-in-out;
+        }
+        .copy-account-btn:hover{
+            background-color: darkolivegreen !important;
+        }
+        .tab {
+            overflow: hidden;
+            border: none;
+            background-color: #e2dddd;
+        }
+
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 20px;
+        }
+
+        .tab button:hover {
+            background-color: #ccc;
+        }
+
+        .tab button.active {
+            background-color: gainsboro;
+            position: relative;
+            z-index: 12;
+            box-shadow: -8px 0px 8px -4px rgba(0, 0, 0, 0.4), 8px 0px 8px -4px rgba(0, 0, 0, 0.4);
+        }
+
+        nav {
+            z-index: 99999;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        #notifbox div {
+            padding: 8px;
+            background-color: silver;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        #account center button {
+            margin: 0 auto;
+            display: inline-block;
+            background-color: steelblue;
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 19px;
+            transition: background-color 0.3s ease;
+        }
+
+        #account center button:hover {
+            background-color: rgb(126, 179, 223);
+        }
+
+        #account {
+            display: flex;
+            justify-content: center;
+        }
+
+        main {
+            margin-bottom: 40px !important;
+        }
+
+        ul.guidelines-chat {
+            list-style: upper-roman;
+            list-style-type: upper-roman;
+        }
+
+        ul.guidelines-chat li::marker {
+            font-weight: bold;
+            color: black;
+            font-size: 23px;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+
+        ul.guidelines-chat li p {
+            font-size: 20px;
+            color: black;
+            text-align: left;
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+
+        ul.guidelines-chat li strong {
+            color: black !important;
+            font-size: 25px !important;
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+
+        s {
+            font-size: inherit !important;
+            font-family: 'Georgia', 'Times New Roman', Times, serif !important;
+            text-decoration: none !important;
+            background-color: rgba(0, 0, 0, 0.8) !important;
+            transform: background-color 0.3s ease;
+            color: rgba(0, 0, 0, 0.86) !important;
+            padding: 0 3px;
+            font-weight: normal !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        ul.guidelines-chat li:nth-last-child(1)::marker {
+            content: "Ult." !important;
+            margin-right: 10px !important;
+            letter-spacing: -3px !important;
+        }
+
+        ul.guidelines-chat li:nth-last-child(1) strong {
+            margin-left: 7px;
+        }
+
+        s:hover {
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            color: white !important;
+        }
+
+        .edit-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .edit-modal {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            width: fit-content;
+            box-sizing: border-box;
+            padding: 24px;
+            border-radius: 12px;
+            background-color: aliceblue;
+            color: #222;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+            animation: editModalAppear 0.15s ease-out;
+        }
+
+        .edit-modal h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        #message-container,
+        #loser-message-container {
+            height:310px;
+        }
+        #loser-message-container{
+            background: #c2bbca !important;
+        }
+        #message-container div button[type="button"],
+        #loser-message-container div button[type="button"] {
+            background-color: lightblue;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+
+        #message-container div button[type="button"]:hover,
+        #loser-message-container div button[type="button"]:hover {
+            background-color: lightskyblue;
+        }
+
+        #edit-message-input {
+            width: 100%;
+            height: 47px !important;
+            min-height:38px;
+            box-sizing: border-box;
+            resize: vertical;
+            padding: 10px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 17px;
+        }
+        .chatbox-tab-pages {
+            max-height:auto !important;
+            height:auto !important;
+        }
+        #edit-message-input:focus,
+        #edit-message-input:hover {
+            background-color: #eee !important;
+        }
+
+        .edit-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .edit-modal-buttons button {
+            border: none;
+            border-radius: 7px;
+            padding: 9px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #edit-cancel-button,
+        #delete-cancel-button,
+        #clear-cancel-button,
+        #pause-cancel-button,
+        #image-cancel-button {
+            background: #ccc;
+            color: #444 !important;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        #edit-cancel-button:hover,
+        #delete-cancel-button:hover,
+        #clear-cancel-button:hover,
+        #pause-cancel-button:hover,
+        #image-cancel-button:hover {
+            background: #bbb;
+            color: #222 !important;
+        }
+
+        #edit-push-button,
+        #delete-confirm-button,
+        #clear-confirm-button,
+        #pause-confirm-button,
+        #image-insert-button {
+            background: steelblue;
+            color: #eee !important;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        #edit-push-button:hover,
+        #delete-confirm-button:hover,
+        #clear-confirm-button:hover,
+        #pause-confirm-button:hover,
+        #image-insert-button:hover {
+            background: rgb(126, 179, 223);
+            color: #222 !important;
+        }
+
+        #edit-push-button:disabled,
+        #delete-confirm-button:disabled,
+        #clear-confirm-button:disabled,
+        #pause-confirm-button:disabled,
+        #image-insert-button:disabled {
+            opacity: 0.6;
+            cursor: wait !important;
+        }
+
+        span.modal-disclaimer-fine {
+            font-size: 16px;
+            text-align: center !important;
+            display: inline-block;
+            margin: 0 auto;
+            font-weight: bolder;
+            background-color: rgba(240, 248, 255, 0.3);
+            padding: 2px;
+            user-select: none;
+        }
+        #account p:nth-child(3) {
+            margin:15px;
+            margin-top:9px;
+        }
+        span.modal-disclaimer-fine::before {
+            content: "✦ ";
+            font-style: normal !important;
+        }
+
+        .admin-feature-setting {
+            margin: 20px auto;
+            margin-top:0 !important;
+            padding: 12px 16px;
+            width: fit-content;
+            border-radius: 10px;
+            background-color: rgba(192, 192, 192, 0.688);
+            color:black;
+            transition: background-color 0.3s ease;
+            box-shadow:-5px 4px 10px rgba(51, 51, 51, 0.6333)
+        }
+
+        .admin-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            user-select: none;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+        }
+
+        .admin-feature-setting:hover{
+            background-color: #b0a9a9;
+        }
+
+        .admin-toggle input {
+            display: none;
+        }
+
+        .admin-toggle-slider {
+            position: relative;
+            width: 48px;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+            height: 26px;
+            background-color: #747171;
+
+            border-radius: 20px;
+            transition: background-color 0.25s ease;
+        }
+
+        .admin-toggle-slider::before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            top: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider {
+            background-color: darkolivegreen;
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider::before {
+            transform: translateX(22px);
+        }
+
+        @keyframes editModalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .chatbox-tabs-layout {
+            display: flex;
+            width: 100%;
+            height:300px !important;
+            box-sizing: border-box;
+        }
+
+        .chatbox-tab-buttons {
+            display: none;
+            flex-direction: column;
+            width: 150px;
+            flex: 0 0 150px;
+            border-right: 1px solid #ccc;
+            background-color: #e2dddd;
+        }
+
+        .chatbox-tabs-layout.admin-tabs-active .chatbox-tab-buttons {
+            display: flex;
+        }
+
+        .chatbox-tab-button {
+            width: 100%;
+            padding: 14px 10px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background-color: inherit;
+            cursor: pointer;
+            text-align: left;
+            font-size: 17px;
+            transition: background-color 0.2s ease;
+        }
+
+        .chatbox-tab-button:hover {
+            background-color: #ccc;
+        }
+
+        .chatbox-tab-button.active {
+            background-color: gainsboro;
+            font-weight: bold;
+            box-shadow: inset -4px 0 0 darkorange !important;
+        }
+
+        .chatbox-tab-pages {
+            flex: 1;
+            min-width: 0;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .chatbox-tab-page {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #send-message,
+        #clear-chat,
+        #add-image,
+        #send-message-loser,
+        #clear-chat-loser,
+        #add-image-loser, 
+        #pause-chat-loser {
+            padding: 8px !important;
+            border: none;
+            border-radius: 7px;
+            background: steelblue;
+            color: #eee !important;
+            box-shadow: 0 4px 10px rgba(51, 51, 51, 0.5);
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #send-message:hover,
+        #clear-chat:hover,
+        #add-image:hover,
+        #send-message-loser:hover,
+        #clear-chat-loser:hover,
+        #add-image-loser:hover,
+        #pause-chat-loser:hover {
+            background: rgb(126, 179, 223);
+            color: #222 !important;
+            box-shadow: 0 4px 10px rgba(51, 51, 51, 0.5);
+        }
+
+        #send-message:disabled,
+        #clear-chat:disabled,
+        #add-image:disabled,
+        #send-message-loser:disabled,
+        #clear-chat-loser:disabled,
+        #add-image-loser:disabled,
+        #pause-chat-loser:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #chat-form,
+        #loser-chat-form {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        #chat-input,
+        #loser-chat-input {
+            flex: 1;
+            width: auto !important;
+            min-width: 0;
+            box-sizing: border-box;
+
+        }
+        #chat-input.chat-input-active,
+        #loser-chat-input.chat-input-active {
+            resize: none;
+        }
+
+        #chat-input:where(textarea),
+        #loser-chat-input:where(textarea) {
+            min-height: 38px;
+            resize: vertical;
+            overflow-y: hidden;
+        }
+
+        #loser-message-container {
+            background-color: rgb(181, 151, 115);
+        }
+        #send-message-loser {
+            background-color: steelblue !important;
+            color: white !important;
+        }
+        #send-message-loser:hover {
+            background-color: royalblue !important;
+            color: white !important;
+        }
+        #pause-chat-loser {
+            background-color: #ad749e;
+            color:whitesmoke !important;
+        }
+        #clear-chat-loser {
+            background-color: #75baa1 !important;
+            color: #222 !important;
+        }
+        #clear-chat-loser:hover {
+            background-color: #498a72 !important;
+            color: white !important;
+        }
+        #add-image-loser {
+            background-color:#db8cc9!important;
+            color: #222 !important;
+        }
+        #add-image-loser:hover {
+            background-color: #bf7fb0 !important;
+            color: #222 !important;
+        }
+        #send-message-loser,
+        #clear-chat-loser,
+        #add-image-loser {
+            padding: 8px !important;
+            border: none !important;
+            border-radius: 7px !important;
+            box-shadow: 0 4px 10px rgba(51, 51, 51, 0.5) !important;
+            font-size: 16px !important;
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+        #send-message-loser:disabled,
+        #clear-chat-loser:disabled,
+        #add-image-loser:disabled
+         {
+            opacity: 0.6;
+            cursor: wait;
+        }
+    </style>
+    <style>
+                
+        .panel h1 {
+            -webkit-text-stroke:1px black;
+            background:linear-gradient(to left, green, darkgreen) !important;
+            background-clip:text !important;
+            -webkit-background-clip: text !important;
+            -moz-background-clip: text !important;
+            color:transparent !important;
+        }
+        .tabcontent {border:none !important}
+        div.panel {
+            background-color: gainsboro;
+            max-width: 840px;
+            width:100%;
+            min-height:480px !important;
+            height:auto;
+        }
+        #image-viewer-image{max-width:65vh !important;max-height:55vh !important;}
+        .message-delete-button {
+            text-shadow: 0 0 1px currentColor;
+            background-color: #b34752 !important;
+            border: none;
+            border-radius: 5px;
+            color:white !important;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease;
+            margin-right:6px
+        }
+        .gooseling-span::before{
+            content:"" !important;
+        }
+        .admin-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+        }
+        .idiv, .udiv {
+        position: relative;
+        width: 400px;       
+        height: 300px;     
+        display:flex;
+        justify-content: center;
+        align-items: center; 
+        text-align: center;
+        overflow: hidden;   
+        }
+        .udiv iframe {
+            
+        width: 400%;        
+        height: 400%;
+        }
+        .idiv iframe, .udiv iframe {
+        position: absolute;
+
+        top: -100px;        
+        left: -150px;       
+
+        width: 400%;        
+        height: 400%;       
+        
+        transform-origin: top left; 
+        transform: scale(0.4); 
+        border: none;
+        }
+
+        .admin-toggle input {
+            display: none;
+        }
+
+        .admin-toggle-slider {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background-color: #aaa;
+            border-radius: 20px;
+            transition: background-color 0.25s ease;
+        }
+
+        .admin-toggle-slider::before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            top: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider {
+            background-color:olivedrab;
+        }
+
+        .admin-toggle input:checked + .admin-toggle-slider::before {
+            transform: translateX(22px);
+        }
+        .message-delete-button:hover {
+            background-color: #8c232d !important;
+            color:white !important
+        }
+        .authentication {
+            margin: 9px auto;
+            display: flex;
+            padding: 15px;
+            background-color: rgba(226, 224, 224, 0.2);
+            width: fit-content;
+            flex-direction: column;
+            gap: 12px;
+            user-select: none;
+            box-shadow: 0px 4px 10px rgba(51, 51, 51, 0.6)
+        }
+
+        #notifbox {
+            text-align: center;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        #notifbox div {
+            width: 100% !important;
+            max-width: 100%;
+            box-sizing: border-box;
+            border-radius: 0px !important;
+        }
+
+        #auth label {
+            color: black;
+            display: grid;
+            grid-template-columns: 110px 200px 30px;
+            align-items: center;
+            gap: 7px;
+            font-size: 21px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .authentication label input[type="checkbox"] {
+            width: auto !important;
+            box-shadow: none !important;
+            margin-right: 8px;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+        }
+
+        #whimpers label {
+            text-align: left;
+            font-size: 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            color: black;
+            font-weight: bold;
+        }
+
+        #account {
+            display: flex;
+            flex-direction: column;
+            gap:5px;
+        }
+
+        #notifications div div{
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.9) !important
+        }
+
+        .authentication label input {
+            font-family: 'Comic Sans MS', 'Chalkboard', 'Chalkboard SE', sans-serif, serif;
+            padding: 5px;
+            border: 0px solid transparent;
+            border-radius: 5px;
+            width: 95%;
+            box-sizing: border-box;
+            box-shadow: 0px 4px 10px rgba(53, 53, 53, 0.5);
+            transition: background-color 0.5s ease-in-out;
+        }
+
+        .authentication label img {
+            width: 24px;
+            height: 24px;
+            cursor: url('/assets/cursors/pointer.png'), pointer;
+            justify-self: center;
+        }
+
+        .authentication button, #account button{
+            width:fit-content;
+            text-align: center;
+            margin:0 auto;
+            border:none;
+            padding: 5px;
+            font-size:18px;
+            font-weight: bold;
+            color:black !important;
+            border-radius: 6px;
+            background-color: steelblue;
+            transition:background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .authentication button:hover{
+            background-color: royalblue !important;
+            transform: scale(1.1);
+        }
+
+        .authentication button:active {
+            background-color: rgba(212, 226, 239, 0.7);
+        }
+
+        .panel p, .authentication p, .authentication h2 {
+            margin:0;
+            padding: 0;
+        }
+
+        .authentication label input:hover, .authentication label input:active, .authentication label input:focus{
+            background-color: rgb(238, 241, 244);
+        }
+        input[type='checkbox'] {
+            background-color: none;
+            box-shadow:none !important
+        }
+        #whimpers {
+            padding:10px;
+            margin:15px auto;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #message-container, #loser-message-container{
+            width:auto;
+            padding:8px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            background-color: rgba(20, 98, 21, 0.4);
+            margin:15px 6px;
+            box-shadow:8px 8px rgba(51, 51, 51, 0.6);
+            color:#333;
+            overflow-y:auto;
+        }
+
+        #notifbox div h3 {
+            color:firebrick;
+            font-size:23px;
+            background-color:yellow;
+            width:fit-content;
+            margin: 0 auto !important;
+            text-align: center;
+            display:flex; justify-content: center;
+        }
+
+        #notifbox div h3::before{
+            content:"(!) "
+        }
+
+        #notifbox div {
+            width:500px !important;
+        }
+
+        main{
+            padding-bottom: 20px;;
+        }
+
+        #chat-form{
+            display: flex;
+            justify-content: center;
+            gap:7px;
+        }
+
+        #chat-form input, form button, #chat-form textarea, #loser-chat-input {
+            border:none;
+            box-shadow: 3px 4px 10px rgba(53, 53, 53, 0.5);
+            transition: background-color 0.3s ease-in-out;
+            width:auto !important;
+        }
+        textarea {
+        font-family: inherit;
+        font-size: 14px;
+        padding: 6px 10px;
+        height: 38px !important;
+        line-height: 1.2;
+            width:95% !important;
+        box-sizing: border-box;
+        resize: vertical; 
+        overflow:hidden;
+        }
+
+        #chat-form button#send-message {
+            background-color: steelblue;
+            color:white !important;
+        }
+
+        #chat-form button:nth-child().send-button-active, #chat-form button:nth-child(2).send-button-active:hover{
+            background-color: rgb(118, 177, 226) !important;
+            color:white !important;
+            cursor:not-allowed  !important;
+        }
+
+        #chat-form button#clear-chat{
+            background-color: #75baa1;
+            color:#222 !important;
+            transition:background-color 0.3s ease-in-out, color 0.3s ease;
+        }
+        #chat-form button#add-image{
+            background-color: rgb(231, 168, 179);
+            color:#222 !important;
+            transition:background-color 0.3s ease-in-out, color 0.3s ease;
+        }
+        #chat-form button#send-message:hover, #chat-form button#send-message-loser:hover{
+            background-color: royalblue !important;
+        }
+        #chat-form button#add-image:hover, #chat-form button#add-image-loser:hover{
+            background-color:palevioletred !important;
+        }
+        button#pause-chat-loser:hover {
+            background-color: #df9cd0 !important;
+            color:black !important
+        }
+        #chat-form button#clear-chat:hover, #chat-form button#clear-chat-loser:hover{
+            background-color:#498a72!important;
+            color:white !important;
+        }
+
+        #chat-form input, #chat-form textarea, #loser-chat-input {
+            transition:background-color 0.3s ease;
+            background-color:white;
+            border:none;
+        }
+
+        #chat-form input:hover:not(.chat-input-active), #chat-form input:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):focus, #chat-form textarea:not(.chat-input-active):hover, #loser-chat-input:hover, #loser-chat-input:focus{
+            background-color: #eee;
+            cursor:text !important;
+        }
+        #chat-form input.chat-input-active, .send-button-active{
+            cursor:not-allowed !important;
+        }
+        .fine-print, .fine-print-admin{
+            font-size:12px;
+            color:black;
+            text-align: center;
+            margin: 0;
+            padding:0;
+            line-height:1.1;
+        }
+        .fine-print-admin {
+            display:none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        .fine-print::before{
+            content:"⚠️ "
+        }
+        .fine-print-admin::before{
+            content:"✦ "
+        }
+
+        #image-filename-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 17px;
+        }
+
+        #image-filename-input:focus,
+        #image-filename-input:hover {
+            background-color: #eee !important;
+        }
+
+        .image-chat-link {
+            cursor: pointer;
+        }
+
+        .image-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .image-viewer {
+            position: relative;
+            width:fit-content;
+            height:auto;
+            max-width: 60vh;
+            max-height:80vh;
+            box-sizing: border-box;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition:display 0.5s ease;
+            animation: editModalAppear 0.15s ease-out;
+        }
+        #image-viewer .image-viewer-content img {
+            overflow:hidden !important;
+        }
+        #image-viewer-filename{color:#222 !important}
+        .image-viewer-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            border: none;
+            background: transparent;
+            color: #333;
+            font-size: 25.5px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 8px;
+            transition:color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        .image-viewer-close:hover {
+            color:#000 !important;
+            text-shadow:0px 1px 1px rgba(0, 0, 0, 0.9)
+        }
+
+        .image-viewer-filename {
+            font-family:
+                "Comic Sans MS",
+                Chalkboard,
+                "Chalkboard SE",
+                cursive;
+
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            word-break: break-word;
+        }
+
+        .image-viewer-content {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+
+        .image-viewer-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .chatbox-tabs-layout {
+            display: flex;
+            width: 100%;
+            min-height: 400px;
+            box-sizing: border-box;
+        }
+
+        .chatbox-tab-buttons {
+            display: flex;
+            flex-direction: column;
+            width: 150px;
+            flex: 0 0 150px;
+            border-right: 1px solid #ccc;
+            background-color: #e2dddd;
+        }
+
+        .chatbox-tab-button {
+            width: 100%;
+            padding: 14px 10px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background-color: inherit;
+            cursor: pointer;
+            text-align: left;
+            font-size: 17px;
+            transition: background-color 0.2s ease;
+        }
+
+        .chatbox-tab-button:hover {
+            background-color: #ccc;
+        }
+
+        .chatbox-tab-button.active {
+            background-color: gainsboro;
+            font-weight: bold;
+            box-shadow: inset -4px 0 0 darkorange
+        }
+
+        .chatbox-tab-pages {
+            flex: 1;
+            min-width: 0;
+            padding-left: 15px;
+            box-sizing: border-box;
+        }
+
+        .chatbox-tab-page {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .message-containers textarea {
+            min-width:500px !important;
+        }
+
+        #message-container div button.message-reply-button[type="button"],
+        #loser-message-container div button.message-reply-button[type="button"] {
+            background-color: #d17af9 !important;
+            color: white !important;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+
+        #message-container div button.message-reply-button[type="button"]:hover,
+        #loser-message-container div button.message-reply-button[type="button"]:hover {
+            background-color: #b971da !important;
+            color: white !important;
+        }
+
+        .reply-tag {
+            display: inline-block;
+            padding: 0 5px;
+            margin-right: 0px;
+            border-radius: 4px;
+            background-color: #b971da75;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+    </style>
+
+    <script src="/services.js"></script>
+    <title>Gooseling - The Goose Site</title>
+
+    <style>
+        #chat-form,
+        #loser-chat-form {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto auto auto;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            gap: 8px !important;
+            align-items: stretch !important;
+        }
+
+        #chat-form #chat-input,
+        #loser-chat-form #loser-chat-input {
+            grid-column: 1;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            flex: none !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+        }
+
+        #chat-form button,
+        #loser-chat-form button {
+            flex: none !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+        }
+
+        #chat-form textarea,
+        #loser-chat-form textarea {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            box-sizing: border-box !important;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul class="grandpa">
+            <li class="dad">
+                <a class="logo son" href="/" title="Back to the homepage.">The Goose Site Legacy</a>
+            </li>
+            <li class="dad">
+                <a class="son" title="Play Goose Games..." href="/interactives">Interactives</a>
+            </li>
+            <li class="dad">
+                <a class="son" title="The trinity slideshows..." href="/powerpoint">Slideshows</a>
+            </li>
+            <li style="cursor:pointer;" class="dad dropdown">
+                <a class="son" title="The unity videos...">Videos</a>
+                <ul class="dropdown-content">
+                    <li class="space"><a title="Subscribe or die..." href="/youtube">Youtube Channel</a></li>
+                    <li><a title="Worship, pray, and repent..." href="/videos">Unity Video Collection</a></li>
+                </ul>
+            </li>
+            <li class="dad">
+                <a class="son" title="Read the Goose Bible..." href="/bible">Bible</a>
+            </li>
+            <li class="dad" id="logout">
+                <a class="son" title="Voids Session Data" onclick="document.cookie = 'duck_mode=true; site_access=granted; need_additional_screening=true; expires=Thu, 18 Dec 2026 12:00:00 UTC; path=/';">
+                    <img src="/assets/images/signin.png" />
+                    <u>Sign Out</u>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="panel">
+            <div class="tab">
+                <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
+                <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
+                <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
+                <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
+            </div>
+
+            <div id="dashboard" class="tabcontent">
+                <h2>Welcome to The Gooseling Panel, @<span class="name">PIRATED</span>!</h2>
+                <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
+                <h2>Test: Goose Latin Book</h2>
+                <center><div class="idiv"><iframe src="/assets/github/book.html" allowfullscreen></iframe></div></center>
+                <center><h2>Test: Goose Latin to English Translator</h2>
+                <div class="udiv"><iframe style="margin:0 auto;display:inline-block" src="/assets/github/translate-technological.html" allowfullscreen></iframe></div></center>
+            </div>
+
+            <div id="notifications" class="tabcontent">
+                <h2>Notifications</h2>
+                <div id="notifbox" style="display:flex;gap:15px;flex-direction: column;">
+                    <div>
+                        <p><strong>[Highlighted by @thegoose] Try GooseGum - Goosism's Leading Chewing Gum & Breath Mint Brand • @goosegum-worshippromotions</strong></p>
+                        <p>Attention gooselings, this is the moment all of you have been waiting for! GooseGum is out now! We are starting out with five types: GooseGum Saver, (cheap vanilla) GooseGum Standard, (fresh mint) GooseGum Deluxe, (fresh herbal oils, mint, and real digestable gold) GooseGum Opal, (features an apple-like mint refreshing taste with gold) and GooseGum Premium. (contains real gold, diamond, sapphire, ruby, and emerald while offering the herbal taste) Get them in packs of 24 while they last!</p>
+                    </div>
+                    <div>
+                        <p><strong>[SPONSORED] Enjoy 20% off at Saint Duck's Restaurant and Gastropub • @officialsaintduck</strong></p>
+                        <p>Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's! Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.</p>
+                    </div>
+                    <div>
+                        <p><strong>Your first notification • @thegoose</strong></p>
+                        <p>Hello there. It's The Goose typing. This is a test.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="administrator" class="tabcontent">
+                <h2>Administrators: What are they?</h2>
+                <p>Administrators, commonly shortened to admins and also known as goosadmins, are moderators who run, manage, and moderate The Goose Chatbox. These select gooselings can delete and comments, go anonymous under aliases, and gain a lot more perks compared to standard-level gooselings. This status is given by @thegoose, and it's estimated that only ten or so gooselings have administrator access.<br>
+                A star icon (✦) next to a feature indicates that it is an admin perk. Star icons do not appear for standard-tier individuals.<br>
+                Messages from admin accounts do not have the star icon next to their name to avoid unnecessary harassment.</p>
+                <p>
+                    <b>Perks</b>
+                    <p>Some, but not all, perks include:</p>
+                    <ul>
+                        <li>
+                            <p>Faster servers for faster messaging.</p>
+                        </li>
+                        <li>
+                            <p>Twice the encryption compared to a normal gooseling account</p>
+                        </li>
+                        <li>
+                            <p>The abillity to delete, edit, and clear all messages</p>
+                        </li>
+                        <li>
+                            <p>Alias mode (going under an alias which cannot be an existing account)</p>
+                        </li>
+                        <li>
+                            <p>Admin-only messaging</p>
+                        </li>
+                    </ul>
+                </p>
+            </div>
+
+            <div id="guidelines" class="tabcontent">
+                <h2>The Goose Chatbox <u>Guidelines</u></h2>
+                <p>List of guidelines and policies for The Goose Chatbox.</p>
+                <p><i style="font-size:14px;">Some words or phrases on this page may be censored. To view the uncensored text, simply hover or look at the censored text a bit closer...</i></p>
+                <ul class="guidelines-chat">
+                    <li>
+                        <strong>Basic Goosettiquete</strong>
+                        <p>The Goose Chatbox Administrators will not tolerate hate speech or discriminatory conduct. This includes racism, sexism, misogyny, misandry, homophobia, queerphobia, cisheteronormativity, androcentrism, islamophobia, anti-religion remarks, ethinicity bullying, xenophobia, ageism, gender-based discrimination and sex-based discrimination.</p>
+                    </li>
+                    <li>
+                        <strong>Cross Site Scripting</strong>
+                        <p>Using The Goose Chatbox for Cross Site Scripting (also known simply as XSS) is illegal under federal law. If any admin notices this behavior, (they will) you will be IP banned from the website and will be reported to the authorities.</p>
+                    </li>
+                    <li>
+                        <strong>No Explicit or Inappropriate Content</strong>
+                        <p>Promoting or mentioning explicit or violent content (includes music) is an instant ban as most, if not all gooselings do not want to see or hear anything indecorous, which exclude goosism related material.</p>
+                    </li>
+                    <li>
+                        <strong>Zero Tolerance for <s>Foul</s> Fowl Language</strong>
+                        <p>The use of any profanity, vulgarity, or prohibited language may result in the immediate termination of your account. There is zero tolerance for this type of behavior. If you really need to use profanity, replace the word with "goose."</p>
+                    </li>
+                    <li>
+                        <strong>Freedom of Speech</strong>
+                        <p>While hatred or scorn of The Goose is discouraged, it is still allowed since The Goose Chatbox is a not a totalitarian state. Talks about politics are <b style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">heavily discoruaged</b> and should be talked about outside of The Goose Chatbox.</p>
+                    </li>
+                    <li>
+                        <strong>Stay on Topic: 80% of Messages Should Be Related to Gooses or The Goose.</strong>
+                        <p>It's important to know that messing around is <i style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">sometimes tolerated</i>, please keep it at an 80:20 ratio.</p>
+                    </li>
+                    <li>
+                        <strong>Messages Must Basic Goose Typing Rules</strong>
+                        <p>Using the letter "2" when writing canon or talking about goose-related topics is not allowed. Canonically, "2" is a short form of The 2oose, who is The Goosatan. If you are writing "The 2oose", that is allowed. However, when saying the number, substitute it with "goose." (Note: If you are trying to type "The 2oose" in a place where numbers are not allowed, type "the qoose" since Q in cursive looks like a goose.</p>
+                    </li>
+                    <li>
+                        <strong>Consequences to Violation</strong>
+                        <p>Violation of these rules stated above could cause a permanent ban, IP ban, or report to the local authorities. As stated in rule V, <u style="font-family: 'Georgia', 'Times New Roman', Times, serif !important;">scorn of The Goose is never a violation.</u></p>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="chatbox" class="tabcontent">
+                <h2>The Goose Chatbox</h2>
+                <p>For gooselings (and <u>some</u> guests) only. No goosinners ever.</p>
+                <center>
+                    <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
+                    <br>
+                    <span class="fine-print-admin admin-only-feature" style="opacity:0;">You currently have admin mode <span class="admin-feature-status"></span>. To toggle it <span class="admin-feature-status-opp">off</span>, please click <a href = "javascript:document.querySelector('#show-admin-features').click()">here</a>. </span>
+                </center>
+
+                <div class="chatbox-tabs-layout">
+                    <div class="chatbox-tab-buttons">
+                        <button type="button" class="chatbox-tab-button active" onclick="openChatboxTab(event, 'chatbox-main')">✦ Admin Chat</button>
+                        <button type="button" class="chatbox-tab-button" onclick="openChatboxTab(event, 'chatbox-goose')">Goose Chat</button>
+                    </div>
+
+                    <div class="chatbox-tab-pages">
+                        <div id="chatbox-main" class="chatbox-tab-page">
+                            <div id="message-container" class="message-containers"></div>
+
+                            <form id="chat-form">
+                                <input maxlength="255" rows="1" type="text" id="chat-input" placeholder="" required style="width: 70%; padding: 8px;">
+                                <button type="submit" id="send-message" style="padding: 8px;">Send</button>
+                                <button type="button" id="clear-chat" style="padding: 8px;display:none;">✦ Wipe</button>
+                                <button type="button" id="add-image" style="padding: 8px;display:none">✦ Image</button>
+                            </form>
+                        </div>
+
+                        <div id="chatbox-goose" class="chatbox-tab-page" style="display:none;">
+                            <div id="loser-message-container" class="message-containers"></div>
+                            <form id="loser-chat-form">
+                                <input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
+                                <button type="submit" id="send-message-loser" style="padding: 8px;">Send</button>
+                                <button type="button" id="clear-chat-loser" class="admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
+                                <button type="button" id="pause-chat-loser" class="admin-only-feature" style="padding: 8px;display:none">✦ Pause</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="account" class="tabcontent">
+                <h2>Account</h2>
+
+                <p>
+                    <u>Your account username</u>: <span class="name"></span>
+                    <button title="Click to copy..."  onclick="copyToClipboard(getCookie('dev-username')); this.textContent='Copied!';setTimeout(() => {this.textContent = 'Copy'}, 3000)" class="copy-account-btn">Copy</button>
+                    <br>
+                    <u>Your account type</u>: <span class="acctype"></span>
+                    
+                </p>
+
+                <p>Manage your gooseling account here.</p>
+
+                <div id="admin-feature-toggle-container" onclick="document.getElementById('show-admin-features').click()" class="admin-feature-setting" style="display:none;">
+                    <label title="Switch to non-admin mode..." class="admin-toggle">
+                        <span>✦ Show admin features</span>
+                        <input type="checkbox" id="show-admin-features">
+                        <span class="admin-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <center>
+                    <button title="Sign out of your gooseling account..." onclick="
+                        document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        document.cookie = 'dev-username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        window.location.reload();
+                    ">Log out</button>
+                </center>
+            </div>
+        </div>
+    </main>
+
+    <div id="edit-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
+            <h2 id="edit-modal-title">Edit Message</h2>
+            <textarea maxlength="255" id="edit-message-input" rows="5" placeholder="Edit the message..."></textarea>
+            <div class="edit-modal-buttons">
+                <button type="button" id="edit-cancel-button">Cancel</button>
+                <button type="button" id="edit-push-button">Push</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="delete-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+            <span class="modal-disclaimer-fine">Administrator Control<br>This message was authored by @<span class="disclaimer-fine-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="disclaimer-find-admin"></span>.</span>
+            <h2 id="delete-modal-title">Delete Message</h2>
+            <p>Are you sure you want to delete this message?</p>
+            <div class="edit-modal-buttons">
+                <button type="button" id="delete-cancel-button">Cancel</button>
+                <button type="button" id="delete-confirm-button">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clear-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="clear-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
+            <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <h2 id="clear-modal-title">Wipe Chat</h2>
+            <p>Are you sure you want to clear all chat messages?</p>
+            <div class="edit-modal-buttons">
+                <button type="button" id="clear-cancel-button">Cancel</button>
+                <button type="button" id="clear-confirm-button">Wipe Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="pause-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+            <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <h2 id="pause-modal-title">Pause Chat</h2>
+            <p id="pause-modal-text">Are you sure you want to pause The Goose Chatbox - Goose Chat?</p>
+            <div class="edit-modal-buttons">
+                <button type="button" id="pause-cancel-button">Cancel</button>
+                <button type="button" id="pause-confirm-button">Pause</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="image-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
+            <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
+            <h2 style="margin:7px;margin-bottom:7px !important" id="image-modal-title">Paste Image</h2>
+            <p style="margin-bottom: 5px !important;" class="image-modal-status">What image would you like to paste?</p>
+            <input maxLength="150" type="text" id="image-filename-input" maxlength="255" placeholder="example.png" autocomplete="goose">
+            
+            <div class="edit-modal-buttons">
+                <button type="button" id="image-cancel-button">Cancel</button>
+                <button type="button" id="image-insert-button">Insert</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-viewer-overlay" class="image-viewer-overlay" style="display:none;">
+        <div id="image-viewer" class="image-viewer" role="dialog" aria-modal="true">
+            <button type="button" id="image-viewer-close" class="image-viewer-close" aria-label="Close goosImage">x</button>
+            <div id="image-viewer-filename" class="image-viewer-filename"></div>
+            <div class="image-viewer-content">
+                <img style="overflow:hidden" id="image-viewer-image" src="" alt="">
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <h1 class="f1">The Goose Site Legacy</h1>
+    </footer>
+</body>
+</html>
