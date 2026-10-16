@@ -129,28 +129,17 @@
                 tabId = "chatbox-goose";
             }
 
-            const pages = document.getElementsByClassName("chatbox-tab-page");
-            for (let i = 0; i < pages.length; i++) {
-                pages[i].style.display = "none";
-            }
-
-            const buttons = document.getElementsByClassName("chatbox-tab-button");
-            for (let i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove("active");
-            }
-
-            const target = document.getElementById(tabId);
-            if (target) {
-                target.style.display = "block";
-            }
-
-            const defaultButton = document.querySelector('.chatbox-tab-button[data-tab="' + tabId + '"]');
-            if (defaultButton) {
-                defaultButton.classList.add("active");
-                defaultButton.classList.remove("unread");
-            }
-
             activeChatboxTab = tabId;
+
+            document.querySelectorAll(".chatbox-tab-page").forEach(page => {
+                page.classList.toggle("active", page.id === tabId);
+            });
+
+            document.querySelectorAll(".chatbox-tab-button").forEach(btn => {
+                const isActive = btn.dataset.tab === tabId;
+                btn.classList.toggle("active", isActive);
+                if (isActive) btn.classList.remove("unread");
+            });
         }
 
         function selectDefaultChatbox() {
@@ -246,7 +235,17 @@
             }
 
             Object.values(chatRegistry).forEach(chat => {
-                syncChatInput(chat, admin && enabled);
+                let canTextArea;
+                if ((canUseHeaders)){
+                    if (admin && !enabled) {
+                        canTextArea = false;
+                    } else{
+                        canTextArea = true;
+                    }
+                } else {
+                    false;
+                }
+                syncChatInput(chat, canTextArea);
 
                 const clearButton = document.getElementById(chat.clearId);
 
@@ -1938,7 +1937,7 @@
             const page = document.createElement("div");
             page.id = chat.tabId;
             page.className = "chatbox-tab-page";
-            page.style.display = "none";
+            ///page.style.display = "none";
             page.style.setProperty("--chat-color", pastelForId(info.id));
 
             page.innerHTML = `
@@ -3159,7 +3158,10 @@
             cursor: pointer;
             text-align: left;
             font-size: 17px;
-            transition: background-color 0.2s ease;
+            transition: 
+                background-color 0.35s ease,
+                box-shadow 0.35s ease-in-out,
+                font-weight 0.3s ease;
         }
 
         .chatbox-tab-button:hover {
@@ -3170,6 +3172,12 @@
             background-color: gainsboro;
             font-weight: bold;
             box-shadow: inset -4px 0 0 darkorange !important;
+            opacity:1;
+            transition: 
+                background-color 0.35s ease,
+                box-shadow 0.35s ease-in-out,
+                font-weight 0.35s ease,
+                opacity 0.35s ease;
         }
 
         .chatbox-tab-pages {
@@ -3225,6 +3233,10 @@
             cursor: not-allowed;
         }
 
+        #send-message:disabled, #send-message-loser:disabled{
+            background: rgb(36, 67, 162) !important;
+        }
+
         #chat-form,
         #loser-chat-form {
             display: flex;
@@ -3261,7 +3273,7 @@
             color: white !important;
         }
         #send-message-loser:hover {
-            background-color: royalblue !important;
+            background-color: rgb(36, 67, 162) !important;
             color: white !important;
         }
         #pause-chat-loser {
@@ -3615,7 +3627,7 @@
             transition:background-color 0.3s ease-in-out, color 0.3s ease;
         }
         #chat-form button#send-message:hover, #chat-form button#send-message-loser:hover{
-            background-color: royalblue !important;
+            background-color: rgb(36, 67, 162) !important;
         }
         #chat-form button#add-image:hover, #chat-form button#add-image-loser:hover{
             background-color:palevioletred !important;
@@ -4110,12 +4122,13 @@
             font-size: 16px !important;
             cursor: pointer;
             background-color: rgb(212, 135, 80) !important;
-            color: whitesmoke !important;
+            color: #222 !important;
             transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .custom-manage-button:hover {
             background-color: rgb(189, 90, 32) !important;
+            color:#444 !important;
         }
 
         #manage-modal {
@@ -4190,6 +4203,45 @@
         #manage-delete-button:disabled {
             opacity: 0.6;
             cursor: wait !important;
+        }
+        .chatbox-tab-pages {
+            display: grid;              
+        }
+
+        .chatbox-tab-page {
+            grid-area: 1 / 1;           
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: scale(0.96) translateY(-160px);
+            filter: blur(4px);
+            transition:
+                opacity 0.35s ease,
+                transform 0.75s ease,
+                filter 0.35s ease,
+                visibility 0s linear 0.35s;  
+                
+        }
+        .chatbox-tab-page.active {
+            
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: none;
+            filter: none;
+            
+            opacity:1;
+            transition:
+                
+                    opacity 0.35s ease,
+                    transform 0.35s ease,
+                    filter 0.35s ease,
+                    visibility 0s;  
+                          
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .chatbox-tab-page { transition: none; }
         }
     </style>
 </head>
@@ -4357,7 +4409,7 @@
                             </form>
                         </div>
 
-                        <div id="chatbox-goose" class="chatbox-tab-page" style="display:none;">
+                        <div id="chatbox-goose" class="chatbox-tab-page" >
                             <div id="loser-message-container" class="message-containers"></div>
                             <form id="loser-chat-form">
                                 <input maxlength="255" rows="1" type="text" id="loser-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
