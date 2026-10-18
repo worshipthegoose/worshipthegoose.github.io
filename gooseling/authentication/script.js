@@ -16,6 +16,7 @@ function superShift(str, type) {
 const usernames = ["thenumberonegooseling", "thegoose",  "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline", "robogoose", "goosercooper", "goseultimate", "eshigoose"];
 const crypt = ["omwozixpgbwbpmowwam", "acxmzowwamtqvoawvtglwvwbkizm", "xtmiamkpivombpqaowwam", "omwozixpgbwbpmowwamiluqv", "ugtqbbtmxwvgqaiemawumowwam", 'ntgqvokiba', "owwamkctb", "owwaqma", "epib", "ijklyemzbg"];
 const passwords = crypt.map(item => superShift(item, false));
+const oneYear = 60 * 60 * 24 * 365;
 
 function getCookie(name) {
     let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -82,8 +83,8 @@ document.addEventListener("DOMContentLoaded", function(){
         const userIndex = usernames.indexOf(enteredUser);
 
         if (userIndex !== -1 && passwords[userIndex] === enteredPass) {
-            document.cookie = `is-developer=true; path=/`;
-            document.cookie = `dev-username=${encodeURIComponent(usernames[userIndex])}; path=/`;
+            document.cookie = `is-developer=true; maxAge=${oneYear}; path=/`;
+            document.cookie = `dev-username=${encodeURIComponent(usernames[userIndex])}; maxAge=${oneYear}; path=/`;
             window.location.reload(); // Safely reloads the page
         } else {
             if (errorMessage) {

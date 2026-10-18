@@ -747,6 +747,66 @@
             }
         }
 
+        /* PLEASE NOTE GOSEDEVS: THESE BOTTOM FUNCTIONS ARE IN BETA. THEY MAY MALFUNCTION */
+
+        function createLikeButton(post, chat) {
+            const likes = Array.isArray(post.likes) ? post.likes : [];
+            const me = getCookie("dev-username") || "";
+            const liked = likes.includes(me);
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "message-like-button" + (liked ? " liked" : "");
+            button.textContent = liked ? "♥" : "♡";
+
+            if (likes.length) {
+                button.textContent += " " + likes.length;
+            }
+
+            button.title = likes.length
+                ? "Liked by: " + likes.map(name => "@" + name).join(", ")
+                : "Like this message...";
+
+            button.addEventListener("click", () => toggleLike(post, chat, button));
+
+            return button;
+        }
+
+        async function toggleLike(post, chat, button) {
+            if (chat.custom && pauseGooseChat) return;
+
+            const me = getCookie("dev-username");
+
+            if (!me || button.disabled) return;
+
+            button.disabled = true;
+
+            try {
+                const response = await chatPost(chat, {
+                    action: "like",
+                    timestamp: post.timestamp,
+                    username: me
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status !== "success") {
+                    throw new Error(result.message || "Failed to like message.");
+                }
+
+                chat.lastData = "";
+                await loadChat(chat.key, false);
+
+            } catch (err) {
+                console.error("Failed to like message:", err);
+                button.disabled = false;
+            }
+        }
+
         function createReplyButton(post, inputId) {
             if (!canUseHeaders(getCookie("dev-username")) || (isAdmin() && !showAdminFeatures())) {
                 return document.createDocumentFragment();
@@ -952,7 +1012,7 @@
 
             const killButton = document.createElement("button");
             killButton.type = "button";
-            killButton.innerHTML = "✦ 🗑";
+            killButton.innerHTML = "🗑";
             killButton.className = "message-delete-button admin-only-feature";
 
             killButton.addEventListener("click", () => {
@@ -963,7 +1023,7 @@
 
             const editButton = document.createElement("button");
             editButton.type = "button";
-            editButton.textContent = "✦ Edit";
+            editButton.textContent = "✎";
             editButton.style.marginRight = "6px";
             editButton.classList.add("admin-only-feature");
 
@@ -1027,6 +1087,7 @@
             textSpan.style.minWidth = "0";
             textSpan.style.overflowWrap = "anywhere";
             textSpan.style.wordBreak = "break-all";
+            // textSpan.appendChild(createLikeButton(post, chat)); <- IN DEV
 
             let usernameStyle = "";
 
@@ -1041,7 +1102,7 @@
             const usernameStrong = document.createElement("strong");
             usernameStrong.style.userSelect = "none";
             usernameStrong.style.marginRight = "5px";
-            usernameStrong.style.color = "#111"
+            usernameStrong.style.color = "#222"
 
             const usernameSpan = document.createElement("span");
             usernameSpan.setAttribute("style", usernameStyle);
@@ -1215,7 +1276,7 @@
                     headerDiv.style.color = "#000";
                 }
 
-                headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
+                headerDiv.textContent = `𓅬 ${dateHeaderString} 𓅬`;
                 headerDiv.style.userSelect = "none";
 
                 container.appendChild(headerDiv);
@@ -1318,6 +1379,11 @@
 
             const container = document.getElementById(chat.containerId);
             if (!container) return;
+
+            if (chat.custom && pauseGooseChat) {
+                applyPauseState(chat);
+                return;
+            }
 
             if (chat.loading && !isInitialLoad) return;
             chat.loading = true;
@@ -1442,7 +1508,9 @@
                         if (gooseInput) gooseInput.disabled = false;
                         gooseSend.disabled = false;
                     }
+                    applyPauseToCustomChats();
                 }
+                if (chat.custom) applyPauseState(chat);
             }
         }
 
@@ -1495,6 +1563,40 @@
             }
         }
 
+        function applyPauseState(chat) {
+            if (!chat || !chat.custom) return;
+
+            const container = document.getElementById(chat.containerId);
+            const input = document.getElementById(chat.inputId);
+            const form = document.getElementById(chat.formId);
+            const send = form ? form.querySelector("button[type='submit']") : null;
+            const clear = document.getElementById(chat.clearId);
+
+            if (pauseGooseChat) {
+                if (input) input.disabled = true;
+                if (send) send.disabled = true;
+                if (clear) clear.disabled = true;
+
+                if (container) {
+                    container.innerHTML = "<p style='color:#222'>Custom Chatboxes have been paused by the administrators due to an unknown reason. We're sorry for the inconvenience, and it should be up and running soon.</p>";
+                }
+
+                chat.lastData = "";
+            } else {
+                if (send && !send.classList.contains("send-button-active")) {
+                    if (input) input.disabled = false;
+                    send.disabled = false;
+                    if (clear) clear.disabled = false;
+                }
+            }
+        }
+
+        function applyPauseToCustomChats() {
+            Object.values(chatRegistry)
+                .filter(chat => chat.custom)
+                .forEach(applyPauseState);
+        }
+
         function updatePauseUI() {
             const pauseButton = document.getElementById("pause-chat-loser");
             const title = document.getElementById("pause-modal-title");
@@ -1512,7 +1614,7 @@
             if (text) {
                 text.textContent = pauseGooseChat
                     ? "Are you sure you want to resume the Goose Chat?"
-                    : "Are you sure you want to pause the Goose Chat?";
+                    : "Are you sure you want to shut up annoying gooselings?";
             }
 
             if (confirmButton) {
@@ -1860,6 +1962,7 @@
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
+                if (pauseGooseChat && chat.custom) return;
 
                 const username = getCookie("dev-username");
                 const input = document.getElementById(chat.inputId);
@@ -1914,6 +2017,7 @@
 
                     if (currentInput) {
                         currentInput.focus();
+                        if (chat.custom) applyPauseState(chat);
                     }
                 }
             });
@@ -2792,12 +2896,40 @@
             });
         });
     </script>
+    <style>
+        .message-like-button {
+            margin-left: 6px;
+            padding: 0 6px !important;
+            border: none !important;
+            border-radius: 10px !important;
+            background-color: rgba(255, 255, 255, 0.45) !important;
+            color: #444 !important;
+            font-size: 12px;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
 
+        .message-like-button:hover {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .message-like-button.liked {
+            color: #c2185b !important;
+            font-weight: bold;
+        }
+
+        .message-like-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+    </style>
     <style>
         .chatbox-tabs-layout{
             margin:7px 0px;
             margin-top: 0 !important;
             border-top:6px double #111 !important;
+            border-radius:9px;
             padding-top:9px !important;
         }
         .copy-account-btn{
@@ -3191,13 +3323,13 @@
             border-bottom: 1px solid #ccc;
             background-color: inherit;
             cursor: pointer;
-            text-align: left;
+            text-align: left !important;
             font-size: 17px;
             transition: 
                 background-color 0.35s ease,
                 box-shadow 0.35s ease-in-out,
                 font-weight 0.3s ease,
-                text-shadow 1s ease-in-out;
+                text-shadow 0.3s ease-in-out;
         }
 
         .chatbox-tab-button:hover {
@@ -4434,7 +4566,7 @@
             </div>
 
             <div id="chatbox" class="tabcontent">
-                <h2 style="margin-bottom:4px !important; padding-bottom:2px !important;">The Goose Chatbox</h2>
+                <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Goose Chatbox</h2>
                 <center style="display:none;">
                     <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
                     <br>
