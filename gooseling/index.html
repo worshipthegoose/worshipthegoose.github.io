@@ -129,9 +129,33 @@
                 tabId = "chatbox-goose";
             }
 
+            const prevTab = activeChatboxTab;
             activeChatboxTab = tabId;
+            const order = Array.from(document.querySelectorAll(".chatbox-tab-button[data-tab]"))
+                .map(btn => btn.dataset.tab);
+            const newIdx = order.indexOf(tabId);
+            const prevIdx = order.indexOf(prevTab);
 
-            document.querySelectorAll(".chatbox-tab-page").forEach(page => {
+            const pages = Array.from(document.querySelectorAll(".chatbox-tab-page"));
+
+            pages.forEach(page => {
+                const idx = order.indexOf(page.id);
+                const isNew = page.id === tabId;
+                const alreadyActive = page.classList.contains("active");
+
+                if (isNew && !alreadyActive) {
+                    page.style.transition = "none";
+                    page.classList.toggle("side-above", prevIdx !== -1 && newIdx < prevIdx);
+                } else if (!isNew) {
+                    if (!alreadyActive) page.style.transition = "none";
+                    page.classList.toggle("side-above", idx < newIdx);
+                }
+            });
+
+            void document.body.offsetWidth;
+
+            pages.forEach(page => {
+                page.style.transition = "";
                 page.classList.toggle("active", page.id === tabId);
             });
 
@@ -1010,22 +1034,26 @@
                 if (getCookie("canada_goose") === "true") {
                     usernameStyle = "border-bottom:1.7px solid white !important;";
                 } else {
-                    usernameStyle = "color:#222";
+                    usernameStyle = "color:#020202";
                 }
             }
 
             const usernameStrong = document.createElement("strong");
             usernameStrong.style.userSelect = "none";
-            usernameStrong.style.marginRight = "3px";
+            usernameStrong.style.marginRight = "5px";
+            usernameStrong.style.color = "#111"
 
             const usernameSpan = document.createElement("span");
             usernameSpan.setAttribute("style", usernameStyle);
-            usernameSpan.textContent = `${hyperTag}@${post.username}:`;
+            usernameSpan.textContent = `${hyperTag}${post.username}`;
 
             usernameStrong.appendChild(usernameSpan);
             textSpan.appendChild(usernameStrong);
 
-            textSpan.appendChild(renderChatMessage(post.message || "", post.username));
+            const messageSpan = document.createElement("span");
+            messageSpan.appendChild(renderChatMessage(post.message || "", post.username));
+            messageSpan.style.color = "#222"
+            textSpan.appendChild(messageSpan);
 
             const timestampSpan = document.createElement("span");
             timestampSpan.style.color = "#444";
@@ -1184,7 +1212,7 @@
                     headerDiv.style.color = "white";
                 } else {
                     headerDiv.style.borderBottom = "2px ridge #111";
-                    headerDiv.style.color = "#111";
+                    headerDiv.style.color = "#000";
                 }
 
                 headerDiv.textContent = `🪿 ${dateHeaderString} 🪿`;
@@ -1248,7 +1276,7 @@
                 manualHeader.style.fontWeight = "bold";
                 manualHeader.style.margin = "0";
                 manualHeader.style.userSelect = "none";
-                manualHeader.style.color = "#111";
+                manualHeader.style.color = "#000";
                 manualHeader.style.fontSize = "17px";
                 manualHeader.style.paddingBottom = "8px";
                 manualHeader.textContent = section.headerText;
@@ -1327,6 +1355,7 @@
                     throw new Error(`HTTP Error! Status: ${response.status}`);
                 }
 
+                chat.retryCount = 0;
                 const data = await response.json();
 
                 if (chat.key === "goose") {
@@ -1392,6 +1421,9 @@
             } catch (err) {
                 console.error("Fetch error:", err);
                 container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+                    chat.retryCount = (chat.retryCount || 0) + 1;
+                    var delay = Math.min(1000 * 2 ** chat.retryCount, 15000); 
+                    setTimeout(() => loadChat(key, true), delay);
             } finally {
                 chat.loading = false;
 
@@ -2764,7 +2796,8 @@
     <style>
         .chatbox-tabs-layout{
             margin:7px 0px;
-            border-top:2px dashed black !important;
+            margin-top: 0 !important;
+            border-top:6px double #111 !important;
             padding-top:9px !important;
         }
         .copy-account-btn{
@@ -2930,8 +2963,10 @@
         }
 
         #message-container,
-        #loser-message-container {
-            height:310px;
+        #loser-message-container,
+        .custom-message-container {
+            height:320px !important;
+            margin-top:0 !important;
         }
         #loser-message-container{
             background: #c2bbca !important;
@@ -3161,7 +3196,8 @@
             transition: 
                 background-color 0.35s ease,
                 box-shadow 0.35s ease-in-out,
-                font-weight 0.3s ease;
+                font-weight 0.3s ease,
+                text-shadow 1s ease-in-out;
         }
 
         .chatbox-tab-button:hover {
@@ -3170,7 +3206,7 @@
 
         .chatbox-tab-button.active {
             background-color: gainsboro;
-            font-weight: bold;
+            text-shadow: 0 0 1px black !important; 
             box-shadow: inset -4px 0 0 darkorange !important;
             opacity:1;
             transition: 
@@ -3328,7 +3364,7 @@
         .tabcontent {border:none !important}
         div.panel {
             background-color: gainsboro;
-            max-width: 840px;
+            max-width: 860px;
             width:100%;
             min-height:480px !important;
             height:auto;
@@ -3817,6 +3853,9 @@
             font-weight: bold;
             box-shadow: inset -4px 0 0 darkorange
         }
+        .chatbox-tab-button {
+            color: #000;
+        }
 
         .chatbox-tab-pages {
             flex: 1;
@@ -3915,13 +3954,14 @@
         }
 
         .custom-message-container {
-            height: 310px;
+            height: 320px !important;
             width: auto;
             padding: 8px;
             overflow-wrap: break-word;
             word-wrap: break-word;
             background-color: var(--chat-color, #b7c9dc);;
             margin: 15px 6px;
+            margin-top:0 !important;
             box-shadow: 8px 8px rgba(51, 51, 51, 0.6);
             color: #333;
             overflow-y: auto;
@@ -4207,13 +4247,15 @@
         .chatbox-tab-pages {
             display: grid;              
         }
-
+        .chatbox-tab-page.side-above {
+            transform: scale(0.96) translateX(180px);
+        }
         .chatbox-tab-page {
             grid-area: 1 / 1;           
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transform: scale(0.96) translateY(-160px);
+            transform: scale(0.96) translateX(-160px);
             filter: blur(4px);
             transition:
                 opacity 0.35s ease,
@@ -4242,6 +4284,11 @@
 
         @media (prefers-reduced-motion: reduce) {
             .chatbox-tab-page { transition: none; }
+        }
+        .chatbox-tab-button,
+        .chatbox-tab-button:hover,
+        .chatbox-tab-button.active {
+            color: #111 !important;
         }
     </style>
 </head>
@@ -4387,9 +4434,8 @@
             </div>
 
             <div id="chatbox" class="tabcontent">
-                <h2>The Goose Chatbox</h2>
-                <p>For gooselings (and <u>some</u> guests) only. No goosinners ever.</p>
-                <center>
+                <h2 style="margin-bottom:4px !important; padding-bottom:2px !important;">The Goose Chatbox</h2>
+                <center style="display:none;">
                     <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
                     <br>
                     <span class="fine-print-admin admin-only-feature" style="opacity:0;">You currently have admin mode <span class="admin-feature-status"></span>. To toggle it <span class="admin-feature-status-opp">off</span>, please click <a href = "javascript:document.querySelector('#show-admin-features').click()">here</a>. </span>
@@ -4528,7 +4574,7 @@
 
     <div id="newchat-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="newchat-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="newchat-modal-title">
-            <span class="modal-disclaimer-fine newchat-disclaimer">Chat Creation<br>You are creating this chat as @<span class="disclaimer-find-user"></span>.</span>
+            <span class="modal-disclaimer-fine newchat-disclaimer"><span class="modal-disclaimer-fine">Administrator Control</span><br>You are creating this chat as @<span class="disclaimer-find-user"></span>.</span>
             <h2 style="margin:7px;margin-bottom:7px !important" id="newchat-modal-title">New Chat</h2>
             <p class="newchat-modal-status">Name your chat and pick the gooselings you want in it.</p>
             <input maxlength="30" type="text" id="newchat-name-input" placeholder="Chat name..." autocomplete="goose">
