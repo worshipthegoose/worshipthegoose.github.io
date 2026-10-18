@@ -61,6 +61,32 @@ document.addEventListener("DOMContentLoaded", function() {
       }, 100); 
     }
   }
+if (getCookie("is-developer") === "true") {
+  const navList = document.querySelector("nav ul");
+  if (navList) {
+    const li = document.createElement("li");
+    li.className = "dad";
+
+    const chatLink = document.createElement("a");
+    chatLink.className = "son";
+    chatLink.title = "Write a message in the Chatbox";
+    chatLink.href = "/gooseling/#/chatbox";
+    chatLink.textContent = "Chatbox";
+
+    li.appendChild(chatLink);
+    navList.appendChild(li);
+
+    function updateChatboxUnderline() {
+      const onChatbox =
+        window.location.pathname.replace(/\/$/, "") === "/gooseling" &&
+        window.location.hash === "#/chatbox";
+      chatLink.style.textDecoration = onChatbox ? "underline" : "none";
+    }
+
+    updateChatboxUnderline();
+    window.addEventListener("hashchange", updateChatboxUnderline);
+  }
+}
 
   const igloo = document.querySelector(".logo");
   if (localStorage.getItem("homepage") !== null){
