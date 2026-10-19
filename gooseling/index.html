@@ -820,7 +820,7 @@
 
             const replyButton = document.createElement("button");
             replyButton.type = "button";
-            replyButton.textContent = "⤷";
+            replyButton.textContent = "⤿";
             replyButton.title = `Reply to @${post.username}`;
             replyButton.className = "message-reply-button";
             replyButton.style.marginRight = "6px";
@@ -1267,12 +1267,13 @@
                 headerDiv.style.padding = "8px 0";
                 headerDiv.style.margin = "0 8px 8px 8px";
                 headerDiv.style.fontSize = "19.5px";
-
+                headerDiv.style.borderRadius = "5px";
+                headerDiv.style.setProperty('corner-shape', 'scoop', 'important')
                 if (getCookie('canada_goose') === 'true') {
-                    headerDiv.style.borderBottom = "2px ridge white";
+                    headerDiv.style.borderBottom = "5px double white";
                     headerDiv.style.color = "white";
                 } else {
-                    headerDiv.style.borderBottom = "2px ridge #111";
+                    headerDiv.style.borderBottom = "5px double #111";
                     headerDiv.style.color = "#000";
                 }
 
@@ -1316,10 +1317,12 @@
                 manualHeaderRow.style.position = "relative";
                 manualHeaderRow.style.display = "flex";
                 manualHeaderRow.style.alignItems = "center";
-                manualHeaderRow.style.width = "calc(100% - 16px)";
+                manualHeaderRow.style.width = "calc(100%)";
                 manualHeaderRow.style.margin = "8px 0 8px 0";
-                manualHeaderRow.style.borderBottom = "4px dotted #111";
+                manualHeaderRow.style.borderBottom = "4px double #111";
                 manualHeaderRow.style.boxSizing = "border-box";
+                manualHeaderRow.style.borderRadius = "5px";
+                manualHeaderRow.style.setProperty('corner-shape', 'round', 'important');
                 manualHeaderRow.style.minHeight = "31px";
 
                 if (showAdminFeatures()) {
@@ -1365,7 +1368,9 @@
 
                 const bottomSeparator = document.createElement("div");
                 bottomSeparator.style.display = "block";
-                bottomSeparator.style.borderBottom = "3px dashed #111";
+                bottomSeparator.style.borderBottom = "4px double #111";
+                bottomSeparator.style.borderRadius = "8px";
+                bottomSeparator.style.setProperty('corner-shape', 'round', 'important');
                 bottomSeparator.style.margin = "8px 0";
 
                 announcementWrapper.appendChild(bottomSeparator);
