@@ -2519,7 +2519,7 @@
                 }
             });
 
-            addCustomChat(OG_CHAT);
+            if (OG_CHAT.members.includes(getCookie('dev-username'))) addCustomChat(OG_CHAT);
             loadChat("admin", true);
             loadChat("goose", true);
             refreshChatList();
