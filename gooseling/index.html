@@ -15,9 +15,9 @@
     <link id="favicon" rel="icon" type="image/x-icon" href="../favicon.ico">
 
     <script class="default">
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwZ1KMjo82WDwYETXd1TJLN_OoK0zlboTwkIymHYfiI67cS30foQ3WpMdsVJ6zpCwzX/exec";
-        const LOSER_GAS_URL = 'https://script.google.com/macros/s/AKfycbwm1axiGpenudATQGniRz7DCEJOMk5QOAS7_XSD9WnDT1WDl7YraG5gl0Q-BpinSFff/exec';
-        const CHATS_GAS_URL = "https://script.google.com/macros/s/AKfycbwt51VvF4ok4gOUGnET8aH_XfrqXIwFwMqx4buwUrxOI4YHkG-M6VA7h83U0GriAg5gEg/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxouL-0fxwf1jtrTZNWkLFPNKm1gq68eu_iJPio77DFsrDqwsCKRIGCSByqN8s07xuX/exec";
+        const CHATS_GAS_URL = 'https://script.google.com/macros/s/AKfycbzcyCEnoTwNkm3i4PFn0ixvHEtNy8ve11QvblxiNsJ35L91PVeDocsIgJSlaGS3HHs_AQ/exec';
+        const LOSER_GAS_URL = "https://script.google.com/macros/s/AKfycbxVV8ou1jU4T3D9vQsC62qnPILsA_1ww9S8lajijRjGkuuCfPgR_KBWR1e3H46Q4FXf/exec";
         const ORIGINAL_FAVICON = "../favicon.ico";
         const newMessageAux = new Audio('/assets/new-message.wav')
         let badgedFaviconDataUrl = null;
@@ -34,13 +34,23 @@
         let newChatMembers = [];
         let refreshingChatList = false;
         let pollTick = 0;
-        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling"]
-        const deluxeUsers = ["goosercooper", "laureline"]
+        const admins = ["thegoose", "agooseworshipper", "thenumberonegooseling", "laureline"]
+        const deluxeUsers = ["goosercooper"]
         const usernames = ["thenumberonegooseling", "thegoose", "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline", "robogoose", "goosercooper", "goseultimate", "eshigoose"];
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
         var pauseGooseChat = false;
         const chatRegistry = {};
+        const OG_CHAT = {
+            id: "7682ce133336",
+            name: "𓅯 OG Gooselings",
+            owner: "thenumberonegooseling",
+            members: ['agooseworshipper', 'thenumberonegooseling']
+        };
+
+        function isLockedChat(chat) {
+            return !!chat && chat.custom && String(chat.id) === OG_CHAT.id;
+        }
 
         function manonIsNotComingBack(){
             console.log(`Manon removed Katseye out of her IG Bio`)
@@ -747,8 +757,6 @@
             }
         }
 
-        /* PLEASE NOTE GOSEDEVS: THESE BOTTOM FUNCTIONS ARE IN BETA. THEY MAY MALFUNCTION */
-
         function createLikeButton(post, chat) {
             const likes = Array.isArray(post.likes) ? post.likes : [];
             const me = getCookie("dev-username") || "";
@@ -773,7 +781,7 @@
         }
 
         async function toggleLike(post, chat, button) {
-            if (chat.custom && pauseGooseChat) return;
+            if (chat.custom && !isLockedChat(chat) && pauseGooseChat) return;
 
             const me = getCookie("dev-username");
 
@@ -950,11 +958,13 @@
                 return;
             }
 
-            const input = document.getElementById("chat-input");
+            const input = document.getElementById(imageTargetInputId);
             const filenameInput = document.getElementById("image-filename-input");
             const status = document.querySelector(".image-modal-status");
 
             if (!input || !filenameInput) return;
+
+            if (imageTargetInputId !== "chat-input" && imageTargetInputId !== "chat-input-" + OG_CHAT.id) return;
 
             const filename = filenameInput.value.trim();
 
@@ -1087,7 +1097,6 @@
             textSpan.style.minWidth = "0";
             textSpan.style.overflowWrap = "anywhere";
             textSpan.style.wordBreak = "break-all";
-            // textSpan.appendChild(createLikeButton(post, chat)); <- IN DEV
 
             let usernameStyle = "";
 
@@ -1385,7 +1394,7 @@
             const container = document.getElementById(chat.containerId);
             if (!container) return;
 
-            if (chat.custom && pauseGooseChat) {
+            if (chat.custom && !isLockedChat(chat) && pauseGooseChat) {
                 applyPauseState(chat);
                 return;
             }
@@ -1569,7 +1578,7 @@
         }
 
         function applyPauseState(chat) {
-            if (!chat || !chat.custom) return;
+            if (!chat || !chat.custom || isLockedChat(chat)) return;
 
             const container = document.getElementById(chat.containerId);
             const input = document.getElementById(chat.inputId);
@@ -1967,7 +1976,7 @@
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
-                if (pauseGooseChat && chat.custom) return;
+                if (pauseGooseChat && chat.custom && !isLockedChat(chat)) return;
 
                 const username = getCookie("dev-username");
                 const input = document.getElementById(chat.inputId);
@@ -2043,8 +2052,9 @@
             if (!info || !/^[a-z0-9]{6,32}$/i.test(String(info.id))) return;
 
             const key = "c_" + info.id;
-
             if (chatRegistry[key]) return;
+
+            const locked = String(info.id) === OG_CHAT.id;
 
             const chat = registerChat({
                 key: key,
@@ -2066,7 +2076,9 @@
             button.className = "chatbox-tab-button custom-chat-tab";
             button.dataset.tab = chat.tabId;
             button.textContent = `${chat.name}`;
-            button.title = `${chat.name} • Members: ${chat.members.map(member => "@" + member).join(", ")}`;
+            button.title = locked
+                ? `${chat.name}`
+                : `${chat.name} • Members: ${chat.members.map(member => "@" + member).join(", ")}`;
 
             button.addEventListener("click", (evt) => {
                 openChatboxTab(evt, chat.tabId);
@@ -2078,16 +2090,25 @@
             const page = document.createElement("div");
             page.id = chat.tabId;
             page.className = "chatbox-tab-page";
-            ///page.style.display = "none";
             page.style.setProperty("--chat-color", pastelForId(info.id));
+
+            const bottomButtons = locked
+                ? `
+                    <button type="submit" id="send-message-${info.id}" class="custom-send-button" style="padding: 8px;">Send</button>
+                    <button type="button" id="${chat.clearId}" class="custom-wipe-button admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
+                    <button type="button" id="add-image-${info.id}" class="custom-image-button admin-only-feature" style="padding: 8px;display:none;">✦ Image</button>
+                `
+                : `
+                    <button type="submit" id="send-message-${info.id}" class="custom-send-button" style="padding: 8px;">Send</button>
+                    <button type="button" id="${chat.clearId}" class="custom-wipe-button admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
+                    <button type="button" id="manage-chat-${info.id}" class="custom-manage-button" style="padding: 8px;">Members</button>
+                `;
 
             page.innerHTML = `
                 <div id="${chat.containerId}" class="message-containers custom-message-container"></div>
                 <form id="${chat.formId}" class="custom-chat-form">
                     <input maxlength="255" rows="1" type="text" id="${chat.inputId}" class="custom-chat-input" placeholder="" required style="width: 70%; padding: 8px;">
-                    <button type="submit" id="send-message-${info.id}" class="custom-send-button" style="padding: 8px;">Send</button>
-                    <button type="button" id="${chat.clearId}" class="custom-wipe-button admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
-                    <button type="button" id="manage-chat-${info.id}" class="custom-manage-button" style="padding: 8px;">Members</button>
+                    ${bottomButtons}
                 </form>
             `;
 
@@ -2097,20 +2118,27 @@
             syncChatInput(chat, showAdminFeatures());
 
             const manageButton = document.getElementById("manage-chat-" + info.id);
-
             if (manageButton) {
                 manageButton.addEventListener("click", () => {
                     openManageModal(chat.key);
                 });
             }
 
+            const imageButton = document.getElementById("add-image-" + info.id);
+            if (imageButton) {
+                imageButton.addEventListener("click", () => {
+                    if (!isAdmin()) return;
+                    imageTargetInputId = chat.inputId;
+                    openImageModal();
+                });
+                imageButton.style.display = showAdminFeatures() ? "inline-block" : "none";
+            }
+
             updateManageButtons();
 
             const wipeButton = document.getElementById(chat.clearId);
-
             if (wipeButton) {
                 wipeButton.style.display = showAdminFeatures() ? "inline-block" : "none";
-
                 wipeButton.addEventListener("click", () => {
                     if (isAdmin()) {
                         openClearModal(chat.key);
@@ -2171,7 +2199,7 @@
                 const ids = new Set(data.map(info => String(info.id)));
 
                 Object.values(chatRegistry)
-                    .filter(chat => chat.custom && !ids.has(chat.id))
+                    .filter(chat => chat.custom && !isLockedChat(chat) && !ids.has(chat.id))
                     .forEach(removeCustomChat);
 
                 data.forEach(info => {
@@ -2479,6 +2507,7 @@
                 }
             });
 
+            addCustomChat(OG_CHAT);
             loadChat("admin", true);
             loadChat("goose", true);
             refreshChatList();
@@ -2525,7 +2554,7 @@
         function updateCustomChatInfo(info) {
             const chat = chatRegistry["c_" + info.id];
 
-            if (!chat) return;
+            if (!chat || isLockedChat(chat)) return;
 
             chat.name = String(info.name || chat.name);
             chat.owner = String(info.owner || chat.owner);
@@ -2902,6 +2931,20 @@
         });
     </script>
     <style>
+        .custom-image-button {
+            padding: 8px !important;
+            border: none !important;
+            border-radius: 7px !important;
+            box-shadow: 0 4px 10px rgba(51, 51, 51, 0.5) !important;
+            font-size: 16px !important;
+            cursor: pointer;
+            background-color: rgb(231, 168, 179) !important;
+            color: #222 !important;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .custom-image-button:hover {
+            background-color: palevioletred !important;
+        }
         .message-like-button {
             margin-left: 6px;
             padding: 0 6px !important;
@@ -3984,7 +4027,9 @@
         .chatbox-tab-button:hover {
             background-color: #ccc;
         }
-
+        #chat-container-fbadd07ede5c {
+            background-color: #59965d !important;
+        }
         .chatbox-tab-button.active {
             background-color: gainsboro;
             font-weight: bold;
@@ -4008,7 +4053,9 @@
         .message-containers textarea {
             min-width:500px !important;
         }
-
+        #message-container {
+            background-color: hsl(136, 60%, 76%) !important
+        }
         #message-container div button.message-reply-button[type="button"],
         #loser-message-container div button.message-reply-button[type="button"] {
             background-color: #d17af9 !important;
@@ -4580,7 +4627,7 @@
 
                 <div class="chatbox-tabs-layout">
                     <div class="chatbox-tab-buttons" style="scrollbar-width: none;">
-                        <button type="button" class="chatbox-tab-button admin-only-feature" data-tab="chatbox-main" onclick="openChatboxTab(event, 'chatbox-main')" style="display:none;">✦ Admin Chat</button>
+                        <button type="button" class="chatbox-tab-button admin-only-feature" data-tab="chatbox-main" onclick="openChatboxTab(event, 'chatbox-main')" style="display:none;">✦ Cats & Gooses</button>
                         <button type="button" class="chatbox-tab-button" data-tab="chatbox-goose" onclick="openChatboxTab(event, 'chatbox-goose')">Goose Chat</button>
                         <button type="button" class="chatbox-tab-button admin-only-feature" id="new-chat-button" title="Create a new chat..." style="display:none;">+ New Chat</button>
                     </div>
