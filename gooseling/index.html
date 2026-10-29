@@ -848,6 +848,7 @@
             let quote = String(message || "")
                 .replace(/\[reply=[^\]]*\]/gi, "")
                 .replace(/\[image=[^\]]*\]/gi, "(image)")
+                .replace(/\[safehtml]*\]/gi, "(custom embed)")
                 .replace(/\[newline\]/gi, " ")
                 .replace(/[\[\]]/g, "")
                 .replace(/\s+/g, " ")
