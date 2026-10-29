@@ -191,7 +191,7 @@
         }
 
         function escapeHtml(str) {
-            if (!str) return "";g
+            if (!str) return "";
             if (str.startsWith("[safehtml]")) {
                 return str.replace("[safehtml]", ""); // k/o's qoosinners
             }
@@ -1124,7 +1124,15 @@
             textSpan.appendChild(usernameStrong);
 
             const messageSpan = document.createElement("span");
-            messageSpan.appendChild(renderChatMessage(post.message || "", post.username));
+            const rawMsg = String(post.message || "");
+            const safeHtmlMatch = rawMsg.match(/^\[safehtml\]\s*([\s\S]*)$/i);
+
+            if (safeHtmlMatch && admins.includes(post.username)) {
+                messageSpan.innerHTML = safeHtmlMatch[1].replace(/\[newline\]/gi, "<br>");
+            } else {
+                messageSpan.appendChild(renderChatMessage(rawMsg, post.username));
+            }   
+
             messageSpan.style.color = "#222"
             textSpan.appendChild(messageSpan);
 
