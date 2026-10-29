@@ -191,15 +191,16 @@
         }
 
         function escapeHtml(str) {
-            if (!str.startsWith("[safehtm]")) {
-                return String(str || "")
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#39;");
+            if (!str) return "";g
+            if (str.startsWith("[safehtml]")) {
+                return str.replace("[safehtml]", ""); // k/o's qoosinners
             }
-            return;
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;"); 
         }
 
         function isAdmin() {
