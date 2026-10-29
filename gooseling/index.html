@@ -1133,10 +1133,13 @@
                     link.setAttribute('target', '_blank');
                     link.setAttribute('rel', 'noopener noreferrer');
                 });
-                messageSpan.querySelectorAll('img').forEach(image =>{
+                messageSpan.querySelectorAll('img').forEach(image => {
                     image.style.width = "25%";
-                    image.style.height = "25%"
-                })
+                    image.style.height = "25%";
+
+                    image.before(document.createElement("br"));
+                    image.after(document.createElement("br"));
+                });
             } else {
                 messageSpan.appendChild(renderChatMessage(rawMsg, post.username));
             }
