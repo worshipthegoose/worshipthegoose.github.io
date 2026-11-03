@@ -4561,12 +4561,12 @@
     .message { white-space: pre-wrap; word-wrap: break-word; color: #333; margin-bottom: 10px; }
     #status { color: green; font-weight: bold; margin: 5px !important; min-height: 20px; }
     .action-controls { display: flex; gap: 10px; }
-    .btn-edit { background-color: #ff9800; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
-    .btn-edit:hover { background-color: #e68a00; font-weight: bolder}
-    .btn-delete { background-color: #f44336; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
+    .btn-edit { transition:background-color 0.3s ease; background-color: #ff9800; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
+    .btn-edit:hover { transition:background-color 0.3s ease; background-color: #e68a00; font-weight: bolder}
+    .btn-delete { transition:background-color 0.3s ease; background-color: #f44336; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
     .btn-delete:hover { background-color: #da190b; font-weight: bolder}
-    .btn-quote { background-color: #008cba; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
-    .btn-quote:hover { background-color: #007399; font-weight: bolder}
+    .btn-quote { transition:background-color 0.3s ease; background-color: #008cba; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
+    .btn-quote:hover { transition:background-color 0.3s ease; background-color: #007399; font-weight: bolder}
     .current-user-info { font-size: 0.9em; margin-bottom: 10px; color: #555; font-style: italic; } 
     #outlet #message {
         height: 180px !important;
@@ -4769,7 +4769,7 @@
 
         function quotePost(author, rowId) {
             const text = document.getElementById(`msg-${rowId}`).textContent;
-            messageBox.value = `"@${author} wrote: ${text}"\n\n` + messageBox.value;
+            messageBox.value = `@${author} wrote: "${text}"\n\n` + messageBox.value;
             messageBox.focus();
         }
 
@@ -4913,7 +4913,7 @@
         });
 
         displayIdentity();
-        loadPosts();
+        setTimeout(function(){loadPosts(); console.log("Outlet Loaded!")}, 1000)
     });
 </script>
     </script>
