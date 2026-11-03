@@ -4913,7 +4913,9 @@
         });
 
         displayIdentity();
-        setTimeout(function(){loadPosts(); console.log("Outlet Loaded!")}, 1000)
+        const intervalId = setInterval(() => {
+            loadPosts();
+        }, 1000);
     });
 </script>
     </script>
