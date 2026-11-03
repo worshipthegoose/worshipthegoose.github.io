@@ -34,7 +34,7 @@
         let newChatMembers = [];
         let refreshingChatList = false;
         let pollTick = 0;
-        const admins = ["thegoose", "thenumberonegooseling", "laureline"]
+        const admins = ["thegoose", "thenumberonegooseling", "laureline"];
         const deluxeUsers = ["goosercooper"]
         const usernames = ["thenumberonegooseling", "thegoose", "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline", "robogoose", "goosercooper", "goseultimate", "eshigoose"];
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
@@ -426,7 +426,9 @@
                 openTab(null, 'Chatbox');
             } else if (rawHash === "account") {
                 openTab(null, 'Account');
-            } else {
+            } else if (rawHash === "chatboard") {
+                openTab(null, 'Chatboard');
+            } else if (rawHash == "dashboard") {
                 openTab(null, 'Dashboard');
             }
         }
@@ -467,7 +469,7 @@
                 if (activeButton) {
                     activeButton.classList.remove("unread");
                 }
-            }
+            }  
 
             tabcontent = document.getElementsByClassName("tabcontent");
             for (i = 0; i < tabcontent.length; i++) {
@@ -4529,6 +4531,245 @@
             color: #111 !important;
         }
     </style>
+    <style>
+        /* This was originally from a diff html file - sorry for the cluser goose */
+    .form-group { margin-bottom: 15px; }
+    textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #45a049; font-weight:bolder !important;}
+    .post-card { background: white; padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; }
+    .post-header { display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    .username { font-weight: bolder !important; color: #007399; }
+    .username.admin { color: #d32f2f; }
+    .username.deluxe { color: #388e3c; }
+    .badge { font-size: 0.75em; padding: 2px 6px; border-radius: 3px; margin-left: 5px; color: white; font-weight: bold; }
+    .badge.admin { background-color: #d32f2f; }
+    .badge.deluxe { background-color: #388e3c; }
+    .message { white-space: pre-wrap; word-wrap: break-word; color: #333; margin-bottom: 10px; }
+    #status { color: green; font-weight: bold; margin-bottom: 10px; min-height: 20px; }
+    .action-controls { display: flex; gap: 10px; }
+    .btn-edit { background-color: #ff9800; padding: 5px 10px; font-size: 0.8em; }
+    .btn-edit:hover { background-color: #e68a00; }
+    .btn-delete { background-color: #f44336; padding: 5px 10px; font-size: 0.8em; }
+    .btn-delete:hover { background-color: #da190b; }
+    .btn-quote { background-color: #008cba; padding: 5px 10px; font-size: 0.8em; }
+    .btn-quote:hover { background-color: #007399; }
+    .current-user-info { font-size: 0.9em; margin-bottom: 10px; color: #555; font-style: italic; } 
+    #chatboard #message {
+        height: 180px !important;
+        min-height: 120px;
+        width: 100% !important;
+        font-size: 16px;
+        line-height: 1.4;
+        overflow-y: auto !important;
+        resize: vertical;
+        font-family: monospace !important;
+    }
+    #chatboard #post-button:disabled { opacity: 0.6; cursor: wait; }
+    #forum-posts {color:#388e3c; font-weight:bolder}
+    #forum-posts .post-card {font-weight: normal !important;}
+    </style>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwhWGdhV2B2_uPaz3cCAAWOyFUNWKXCss-SQ3WKCFoeLM1iy53BdDTPYdtvBq1bDAo_/exec";
+        const admins = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
+        const deluxeUsers = ["goosercooper"];
+
+        const messageBox = document.getElementById("message");
+        const postButton = document.getElementById("post-button");
+        const statusDiv = document.getElementById("status");
+        const postsContainer = document.getElementById("forum-posts");
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                const raw = parts.pop().split(";").shift();
+                try { return decodeURIComponent(raw); } catch (e) { return raw; }
+            }
+            return null;
+        }
+
+        function getActiveUsername() {
+            return getCookie("dev-username") || "Anonymous";
+        }
+
+        function escapeHtml(text) {
+            const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function displayIdentity() {
+            const user = getActiveUsername();
+            const userDisplay = document.getElementById("user-display");
+            if (!userDisplay) return;
+            userDisplay.innerHTML = user === "Anonymous"
+                ? "Posting as: <strong>Anonymous</strong> (No 'dev-username' cookie found)"
+                : `Posting as: <strong>${escapeHtml(user)}</strong>`;
+        }
+
+        function checkAdminPrivilege() {
+            return admins.includes(getActiveUsername().toLowerCase());
+        }
+
+        function checkQuotePrivilege() {
+            const user = getActiveUsername().toLowerCase();
+            return admins.includes(user) || deluxeUsers.includes(user);
+        }
+
+        async function apiRequest(params) {
+            const queryString = new URLSearchParams(params).toString();
+            const response = await fetch(`${WEB_APP_URL}?${queryString}`, { method: "GET" });
+            return await response.json();
+        }
+
+        async function loadPosts() {
+            try {
+                const result = await apiRequest({ action: "getPosts" });
+                if (result.success) {
+                    renderPosts(result.data);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (err) {
+                postsContainer.textContent = "Error loading posts: " + err.message;
+            }
+        }
+
+        function renderPosts(posts) {
+            if (!posts || posts.length === 0) {
+                postsContainer.innerHTML = "<p>No posts yet. Be the first to start the conversation!</p>";
+                return;
+            }
+
+            const hasQuotePrivilege = checkQuotePrivilege();
+            const hasAdminPrivilege = checkAdminPrivilege();
+            let html = "";
+
+            posts.forEach(post => {
+                let classAttr = "username";
+                let badge = "";
+                if (post.userType === "admin") {
+                    classAttr += " admin";
+                    badge = '<span class="badge admin">Admin</span>';
+                } else if (post.userType === "deluxe") {
+                    classAttr += " deluxe";
+                    badge = '<span class="badge deluxe">Deluxe</span>';
+                }
+
+                const author = escapeHtml(post.username || "Anonymous");
+
+                html += `
+                <div class="post-card">
+                    <div class="post-header">
+                        <span class="${classAttr}">${author}${badge}</span>
+                        <span>${escapeHtml(post.timestamp || "")}</span>
+                    </div>
+                    <div class="message" id="msg-${post.rowId}">${escapeHtml(post.message || "")}</div>
+                    <div class="action-controls">
+                        ${hasQuotePrivilege ? `<button type="button" class="btn-quote" data-action="quote" data-author="${author}" data-row="${post.rowId}">Quote</button>` : ""}
+                        ${hasAdminPrivilege ? `
+                            <button type="button" class="btn-edit" data-action="edit" data-row="${post.rowId}">Edit</button>
+                            <button type="button" class="btn-delete" data-action="delete" data-row="${post.rowId}">Delete</button>
+                        ` : ""}
+                    </div>
+                </div>`;
+            });
+
+            postsContainer.innerHTML = html;
+        }
+
+        async function submitPost() {
+            const username = getActiveUsername();
+            const message = messageBox.value.trim();
+
+            if (!message) {
+                alert("Please enter a message.");
+                return;
+            }
+
+            postButton.disabled = true;
+            statusDiv.style.color = "orange";
+            statusDiv.innerText = "Posting...";
+
+            try {
+                const result = await apiRequest({ action: "addPost", username, message });
+                if (result.success) {
+                    statusDiv.style.color = "green";
+                    statusDiv.innerText = "Posted successfully!";
+                    messageBox.value = "";
+                    loadPosts();
+                    setTimeout(() => { statusDiv.innerText = ""; }, 3000);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (err) {
+                statusDiv.style.color = "firebrick";
+                statusDiv.innerText = "Something failed: " + err.message;
+            } finally {
+                postButton.disabled = false;
+            }
+        }
+
+        function quotePost(author, rowId) {
+            const text = document.getElementById(`msg-${rowId}`).textContent;
+            messageBox.value = `"@${author} wrote: ${text}"\n\n` + messageBox.value;
+            messageBox.focus();
+        }
+
+        async function editPost(rowId) {
+            const username = getActiveUsername();
+            const currentMessage = document.getElementById(`msg-${rowId}`).innerText;
+            const newMessage = prompt("Edit your message:", currentMessage);
+
+            if (newMessage === null || newMessage.trim() === "") return;
+
+            try {
+                const result = await apiRequest({ action: "editPost", rowId, message: newMessage.trim(), username });
+                if (result.success) loadPosts();
+                else alert("Error: " + result.error);
+            } catch (err) {
+                alert("Network Error: " + err.message);
+            }
+        }
+
+        async function deletePost(rowId) {
+            const username = getActiveUsername();
+            if (!confirm("Are you sure you want to delete this post?")) return;
+
+            try {
+                const result = await apiRequest({ action: "deletePost", rowId, username });
+                if (result.success) loadPosts();
+                else alert("Error: " + result.error);
+            } catch (err) {
+                alert("Network Error: " + err.message);
+            }
+        }
+
+        // Wire everything up with listeners instead of inline onclick
+        postButton.addEventListener("click", submitPost);
+
+        messageBox.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                submitPost();
+            }
+        });
+
+        postsContainer.addEventListener("click", function (e) {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+            const rowId = btn.dataset.row;
+            if (btn.dataset.action === "quote") quotePost(btn.dataset.author, rowId);
+            else if (btn.dataset.action === "edit") editPost(rowId);
+            else if (btn.dataset.action === "delete") deletePost(rowId);
+        });
+
+        displayIdentity();
+        loadPosts();
+    });
+</script>
+    </script>
 </head>
 
 <body>
@@ -4568,7 +4809,9 @@
                 <button class="tablinks" onclick="openTab(event, 'Dashboard')">Dashboard</button>
                 <button class="tablinks" onclick="openTab(event, 'Notifications')">Notifications</button>
                 <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
+                <button class="tablinks" onclick="openTab(event, 'Chatboard')">Chatboard</button>
                 <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
+
             </div>
 
             <div id="dashboard" class="tabcontent">
@@ -4670,9 +4913,23 @@
                     
                 </ul>
             </div>
+            <div id="chatboard" class="tabcontent">
+                <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Gooseling Chatboard</h2>
+                <div class="current-user-info" id="user-display" style="display:none !important;">Loading identity...</div>
+                
+                <div class="form-group">
+                    <textarea id="message" rows="3" placeholder="Compose something extremely goose here..." required></textarea>
+                </div>
+                <button type="button" id="post-button">Post Message</button> <!--- I will yell at your ass if you tell me to use submit -->
+                <div id="status"></div>
 
+                <hr> <!--- Line spacer I fckin hate this-->
+
+                <h3>Recent Goose Discussions</h3>
+                <div id="forum-posts">Hold on a goose...</div>
+            </div>
             <div id="chatbox" class="tabcontent">
-                <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Goose Chatbox</h2>
+                <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Gooseling Chatbox</h2>
                 <center style="display:none;">
                     <span class="fine-print">Before typing any message, please read the <a title="Clicking this link will open a new panel tab..." href="#/chatbox/guidelines">Chatbox Guidelines</a> to ensure a safe space for every gooseling.</span>
                     <br>
@@ -4728,7 +4985,7 @@
 
                 <div id="admin-feature-toggle-container" onclick="document.getElementById('show-admin-features').click()" class="admin-feature-setting" style="display:none;">
                     <label title="Switch to non-admin mode..." class="admin-toggle">
-                        <span>✦ Show admin features</span>
+                        <span>✦ Show admin features for Chatbox</span>
                         <input type="checkbox" id="show-admin-features">
                         <span class="admin-toggle-slider"></span>
                     </label>

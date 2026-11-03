@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Forum</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; background-color: #f9f9f9; }
+    h2 { color: #333; }
+    .form-group { margin-bottom: 15px; }
+    textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .post-card { background: white; padding: 15px; margin-top: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; }
+    .post-header { display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    .username { font-weight: bold; color: #555; }
+    .username.admin { color: #d32f2f; }
+    .username.deluxe { color: #388e3c; }
+    .badge { font-size: 0.75em; padding: 2px 6px; border-radius: 3px; margin-left: 5px; color: white; font-weight: bold; }
+    .badge.admin { background-color: #d32f2f; }
+    .badge.deluxe { background-color: #388e3c; }
+    .message { white-space: pre-wrap; word-wrap: break-word; color: #333; margin-bottom: 10px; }
+    #status { color: green; font-weight: bold; margin-bottom: 10px; min-height: 20px; }
+    .action-controls { display: flex; gap: 10px; }
+    .btn-edit { background-color: #ff9800; padding: 5px 10px; font-size: 0.8em; }
+    .btn-edit:hover { background-color: #e68a00; }
+    .btn-delete { background-color: #f44336; padding: 5px 10px; font-size: 0.8em; }
+    .btn-delete:hover { background-color: #da190b; }
+    .btn-quote { background-color: #008cba; padding: 5px 10px; font-size: 0.8em; }
+    .btn-quote:hover { background-color: #007399; }
+    .current-user-info { font-size: 0.9em; margin-bottom: 10px; color: #555; font-style: italic; }
+  </style>
+</head>
+<body>
+
+  <h2>The Gooseling Chatboard</h2>
+    <p>No, it's not the Gooseling Chatbox. It works though.</p>
+  <div class="current-user-info" id="user-display">Loading identity...</div>
+  
+  <div class="form-group">
+    <textarea id="message" rows="3" placeholder="Write a message..." required></textarea>
+  </div>
+  <button onclick="submitPost()">Post Message</button>
+  <div id="status"></div>
+
+  <hr>
+
+  <h3>Recent Discussions</h3>
+  <div id="forum-posts">Loading discussions...</div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwhWGdhV2B2_uPaz3cCAAWOyFUNWKXCss-SQ3WKCFoeLM1iy53BdDTPYdtvBq1bDAo_/exec";
+    const admins = ["thegoose", "thenumberonegooseling", "laureline"];
+    const deluxeUsers = ["goosercooper"];
+
+    window.onload = function() {
+      displayIdentity();
+      loadPosts();
+    };
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    function getActiveUsername() {
+      return getCookie("dev-username") || "Anonymous";
+    }
+
+    function displayIdentity() {
+      const user = getActiveUsername();
+      const userDisplay = document.getElementById("user-display");
+      if (user === "Anonymous") {
+        userDisplay.innerHTML = "Posting as: <strong>Anonymous</strong> (No 'dev-username' cookie found)";
+      } else {
+        userDisplay.innerHTML = `Posting as: <strong>${escapeHtml(user)}</strong>`;
+      }
+    }
+
+    function checkAdminPrivilege() {
+      const user = getActiveUsername().toLowerCase();
+      return admins.includes(user);
+    }
+
+    function checkQuotePrivilege() {
+      const user = getActiveUsername().toLowerCase();
+      return admins.includes(user) || deluxeUsers.includes(user);
+    }
+
+    async function apiRequest(params) {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await fetch(`${WEB_APP_URL}?${queryString}`, {
+        method: "GET"
+      });
+      return await response.json();
+    }
+
+    async function loadPosts() {
+      try {
+        const result = await apiRequest({ action: 'getPosts' });
+        if (result.success) {
+          renderPosts(result.data);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (err) {
+        document.getElementById('forum-posts').innerHTML = "Error loading posts: " + err.message;
+      }
+    }
+
+    function renderPosts(posts) {
+      const container = document.getElementById('forum-posts');
+      if (!posts || posts.length === 0) {
+        container.innerHTML = "<p>No posts yet. Be the first to start the conversation!</p>";
+        return;
+      }
+      
+      const hasQuotePrivilege = checkQuotePrivilege();
+      const hasAdminPrivilege = checkAdminPrivilege();
+      let html = '';
+      
+      posts.forEach(post => {
+        let classAttr = "username";
+        let badge = "";
+        if (post.userType === "admin") {
+          classAttr += " admin";
+          badge = '<span class="badge admin">Admin</span>';
+        } else if (post.userType === "deluxe") {
+          classAttr += " deluxe";
+          badge = '<span class="badge deluxe">Deluxe</span>';
+        }
+
+        html += `
+          <div class="post-card">
+            <div class="post-header">
+              <span class="${classAttr}">${escapeHtml(post.username || 'Anonymous')}${badge}</span>
+              <span>${post.timestamp}</span>
+            </div>
+            <div class="message" id="msg-${post.rowId}">${escapeHtml(post.message || '')}</div>
+            <div class="action-controls">
+              ${hasQuotePrivilege ? `<button class="btn-quote" onclick="quotePost('${escapeHtml(post.username || 'Anonymous')}', ${post.rowId})">Quote</button>` : ''}
+              ${hasAdminPrivilege ? `
+                <button class="btn-edit" onclick="editPost(${post.rowId})">Edit</button>
+                <button class="btn-delete" onclick="deletePost(${post.rowId})">Delete</button>
+              ` : ''}
+            </div>
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    async function submitPost() {
+      const username = getActiveUsername();
+      const message = document.getElementById('message').value.trim();
+      const statusDiv = document.getElementById('status');
+      
+      if (!message) {
+        alert('Please enter a message.');
+        return;
+      }
+      
+      statusDiv.style.color = "orange";
+      statusDiv.innerText = "Posting...";
+      
+      try {
+        const result = await apiRequest({ action: 'addPost', username, message });
+        if (result.success) {
+          statusDiv.style.color = "green";
+          statusDiv.innerText = "Posted successfully!";
+          document.getElementById('message').value = '';
+          loadPosts();
+          setTimeout(() => { statusDiv.innerText = ''; }, 3000);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (err) {
+        statusDiv.style.color = "red";
+        statusDiv.innerText = "Error: " + err.message;
+      }
+    }
+
+    function quotePost(author, rowId) {
+      const text = document.getElementById(`msg-${rowId}`).innerText;
+      const input = document.getElementById('message');
+      input.value = `"${text}" - @${author}\n\n` + input.value;
+      input.focus();
+    }
+
+    async function editPost(rowId) {
+      const username = getActiveUsername();
+      const currentMessage = document.getElementById(`msg-${rowId}`).innerText;
+      const newMessage = prompt("Edit your message:", currentMessage);
+      
+      if (newMessage === null || newMessage.trim() === "") return;
+
+      try {
+        const result = await apiRequest({ action: 'editPost', rowId, message: newMessage.trim(), username });
+        if (result.success) {
+          loadPosts();
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (err) {
+        alert("Network Error: " + err.message);
+      }
+    }
+
+    async function deletePost(rowId) {
+      const username = getActiveUsername();
+      if (!confirm("Are you sure you want to delete this post?")) return;
+
+      try {
+        const result = await apiRequest({ action: 'deletePost', rowId, username });
+        if (result.success) {
+          loadPosts();
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (err) {
+        alert("Network Error: " + err.message);
+      }
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>
