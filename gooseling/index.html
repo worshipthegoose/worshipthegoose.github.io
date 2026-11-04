@@ -4626,299 +4626,320 @@
     }
     </style>
     <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydFPRkD3Gp5EYrGIgeo_k0hjzjv5IgI_ZmCVkbNTrO3t_eQMJknQwkVpDyYQwlIeu6/exec";
-        const admins = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
-        const deluxeUsers = ["goosercooper"];
+document.addEventListener("DOMContentLoaded", function () {
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydFPRkD3Gp5EYrGIgeo_k0hjzjv5IgI_ZmCVkbNTrO3t_eQMJknQwkVpDyYQwlIeu6/exec";
+    const admins = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
+    const deluxeUsers = ["goosercooper"];
+    const SAFEHTML_RE = /^\s*<!doctype safehtml>\s*([\s\S]*)$/i;
+    const rawMessages = {};
+    let lastPostsJson = "";
 
-        const messageBox = document.getElementById("message");
-        const postButton = document.getElementById("post-button");
-        const statusDiv = document.getElementById("status");
-        const postsContainer = document.getElementById("forum-posts");
+    const messageBox = document.getElementById("message");
+    const postButton = document.getElementById("post-button");
+    const statusDiv = document.getElementById("status");
+    const postsContainer = document.getElementById("forum-posts");
 
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) {
-                const raw = parts.pop().split(";").shift();
-                try { return decodeURIComponent(raw); } catch (e) { return raw; }
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            const raw = parts.pop().split(";").shift();
+            try { return decodeURIComponent(raw); } catch (e) { return raw; }
+        }
+        return null;
+    }
+
+    function getActiveUsername() {
+        return getCookie("dev-username") || "Anonymous";
+    }
+
+    function escapeHtml(text) {
+        const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function renderMessageBody(raw) {
+        const match = String(raw || "").match(SAFEHTML_RE);
+        if (match) {
+            const doc = '<base target="_blank"><style>body{font-family:sans-serif;color:#333;margin:6px;word-wrap:break-word}img{max-width:100%;height:auto}</style>' + match[1];
+            return {
+                safe: true,
+                html: `<iframe sandbox="allow-popups" srcdoc="${escapeHtml(doc)}" style="width:100%;height:220px;border:0;background:white;resize:vertical;overflow:auto;"></iframe>`
+            };
+        }
+        return { safe: false, html: escapeHtml(raw || "") };
+    }
+
+    function displayIdentity() {
+        const user = getActiveUsername();
+        const userDisplay = document.getElementById("user-display");
+        if (!userDisplay) return;
+        userDisplay.innerHTML = user === "Anonymous"
+            ? "Posting as: <strong>Anonymous</strong> (No 'dev-username' cookie found)"
+            : `Posting as: <strong>${escapeHtml(user)}</strong>`;
+    }
+
+    function checkAdminPrivilege() {
+        return admins.includes(getActiveUsername().toLowerCase());
+    }
+
+    function checkQuotePrivilege() {
+        const user = getActiveUsername().toLowerCase();
+        return admins.includes(user) || deluxeUsers.includes(user);
+    }
+
+    async function apiRequest(params) {
+        const queryString = new URLSearchParams(params).toString();
+        const response = await fetch(`${WEB_APP_URL}?${queryString}`, { method: "GET" });
+        return await response.json();
+    }
+
+    async function loadPosts() {
+        try {
+            const result = await apiRequest({ action: "getPosts" });
+            if (result.success) {
+                renderPosts(result.data);
+            } else {
+                throw new Error(result.error);
             }
-            return null;
+        } catch (err) {
+            postsContainer.textContent = "Error loading posts: " + err.message;
+            lastPostsJson = "";
+        }
+    }
+
+    function renderPosts(posts) {
+        const json = JSON.stringify(posts);
+        if (json === lastPostsJson) return;
+        lastPostsJson = json;
+
+        if (!posts || posts.length === 0) {
+            postsContainer.innerHTML = "<p>No posts yet. Be the first to start the conversation!</p>";
+            return;
         }
 
-        function getActiveUsername() {
-            return getCookie("dev-username") || "Anonymous";
-        }
+        const hasQuotePrivilege = checkQuotePrivilege();
+        const hasAdminPrivilege = checkAdminPrivilege();
+        let html = "";
 
-        function escapeHtml(text) {
-            const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
-            return String(text).replace(/[&<>"']/g, m => map[m]);
-        }
-
-        function displayIdentity() {
-            const user = getActiveUsername();
-            const userDisplay = document.getElementById("user-display");
-            if (!userDisplay) return;
-            userDisplay.innerHTML = user === "Anonymous"
-                ? "Posting as: <strong>Anonymous</strong> (No 'dev-username' cookie found)"
-                : `Posting as: <strong>${escapeHtml(user)}</strong>`;
-        }
-
-        function checkAdminPrivilege() {
-            return admins.includes(getActiveUsername().toLowerCase());
-        }
-
-        function checkQuotePrivilege() {
-            const user = getActiveUsername().toLowerCase();
-            return admins.includes(user) || deluxeUsers.includes(user);
-        }
-
-        async function apiRequest(params) {
-            const queryString = new URLSearchParams(params).toString();
-            const response = await fetch(`${WEB_APP_URL}?${queryString}`, { method: "GET" });
-            return await response.json();
-        }
-
-        async function loadPosts() {
-            try {
-                const result = await apiRequest({ action: "getPosts" });
-                if (result.success) {
-                    renderPosts(result.data);
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (err) {
-                postsContainer.textContent = "Error loading posts: " + err.message;
-            }
-        }
-
-        function renderPosts(posts) {
-            if (!posts || posts.length === 0) {
-                postsContainer.innerHTML = "<p>No posts yet. Be the first to start the conversation!</p>";
-                return;
+        posts.forEach(post => {
+            let classAttr = "username";
+            let badge = "";
+            if (post.userType === "admin") {
+                classAttr += " admin";
+                badge = '<span class="badge admin">✦ Admin</span>';
+            } else if (post.userType === "deluxe") {
+                classAttr += " deluxe";
+                badge = '<span class="badge deluxe">✹ Deluxe</span>';
             }
 
-            const hasQuotePrivilege = checkQuotePrivilege();
-            const hasAdminPrivilege = checkAdminPrivilege();
-            let html = "";
+            const author = escapeHtml(post.username || "Anonymous");
+            rawMessages[post.rowId] = post.message || "";
+            const body = renderMessageBody(post.message);
 
-            posts.forEach(post => {
-                let classAttr = "username";
-                let badge = "";
-                if (post.userType === "admin") {
-                    classAttr += " admin";
-                    badge = '<span class="badge admin">✦ Admin</span>';
-                } else if (post.userType === "deluxe") {
-                    classAttr += " deluxe";
-                    badge = '<span class="badge deluxe">✹ Deluxe</span>';
-                }
+            html += `
+            <div class="post-card">
+                <div class="post-header">
+                    <span class="${classAttr}">⏻ ${author}${badge}</span>
+                    <span>${escapeHtml(post.timestamp || "")}</span>
+                </div>
+                <div class="message${body.safe ? " safehtml" : ""}" id="msg-${post.rowId}">${body.html}</div>
+                <div class="action-controls">
+                    ${hasQuotePrivilege ? `<button type="button" class="btn-quote" data-action="quote" data-author="${author}" data-row="${post.rowId}">Quote</button>` : ""}
+                    ${hasAdminPrivilege ? `
+                        <button type="button" class="btn-edit" data-action="edit" data-author="${author}" data-row="${post.rowId}">Edit</button>
+                        <button type="button" class="btn-delete" data-action="delete" data-author="${author}" data-row="${post.rowId}">Delete</button>
+                    ` : ""}
+                </div>
+            </div>`;
+        });
 
-                const author = escapeHtml(post.username || "Anonymous");
+        postsContainer.innerHTML = html;
+    }
 
-                html += `
-                <div class="post-card">
-                    <div class="post-header">
-                        <span class="${classAttr}">⏻ ${author}${badge}</span>
-                        <span>${escapeHtml(post.timestamp || "")}</span>
-                    </div>
-                    <div class="message" id="msg-${post.rowId}">${escapeHtml(post.message || "")}</div>
-                    <div class="action-controls">
-                        ${hasQuotePrivilege ? `<button type="button" class="btn-quote" data-action="quote" data-author="${author}" data-row="${post.rowId}">Quote</button>` : ""}
-                        ${hasAdminPrivilege ? `
-                            <button type="button" class="btn-edit" data-action="edit" data-author="${author}" data-row="${post.rowId}">Edit</button>
-                            <button type="button" class="btn-delete" data-action="delete" data-author="${author}" data-row="${post.rowId}">Delete</button>
-                        ` : ""}
-                    </div>
-                </div>`;
+    async function submitPost() {
+        const username = getActiveUsername();
+        const message = messageBox.value.trim();
+
+        if (!message) {
+            alert("Please enter a message.");
+            return;
+        }
+
+        postButton.disabled = true;
+        statusDiv.style.color = "orange";
+        statusDiv.innerText = "Posting...";
+
+        try {
+            const result = await apiRequest({ action: "addPost", username, message });
+            if (result.success) {
+                statusDiv.style.color = "green";
+                statusDiv.innerText = "Posted successfully!";
+                messageBox.value = "";
+                loadPosts();
+                setTimeout(() => { statusDiv.innerText = ""; }, 3000);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (err) {
+            statusDiv.style.color = "firebrick";
+            statusDiv.innerText = "Something failed: " + err.message;
+        } finally {
+            postButton.disabled = false;
+        }
+    }
+
+    function quotePost(author, rowId) {
+        const text = rawMessages[rowId] || "";
+        messageBox.value = `@${author} wrote: "${text}"\n\n` + messageBox.value;
+        messageBox.focus();
+    }
+
+    let pendingEditRow = null;
+    let pendingDeleteRow = null;
+
+    const outletEditOverlay = document.getElementById("outlet-edit-modal-overlay");
+    const outletEditInput = document.getElementById("outlet-edit-input");
+    const outletEditPushBtn = document.getElementById("outlet-edit-push-button");
+    const outletEditCancelBtn = document.getElementById("outlet-edit-cancel-button");
+
+    const outletDeleteOverlay = document.getElementById("outlet-delete-modal-overlay");
+    const outletDeleteConfirmBtn = document.getElementById("outlet-delete-confirm-button");
+    const outletDeleteCancelBtn = document.getElementById("outlet-delete-cancel-button");
+
+    function fillModalMeta(overlay, author) {
+        overlay.querySelector(".outlet-modal-author").textContent = author || "Unknown";
+        overlay.querySelector(".outlet-modal-admin").textContent = getActiveUsername();
+    }
+
+    function openOutletEditModal(rowId, author) {
+        if (!checkAdminPrivilege()) return;
+        pendingEditRow = rowId;
+        outletEditInput.value = rawMessages[rowId] || "";
+        fillModalMeta(outletEditOverlay, author);
+        outletEditOverlay.style.display = "flex";
+        setTimeout(() => { outletEditInput.focus(); outletEditInput.select(); }, 50);
+    }
+
+    function closeOutletEditModal() {
+        outletEditOverlay.style.display = "none";
+        pendingEditRow = null;
+    }
+
+    function openOutletDeleteModal(rowId, author) {
+        if (!checkAdminPrivilege()) return;
+        pendingDeleteRow = rowId;
+        fillModalMeta(outletDeleteOverlay, author);
+        outletDeleteOverlay.style.display = "flex";
+    }
+
+    function closeOutletDeleteModal() {
+        outletDeleteOverlay.style.display = "none";
+        pendingDeleteRow = null;
+    }
+
+    async function pushOutletEdit() {
+        if (!pendingEditRow) return;
+        const newMessage = outletEditInput.value.trim();
+        if (!newMessage) {
+            alert("The post cannot be empty.");
+            return;
+        }
+
+        outletEditPushBtn.disabled = true;
+        outletEditInput.disabled = true;
+        outletEditPushBtn.textContent = "Pushing...";
+
+        try {
+            const result = await apiRequest({
+                action: "editPost",
+                rowId: pendingEditRow,
+                message: newMessage,
+                username: getActiveUsername()
             });
-
-            postsContainer.innerHTML = html;
-        }
-
-        async function submitPost() {
-            const username = getActiveUsername();
-            const message = messageBox.value.trim();
-
-            if (!message) {
-                alert("Please enter a message.");
-                return;
-            }
-
-            postButton.disabled = true;
-            statusDiv.style.color = "orange";
-            statusDiv.innerText = "Posting...";
-
-            try {
-                const result = await apiRequest({ action: "addPost", username, message });
-                if (result.success) {
-                    statusDiv.style.color = "green";
-                    statusDiv.innerText = "Posted successfully!";
-                    messageBox.value = "";
-                    loadPosts();
-                    setTimeout(() => { statusDiv.innerText = ""; }, 3000);
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (err) {
-                statusDiv.style.color = "firebrick";
-                statusDiv.innerText = "Something failed: " + err.message;
-            } finally {
-                postButton.disabled = false;
-            }
-        }
-
-        function quotePost(author, rowId) {
-            const text = document.getElementById(`msg-${rowId}`).textContent;
-            messageBox.value = `@${author} wrote: "${text}"\n\n` + messageBox.value;
-            messageBox.focus();
-        }
-
-        let pendingEditRow = null;
-        let pendingDeleteRow = null;
-
-        const outletEditOverlay = document.getElementById("outlet-edit-modal-overlay");
-        const outletEditInput = document.getElementById("outlet-edit-input");
-        const outletEditPushBtn = document.getElementById("outlet-edit-push-button");
-        const outletEditCancelBtn = document.getElementById("outlet-edit-cancel-button");
-
-        const outletDeleteOverlay = document.getElementById("outlet-delete-modal-overlay");
-        const outletDeleteConfirmBtn = document.getElementById("outlet-delete-confirm-button");
-        const outletDeleteCancelBtn = document.getElementById("outlet-delete-cancel-button");
-
-        function fillModalMeta(overlay, author) {
-            overlay.querySelector(".outlet-modal-author").textContent = author || "Unknown";
-            overlay.querySelector(".outlet-modal-admin").textContent = getActiveUsername();
-        }
-
-        function openOutletEditModal(rowId, author) {
-            if (!checkAdminPrivilege()) return;
-            pendingEditRow = rowId;
-            outletEditInput.value = document.getElementById(`msg-${rowId}`).textContent;
-            fillModalMeta(outletEditOverlay, author);
-            outletEditOverlay.style.display = "flex";
-            setTimeout(() => { outletEditInput.focus(); outletEditInput.select(); }, 50);
-        }
-
-        function closeOutletEditModal() {
-            outletEditOverlay.style.display = "none";
-            pendingEditRow = null;
-        }
-
-        function openOutletDeleteModal(rowId, author) {
-            if (!checkAdminPrivilege()) return;
-            pendingDeleteRow = rowId;
-            fillModalMeta(outletDeleteOverlay, author);
-            outletDeleteOverlay.style.display = "flex";
-        }
-
-        function closeOutletDeleteModal() {
-            outletDeleteOverlay.style.display = "none";
-            pendingDeleteRow = null;
-        }
-
-        async function pushOutletEdit() {
-            if (!pendingEditRow) return;
-            const newMessage = outletEditInput.value.trim();
-            if (!newMessage) {
-                alert("The post cannot be empty.");
-                return;
-            }
-
-            outletEditPushBtn.disabled = true;
-            outletEditInput.disabled = true;
-            outletEditPushBtn.textContent = "Pushing...";
-
-            try {
-                const result = await apiRequest({
-                    action: "editPost",
-                    rowId: pendingEditRow,
-                    message: newMessage,
-                    username: getActiveUsername()
-                });
-                if (!result.success) throw new Error(result.error);
-                closeOutletEditModal();
-                loadPosts();
-            } catch (err) {
-                alert("Failed to edit post: " + err.message);
-            } finally {
-                outletEditPushBtn.disabled = false;
-                outletEditInput.disabled = false;
-                outletEditPushBtn.textContent = "Push";
-            }
-        }
-
-        async function confirmOutletDelete() {
-            if (!pendingDeleteRow) return;
-
-            outletDeleteConfirmBtn.disabled = true;
-            outletDeleteConfirmBtn.textContent = "Deleting...";
-
-            try {
-                const result = await apiRequest({
-                    action: "deletePost",
-                    rowId: pendingDeleteRow,
-                    username: getActiveUsername()
-                });
-                if (!result.success) throw new Error(result.error);
-                closeOutletDeleteModal();
-                loadPosts();
-            } catch (err) {
-                alert("Failed to delete post: " + err.message);
-            } finally {
-                outletDeleteConfirmBtn.disabled = false;
-                outletDeleteConfirmBtn.textContent = "Delete";
-            }
-        }
-
-        outletEditPushBtn.addEventListener("click", pushOutletEdit);
-        outletEditCancelBtn.addEventListener("click", closeOutletEditModal);
-        outletDeleteConfirmBtn.addEventListener("click", confirmOutletDelete);
-        outletDeleteCancelBtn.addEventListener("click", closeOutletDeleteModal);
-
-        outletEditInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                pushOutletEdit();
-            }
-        });
-
-        outletEditOverlay.addEventListener("click", (e) => { if (e.target === outletEditOverlay) closeOutletEditModal(); });
-        outletDeleteOverlay.addEventListener("click", (e) => { if (e.target === outletDeleteOverlay) closeOutletDeleteModal(); });
-
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") {
-                closeOutletEditModal();
-                closeOutletDeleteModal();
-            }
-        });
-
-        // Wire everything up with listeners instead of inline onclick
-        postButton.addEventListener("click", submitPost);
-
-        messageBox.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                submitPost();
-            }
-        });
-
-        postsContainer.addEventListener("click", function (e) {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
-            const rowId = btn.dataset.row;
-            const author = btn.dataset.author;
-            if (btn.dataset.action === "quote") quotePost(author, rowId);
-            else if (btn.dataset.action === "edit") openOutletEditModal(rowId, author);
-            else if (btn.dataset.action === "delete") openOutletDeleteModal(rowId, author);
-        });
-
-        displayIdentity();
-        const intervalId = setInterval(() => {
+            if (!result.success) throw new Error(result.error);
+            closeOutletEditModal();
+            lastPostsJson = "";
             loadPosts();
-        }, 1000);
+        } catch (err) {
+            alert("Failed to edit post: " + err.message);
+        } finally {
+            outletEditPushBtn.disabled = false;
+            outletEditInput.disabled = false;
+            outletEditPushBtn.textContent = "Push";
+        }
+    }
+
+    async function confirmOutletDelete() {
+        if (!pendingDeleteRow) return;
+
+        outletDeleteConfirmBtn.disabled = true;
+        outletDeleteConfirmBtn.textContent = "Deleting...";
+
+        try {
+            const result = await apiRequest({
+                action: "deletePost",
+                rowId: pendingDeleteRow,
+                username: getActiveUsername()
+            });
+            if (!result.success) throw new Error(result.error);
+            closeOutletDeleteModal();
+            lastPostsJson = "";
+            loadPosts();
+        } catch (err) {
+            alert("Failed to delete post: " + err.message);
+        } finally {
+            outletDeleteConfirmBtn.disabled = false;
+            outletDeleteConfirmBtn.textContent = "Delete";
+        }
+    }
+
+    outletEditPushBtn.addEventListener("click", pushOutletEdit);
+    outletEditCancelBtn.addEventListener("click", closeOutletEditModal);
+    outletDeleteConfirmBtn.addEventListener("click", confirmOutletDelete);
+    outletDeleteCancelBtn.addEventListener("click", closeOutletDeleteModal);
+
+    outletEditInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            pushOutletEdit();
+        }
     });
+
+    outletEditOverlay.addEventListener("click", (e) => { if (e.target === outletEditOverlay) closeOutletEditModal(); });
+    outletDeleteOverlay.addEventListener("click", (e) => { if (e.target === outletDeleteOverlay) closeOutletDeleteModal(); });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeOutletEditModal();
+            closeOutletDeleteModal();
+        }
+    });
+
+    postButton.addEventListener("click", submitPost);
+
+    messageBox.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            submitPost();
+        }
+    });
+
+    postsContainer.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const rowId = btn.dataset.row;
+        const author = btn.dataset.author;
+        if (btn.dataset.action === "quote") quotePost(author, rowId);
+        else if (btn.dataset.action === "edit") openOutletEditModal(rowId, author);
+        else if (btn.dataset.action === "delete") openOutletDeleteModal(rowId, author);
+    });
+
+    displayIdentity();
+    loadPosts();
+    setInterval(loadPosts, 1000);
+});
 </script>
-    </script>
 </head>
 
 <body>
