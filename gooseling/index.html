@@ -37,6 +37,11 @@
         const admins = ["thegoose", "thenumberonegooseling", "laureline"];
         const deluxeUsers = ["goosercooper"]
         const usernames = ["thenumberonegooseling", "thegoose", "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline", "robogoose", "goosercooper", "goseultimate", "eshigoose"];
+        const SAFEHTML_CUTOFF = new Date("2026-11-05T00:00:00-08:00").getTime(); // Release at least a day before EDIT mayday plan aborted
+        function isGrandfathered(post) {
+            const time = post && post.timestamp ? new Date(post.timestamp).getTime() : NaN;
+            return Number.isFinite(time) && time < SAFEHTML_CUTOFF;
+        }
         const inputSuggestions = ["Suggest goose ideas...", "Talk about the best gooschurches for worshipping...", "Trade worshipping techniques...", "Talk about the new version of The Goose Site...", "Talk trash about goosinners... (non-gooselings)", "Discuss new goose images...", "Bring up how The Goose is the great leader of all...", "Greet a gooseling or two..."]
         const randomPlaceholder = inputSuggestions[Math.floor(Math.random() * inputSuggestions.length)];
         var pauseGooseChat = false;
@@ -192,9 +197,6 @@
 
         function escapeHtml(str) {
             if (!str) return "";
-            if (str.startsWith("[safehtml]")) {
-                return str.replace("[safehtml]", ""); // k/o's qoosinners
-            }
             return String(str)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -426,9 +428,9 @@
                 openTab(null, 'Chatbox');
             } else if (rawHash === "account") {
                 openTab(null, 'Account');
-            } else if (rawHash === "outlet") {
+            } else if (rawHash.startsWith("outlet")) {
                 openTab(null, 'Outlet');
-            } else {
+            } else if (rawHash == "dashboard") {
                 openTab(null, 'Dashboard');
             }
         }
@@ -453,7 +455,7 @@
                     btn.className += " active";
                 }
             } else {
-                if (window.location.hash !== `#/${targetId}`) {
+                if (window.location.hash !== `#/${targetId}` && !(targetId === "outlet" && window.location.hash.startsWith("#/outlet"))) {
                     window.location.hash = `#/${targetId}`;
                 }
                 removeGuidelinesTabButton();
@@ -1130,7 +1132,7 @@
             const rawMsg = String(post.message || "");
             const safeHtmlMatch = rawMsg.match(/^\[safehtml\]\s*([\s\S]*)$/i);
 
-            if (safeHtmlMatch && admins.includes(post.username)) {
+            if (safeHtmlMatch && admins.includes(post.username) && isGrandfathered(post)) {
                 messageSpan.innerHTML = safeHtmlMatch[1].replace(/\[newline\]/gi, "<br>");
                 messageSpan.querySelectorAll('a').forEach(link => {
                     link.setAttribute('target', '_blank');
@@ -1146,7 +1148,6 @@
             } else {
                 messageSpan.appendChild(renderChatMessage(rawMsg, post.username));
             }
-            //
 
             messageSpan.style.color = "#222"
             textSpan.appendChild(messageSpan);
@@ -2122,8 +2123,6 @@
                     <button type="submit" id="send-message-${info.id}" class="custom-send-button" style="padding: 8px;">Send</button>
                     <button type="button" id="${chat.clearId}" class="custom-wipe-button admin-only-feature" style="padding: 8px;display:none;">✦ Wipe</button>
                     <button type="button" id="add-image-${info.id}" class="custom-image-button admin-only-feature" style="padding: 8px;display:none;">✦ Image</button>
-                    <!-- <button type="button" id="manage-chat-${info.id}" class="custom-manage-button" style="padding: 8px;">Members</button>
-                    <button type="button" id="pause-chat-${info.id}" class="custom-pause-button admin-only-feature" style="padding: 8px;display:none;">✦ Pause</button> -->
                 `
                 : `
                     <button type="submit" id="send-message-${info.id}" class="custom-send-button" style="padding: 8px;">Send</button>
@@ -4477,6 +4476,7 @@
         }
         .tablinks {
             font-weight:500 !important;
+            transition:box-shadow 0.3s ease !important
         }
         #manage-delete-button:hover {
             background: #8c232d;
@@ -4534,7 +4534,6 @@
         }
     </style>
     <style>
-        /* This was originally from a diff html file - sorry for the cluser goose */
         .cluserpaint {
             font-size:10.5px !important;
             text-align:center;
@@ -4544,397 +4543,340 @@
   border: none;
   border-top: 3.5px double #111 !important;
 }
-    .form-group { margin-bottom: 15px; }
-    #message { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; transition: background-color 0.3s ease; }
-    #message:hover, textarea:active, textarea:focus {background-color: #eee !important;}
-    #outlet button {border:none !important; border-radius:4px;}
-    #post-button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bolder !important;transition: background-color 0.3s ease; }
-    #post-button:hover { background-color: #45a049; font-weight:bolder !important;}
-    .post-card { background: white; padding: 15px; margin-top: 15px; margin-bottom:7px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; }
-    .post-header { display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-    .username { font-weight: bolder !important; color: #007399; }
-    .username.admin { color: firebrick; }
-    .username.deluxe { color: #0c8b13; }
-    .badge { font-size: 0.75em; padding: 2px 6px; border-radius: 3px; margin-left: 5px; color: white; font-weight: bold; }
-    .badge.admin { background-color: firebrick; }
-    .badge.deluxe { background-color: #388e3c; }
-    .message { white-space: pre-wrap; word-wrap: break-word; color: #333; margin-bottom: 10px; }
-    #status { color: green; font-weight: bold; margin: 5px !important; min-height: 20px; }
-    .action-controls { display: flex; gap: 10px; }
-    .btn-edit { transition:background-color 0.3s ease; background-color: #ff9800; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
-    .btn-edit:hover { transition:background-color 0.3s ease; background-color: #e68a00; font-weight: bolder}
-    .btn-delete { transition:background-color 0.3s ease; background-color: #f44336; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
-    .btn-delete:hover { background-color: #da190b; font-weight: bolder}
-    .btn-quote { transition:background-color 0.3s ease; background-color: #008cba; padding: 5px 10px; font-size: 0.8em; font-weight: bolder}
-    .btn-quote:hover { transition:background-color 0.3s ease; background-color: #007399; font-weight: bolder}
-    .current-user-info { font-size: 0.9em; margin-bottom: 10px; color: #555; font-style: italic; } 
-    #outlet #message {
-        height: 180px !important;
-        min-height: 120px;
-        width: 100% !important;
-        font-size: 16px;
-        line-height: 1.4;
-        overflow-y: auto !important;
-        resize: vertical;
-        font-family: monospace !important;
-    }
-    #outlet #post-button:disabled { opacity: 0.6; cursor: wait; }
-    #forum-posts {color:#388e3c; font-weight:bolder}
-    #forum-posts .post-card {font-weight: normal !important;}
-    #outlet-edit-input {
-        width: 100%;
-        height: 120px !important;
-        min-height: 60px;
-        box-sizing: border-box;
-        resize: vertical;
-        padding: 10px;
-        border: 1px solid #aaa;
-        border-radius: 6px;
-        font-family: inherit;
-        font-size: 17px;
-    }
-    #outlet-edit-input:focus,
-    #outlet-edit-input:hover {
-        background-color: #eee !important;
-    }
-    #outlet-edit-cancel-button,
-    #outlet-delete-cancel-button {
-        background: #ccc;
-        color: #444 !important;
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-    #outlet-edit-cancel-button:hover,
-    #outlet-delete-cancel-button:hover {
-        background: #bbb;
-        color: #222 !important;
-    }
-    #outlet-edit-push-button,
-    #outlet-delete-confirm-button {
-        background: steelblue;
-        color: #eee !important;
-        transition: background 0.3s ease, color 0.3s ease;
-    }
-    #outlet-edit-push-button:hover,
-    #outlet-delete-confirm-button:hover {
-        background: rgb(126, 179, 223);
-        color: #222 !important;
-    }
-    #outlet-edit-push-button:disabled,
-    #outlet-delete-confirm-button:disabled {
-        opacity: 0.6;
-        cursor: wait !important;
-    }
+    textarea:active, textarea:focus {background-color: #eee !important;}
+    #outlet button {border:none; border-radius:4px; padding:4px 10px; cursor:pointer; margin:2px;}
+        #outlet-modal { width: 440px; max-width: 90vw; }
+        #outlet-name-input, #outlet-desc-input, #outlet-member-input {
+            width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px;
+            border: 1px solid #aaa; border-radius: 6px; font-family: inherit; font-size: 17px;
+        }
+        #outlet-name-input:hover, #outlet-name-input:focus,
+        #outlet-desc-input:hover, #outlet-desc-input:focus,
+        #outlet-member-input:hover, #outlet-member-input:focus { background-color: #eee !important; }
+        .outlet-restrict { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 2px 0 6px; color: #222; }
+        #outlet-cancel-button { background: #ccc; color: #444 !important; transition: background 0.3s ease, color 0.3s ease; }
+        #outlet-cancel-button:hover { background: #bbb; color: #222 !important; }
+        #outlet-create-button { background: steelblue; color: #eee !important; transition: background 0.3s ease, color 0.3s ease; }
+        #outlet-create-button:hover { background: rgb(126, 179, 223); color: #222 !important; }
+        #outlet-create-button:disabled { opacity: 0.6; cursor: wait !important; }
     </style>
     <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydFPRkD3Gp5EYrGIgeo_k0hjzjv5IgI_ZmCVkbNTrO3t_eQMJknQwkVpDyYQwlIeu6/exec";
-    const admins = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
-    const deluxeUsers = ["goosercooper"];
-    const SAFEHTML_RE = /^\s*<!doctype safehtml>\s*([\s\S]*)$/i;
-    const rawMessages = {};
-    let lastPostsJson = "";
+(() => {
+  const API = "https://script.google.com/macros/s/AKfycbxYejIkaUlD6rZgCrKHova4MulVhIqMC2eUvFBzIXx4gExMqDkks4Vrzu63Iys9gZnT/exec";
+  const ADMINS = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
+  const DELUXE = ["goosercooper"];
+  const ID9 = /^\d{9}$/;
+  const SAFE = /^\s*<!doctype safehtml>\s*/i;
+  const WRITES = ["createForum", "createWayout", "addPlugin", "editPost", "deletePost"];
 
-    const messageBox = document.getElementById("message");
-    const postButton = document.getElementById("post-button");
-    const statusDiv = document.getElementById("status");
-    const postsContainer = document.getElementById("forum-posts");
+  const ck = n => { const m = document.cookie.match(new RegExp("(^| )" + n + "=([^;]+)")); return m ? decodeURIComponent(m[2]) : null; };
+  const me = () => ck("dev-username") || "Anonymous";
+  const role = u => ADMINS.includes(String(u).toLowerCase()) ? "admin" : DELUXE.includes(String(u).toLowerCase()) ? "deluxe" : "";
+  const isAdmin = () => role(me()) === "admin";
+  const canQuote = () => role(me()) !== "";
 
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) {
-            const raw = parts.pop().split(";").shift();
-            try { return decodeURIComponent(raw); } catch (e) { return raw; }
-        }
-        return null;
+  async function api(p) {
+    const q = { ...p, username: me() };
+    const r = WRITES.includes(p.action)
+      ? await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(q) })
+      : await fetch(API + "?" + new URLSearchParams(q));
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); }
+    catch (e) { throw new Error("Couldn't reach the Outlet server."); }
+    if (!j.success) throw new Error(j.error || "Something went wrong.");
+    return j.data;
+  }
+  function h(tag, props = {}, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e[k] = v;
     }
+    kids.flat().forEach(c => e.append(c));
+    return e;
+  }
+  const go = path => { location.hash = "#/outlet" + path; };
+  const link = (text, path, cls = "") => h("a", { href: "#/outlet" + path, className: cls }, text);
+  const when = t => new Date(t).toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+  const loading = () => h("p", { className: "ol-sub" }, "Hold on a goose...");
 
-    function getActiveUsername() {
-        return getCookie("dev-username") || "Anonymous";
+  const style = document.createElement("style");
+  style.textContent = `
+    #outlet-root{color:#333;text-align:left}
+    #outlet-root a{color:#007399;text-decoration:none}
+    #outlet-root a:hover{text-decoration:underline}
+    #outlet-root p{font-size:15px!important;margin:4px 0!important}
+    #outlet-root .ol-title{font-size:26px!important;margin:8px 0}
+    #outlet-root h3{font-size:22px!important;margin:6px 0;border-bottom:3px double #111;padding-bottom:4px}
+    #outlet-root h4{font-size:17px!important;margin:6px 0}
+    .ol-sub{color:#666;font-size:13px}
+    .ol-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .ol-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:700px){.ol-cols{grid-template-columns:1fr}}
+    .post-card{background:#fff !important;padding:8px;margin:12px 0 7px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    .ol-ch{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.85em;color:#666;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px}
+    .ol-user{font-weight:bolder;color:#007399}
+    .ol-user.admin{color:#d32f2f}
+    .ol-user.deluxe{color:#388e3c}
+    .ol-badge{font-size:.75em;padding:2px 6px;border-radius:3px;margin-left:5px;color:#fff;font-weight:bold}
+    .admin .ol-badge{background:#d32f2f}
+    .deluxe .ol-badge{background:#388e3c}
+    #outlet-root .ol-t{font-size:20px;font-weight:bold}
+    .ol-body{white-space:pre-wrap;overflow-wrap:anywhere;color:#333;margin-bottom:10px}
+    .ol-body.ol-html{white-space:normal}
+    .ol-tools{display:flex;gap:10px;flex-wrap:wrap}
+    #outlet-root .ol-tools button,#outlet-root .ol-b{border:none;border-radius:6px;padding:7px 14px;font-weight:bolder;color:#222;cursor:pointer}
+    #outlet-root .ol-q{background:#008cba}#outlet-root .ol-q:hover{background:#007399}
+    #outlet-root .ol-e{background:#ff9800}#outlet-root .ol-e:hover{background:#e68a00}
+    #outlet-root .ol-d{background:#f44336}#outlet-root .ol-d:hover{background:#da190b}
+    #outlet-root .ol-go{background:#4CAF50;color:#fff}#outlet-root .ol-go:hover{background:#45a049}
+    #outlet-root .ol-b:disabled{opacity:.6;cursor:wait}
+    .ol-hl{outline:3px solid darkorange}
+    .ol-form textarea{transition:background 0.3s ease;background:#fff;width:100%;box-sizing:border-box;margin:4px 0;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:16px}
+    .ol-form textarea:focus, .ol-form textarea:hover {background:#eee}
+    #outlet-root textarea{width:100%!important;box-sizing:border-box;margin:4px 0;padding:8px;border:1px solid #ccc;border-radius:4px;
+      min-height:110px;overflow:hidden!important;resize:none;font-size:16px!important}
+    .ol-err{color:firebrick;font-weight:bold}
+    .ol-pager{text-align:center;margin:10px 0}
+    button {transition: background 0.3s ease,
+     background-color 0.3s ease !important}`;
+  document.head.append(style);
+
+  const grow = t => { t.style.setProperty("height", "auto", "important"); t.style.setProperty("height", t.scrollHeight + "px", "important"); };
+  const ta = (placeholder, max = 20000) => {
+    const t = h("textarea", { placeholder, maxLength: max });
+    t.addEventListener("input", () => grow(t));
+    return t;
+  };
+  function form(fields, submitText, onSubmit) {
+    const err = h("div", { className: "ol-err" });
+    const f = h("div", { className: "ol-form" }, fields.map(x => x.el), err);
+    const btn = h("button", { type: "button", className: "ol-b ol-go", textContent: submitText, onclick: async () => {
+      btn.disabled = true; err.textContent = "";
+      try { await onSubmit(); } catch (e) { err.textContent = e.message; }
+      btn.disabled = false;
+    } });
+    f.append(btn);
+    return f;
+  }
+  const toggler = (text, panel) => {
+    panel.style.display = "none";
+    return h("button", { type: "button", className: "ol-b ol-go", textContent: text, onclick: () => {
+      panel.style.display = panel.style.display === "none" ? "block" : "none";
+    } });
+  };
+  const pager = (d, base) => d.pages > 1 ? h("div", { className: "ol-pager" },
+    d.page > 1 ? link("← Prev", base + "/" + (d.page - 1)) : "", ` Page ${d.page} of ${d.pages} `,
+    d.page < d.pages ? link("Next →", base + "/" + (d.page + 1)) : "") : "";
+
+  const who = a => h("span", { className: "ol-user " + role(a) }, "⏻ " + a,
+    role(a) ? h("span", { className: "ol-badge" }, role(a) === "admin" ? "✦ Admin" : "✹ Deluxe") : "");
+  const bodyEl = text => {
+    const m = SAFE.exec(text), b = h("div", { className: "ol-body" });
+    if (m) { b.classList.add("ol-html"); b.innerHTML = text.slice(m[0].length); } else b.textContent = text;
+    return b;
+  };
+
+  const tools = (type, id, author, text, forum, body, replyBox) => {
+    const bar = h("div", { className: "ol-tools" });
+    if (canQuote()) bar.append(h("button", { type: "button", className: "ol-q", textContent: "Quote", onclick: () => {
+      replyBox.value = `"@${author} wrote: ${text.replace(SAFE, "")}"\n\n` + replyBox.value;
+      grow(replyBox); replyBox.focus(); replyBox.scrollIntoView({ block: "center" });
+    } }));
+    if (isAdmin()) {
+      bar.append(h("button", { type: "button", className: "ol-e", textContent: "Edit", onclick: () => {
+        const t = ta("", 20000); t.value = text;
+        body.replaceChildren(t, h("div", { className: "ol-tools" },
+          h("button", { type: "button", className: "ol-b ol-go", textContent: "Save", onclick: async () => {
+            try { await api({ action: "editPost", type, id, message: t.value }); render(); } catch (e) { alert(e.message); }
+          } }),
+          h("button", { type: "button", className: "ol-b ol-d", textContent: "Cancel", onclick: () => render() })));
+        grow(t); t.focus();
+      } }), h("button", { type: "button", className: "ol-d", textContent: "Delete", onclick: async () => {
+        if (!confirm("Delete this " + type + (type === "wayout" ? " and all its plugins?" : "?"))) return;
+        try { await api({ action: "deletePost", type, id }); type === "wayout" ? go("/" + forum) : render(); }
+        catch (e) { alert(e.message); }
+      } }));
     }
+    return bar;
+  };
 
-    function escapeHtml(text) {
-        const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
-        return String(text).replace(/[&<>"']/g, m => map[m]);
-    }
+  let outletMembers = [], outletWired = false;
+  const $ = id => document.getElementById(id);
+  const outletStatus = t => { const s = document.querySelector("#outlet-modal .outlet-modal-status"); if (s) s.textContent = t; };
+  const outletPool = () => (typeof usernames !== "undefined" ? usernames : []);
 
-    function renderMessageBody(raw) {
-        const match = String(raw || "").match(SAFEHTML_RE);
-        if (match) {
-            return { safe: true, html: match[1] };
-        }
-        return { safe: false, html: escapeHtml(raw || "") };
-    }
+  function outletMatches() {
+    const q = ($("outlet-member-input").value || "").replace(/^@/, "").trim().toLowerCase();
+    return outletPool().filter(n => !outletMembers.includes(n) && n.includes(q));
+  }
+  function renderOutletMembers() {
+    $("outlet-members").replaceChildren(...outletMembers.map(m =>
+      h("span", { className: "newchat-member-chip" }, "@" + m,
+        h("button", { type: "button", title: "Remove @" + m, textContent: "×", onclick: () => {
+          outletMembers = outletMembers.filter(x => x !== m); renderOutletMembers();
+        } }))));
+    const matches = outletMatches();
+    $("outlet-results").replaceChildren(...(matches.length
+      ? matches.map(n => h("button", { type: "button", className: "newchat-result", textContent: "@" + n, onclick: () => addOutletMember(n) }))
+      : [h("div", { className: "newchat-no-results" }, "No gooselings found.")]));
+  }
+  function addOutletMember(name) {
+    if (outletMembers.includes(name)) return;
+    if (outletMembers.length >= 25) return outletStatus("That's too many gooselings. The limit is 25 members.");
+    outletMembers.push(name);
+    $("outlet-member-input").value = ""; $("outlet-member-input").focus();
+    outletStatus("@" + name + " added!");
+    renderOutletMembers();
+  }
+  function closeOutletModal() { $("outlet-modal-overlay").style.display = "none"; outletMembers = []; }
 
-    function displayIdentity() {
-        const user = getActiveUsername();
-        const userDisplay = document.getElementById("user-display");
-        if (!userDisplay) return;
-        userDisplay.innerHTML = user === "Anonymous"
-            ? "Posting as: <strong>Anonymous</strong> (No 'dev-username' cookie found)"
-            : `Posting as: <strong>${escapeHtml(user)}</strong>`;
-    }
+  async function createOutlet() {
+    const name = $("outlet-name-input").value.trim(), btn = $("outlet-create-button");
+    const restricted = $("outlet-restrict-input").checked;
+    if (!name) return outletStatus("Your outlet needs a name, goose you.");
+    if (restricted && !outletMembers.length) return outletStatus("Add at least one gooseling, or untick the restriction.");
+    btn.disabled = true; btn.textContent = "Creating...";
+    try {
+      const r = await api({ action: "createForum", name, description: $("outlet-desc-input").value,
+        restricted, members: outletMembers.join(",") });
+      closeOutletModal();
+      go("/" + r.slug);
+    } catch (e) { outletStatus("Failed to create outlet: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "Create"; }
+  }
 
-    function checkAdminPrivilege() {
-        return admins.includes(getActiveUsername().toLowerCase());
-    }
-
-    function checkQuotePrivilege() {
-        const user = getActiveUsername().toLowerCase();
-        return admins.includes(user) || deluxeUsers.includes(user);
-    }
-
-    async function apiRequest(params) {
-        const queryString = new URLSearchParams(params).toString();
-        const response = await fetch(`${WEB_APP_URL}?${queryString}`, { method: "GET" });
-        return await response.json();
-    }
-
-    async function loadPosts() {
-        try {
-            const result = await apiRequest({ action: "getPosts" });
-            if (result.success) {
-                renderPosts(result.data);
-            } else {
-                throw new Error(result.error);
-            }
-        } catch (err) {
-            postsContainer.textContent = "Error loading posts: " + err.message;
-            lastPostsJson = "";
-        }
-    }
-
-    function renderPosts(posts) {
-        const json = JSON.stringify(posts);
-        if (json === lastPostsJson) return;
-        lastPostsJson = json;
-
-        if (!posts || posts.length === 0) {
-            postsContainer.innerHTML = "<p>No posts yet. Be the first to start the conversation!</p>";
-            return;
-        }
-
-        const hasQuotePrivilege = checkQuotePrivilege();
-        const hasAdminPrivilege = checkAdminPrivilege();
-        let html = "";
-
-        posts.forEach(post => {
-            let classAttr = "username";
-            let badge = "";
-            if (post.userType === "admin") {
-                classAttr += " admin";
-                badge = '<span class="badge admin">✦ Admin</span>';
-            } else if (post.userType === "deluxe") {
-                classAttr += " deluxe";
-                badge = '<span class="badge deluxe">✹ Deluxe</span>';
-            }
-
-            const author = escapeHtml(post.username || "Anonymous");
-            rawMessages[post.rowId] = post.message || "";
-            const body = renderMessageBody(post.message);
-
-            html += `
-            <div class="post-card">
-                <div class="post-header">
-                    <span class="${classAttr}">⏻ ${author}${badge}</span>
-                    <span>${escapeHtml(post.timestamp || "")}</span>
-                </div>
-                <div class="message${body.safe ? " safehtml" : ""}" id="msg-${post.rowId}">${body.html}</div>
-                <div class="action-controls">
-                    ${hasQuotePrivilege ? `<button type="button" class="btn-quote" data-action="quote" data-author="${author}" data-row="${post.rowId}">Quote</button>` : ""}
-                    ${hasAdminPrivilege ? `
-                        <button type="button" class="btn-edit" data-action="edit" data-author="${author}" data-row="${post.rowId}">Edit</button>
-                        <button type="button" class="btn-delete" data-action="delete" data-author="${author}" data-row="${post.rowId}">Delete</button>
-                    ` : ""}
-                </div>
-            </div>`;
-        });
-
-        postsContainer.innerHTML = html;
-    }
-
-    async function submitPost() {
-        const username = getActiveUsername();
-        const message = messageBox.value.trim();
-
-        if (!message) {
-            alert("Please enter a message.");
-            return;
-        }
-
-        postButton.disabled = true;
-        statusDiv.style.color = "orange";
-        statusDiv.innerText = "Posting...";
-
-        try {
-            const result = await apiRequest({ action: "addPost", username, message });
-            if (result.success) {
-                statusDiv.style.color = "green";
-                statusDiv.innerText = "Posted successfully!";
-                messageBox.value = "";
-                loadPosts();
-                setTimeout(() => { statusDiv.innerText = ""; }, 3000);
-            } else {
-                throw new Error(result.error);
-            }
-        } catch (err) {
-            statusDiv.style.color = "firebrick";
-            statusDiv.innerText = "Something failed: " + err.message;
-        } finally {
-            postButton.disabled = false;
-        }
-    }
-
-    function quotePost(author, rowId) {
-        const text = rawMessages[rowId] || "";
-        messageBox.value = `@${author} wrote: "${text}"\n\n` + messageBox.value;
-        messageBox.focus();
-    }
-
-    let pendingEditRow = null;
-    let pendingDeleteRow = null;
-
-    const outletEditOverlay = document.getElementById("outlet-edit-modal-overlay");
-    const outletEditInput = document.getElementById("outlet-edit-input");
-    const outletEditPushBtn = document.getElementById("outlet-edit-push-button");
-    const outletEditCancelBtn = document.getElementById("outlet-edit-cancel-button");
-
-    const outletDeleteOverlay = document.getElementById("outlet-delete-modal-overlay");
-    const outletDeleteConfirmBtn = document.getElementById("outlet-delete-confirm-button");
-    const outletDeleteCancelBtn = document.getElementById("outlet-delete-cancel-button");
-
-    function fillModalMeta(overlay, author) {
-        overlay.querySelector(".outlet-modal-author").textContent = author || "Unknown";
-        overlay.querySelector(".outlet-modal-admin").textContent = getActiveUsername();
-    }
-
-    function openOutletEditModal(rowId, author) {
-        if (!checkAdminPrivilege()) return;
-        pendingEditRow = rowId;
-        outletEditInput.value = rawMessages[rowId] || "";
-        fillModalMeta(outletEditOverlay, author);
-        outletEditOverlay.style.display = "flex";
-        setTimeout(() => { outletEditInput.focus(); outletEditInput.select(); }, 50);
-    }
-
-    function closeOutletEditModal() {
-        outletEditOverlay.style.display = "none";
-        pendingEditRow = null;
-    }
-
-    function openOutletDeleteModal(rowId, author) {
-        if (!checkAdminPrivilege()) return;
-        pendingDeleteRow = rowId;
-        fillModalMeta(outletDeleteOverlay, author);
-        outletDeleteOverlay.style.display = "flex";
-    }
-
-    function closeOutletDeleteModal() {
-        outletDeleteOverlay.style.display = "none";
-        pendingDeleteRow = null;
-    }
-
-    async function pushOutletEdit() {
-        if (!pendingEditRow) return;
-        const newMessage = outletEditInput.value.trim();
-        if (!newMessage) {
-            alert("The post cannot be empty.");
-            return;
-        }
-
-        outletEditPushBtn.disabled = true;
-        outletEditInput.disabled = true;
-        outletEditPushBtn.textContent = "Pushing...";
-
-        try {
-            const result = await apiRequest({
-                action: "editPost",
-                rowId: pendingEditRow,
-                message: newMessage,
-                username: getActiveUsername()
-            });
-            if (!result.success) throw new Error(result.error);
-            closeOutletEditModal();
-            lastPostsJson = "";
-            loadPosts();
-        } catch (err) {
-            alert("Failed to edit post: " + err.message);
-        } finally {
-            outletEditPushBtn.disabled = false;
-            outletEditInput.disabled = false;
-            outletEditPushBtn.textContent = "Push";
-        }
-    }
-
-    async function confirmOutletDelete() {
-        if (!pendingDeleteRow) return;
-
-        outletDeleteConfirmBtn.disabled = true;
-        outletDeleteConfirmBtn.textContent = "Deleting...";
-
-        try {
-            const result = await apiRequest({
-                action: "deletePost",
-                rowId: pendingDeleteRow,
-                username: getActiveUsername()
-            });
-            if (!result.success) throw new Error(result.error);
-            closeOutletDeleteModal();
-            lastPostsJson = "";
-            loadPosts();
-        } catch (err) {
-            alert("Failed to delete post: " + err.message);
-        } finally {
-            outletDeleteConfirmBtn.disabled = false;
-            outletDeleteConfirmBtn.textContent = "Delete";
-        }
-    }
-
-    outletEditPushBtn.addEventListener("click", pushOutletEdit);
-    outletEditCancelBtn.addEventListener("click", closeOutletEditModal);
-    outletDeleteConfirmBtn.addEventListener("click", confirmOutletDelete);
-    outletDeleteCancelBtn.addEventListener("click", closeOutletDeleteModal);
-
-    outletEditInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            pushOutletEdit();
-        }
+  function wireOutletModal() {
+    if (outletWired) return; outletWired = true;
+    const overlay = $("outlet-modal-overlay");
+    $("outlet-cancel-button").addEventListener("click", closeOutletModal);
+    $("outlet-create-button").addEventListener("click", createOutlet);
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeOutletModal(); });
+    $("outlet-restrict-input").addEventListener("change", e => {
+      $("outlet-search").style.display = e.target.checked ? "block" : "none";
+      $("outlet-members").style.display = e.target.checked ? "flex" : "none";
     });
-
-    outletEditOverlay.addEventListener("click", (e) => { if (e.target === outletEditOverlay) closeOutletEditModal(); });
-    outletDeleteOverlay.addEventListener("click", (e) => { if (e.target === outletDeleteOverlay) closeOutletDeleteModal(); });
-
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-            closeOutletEditModal();
-            closeOutletDeleteModal();
-        }
+    $("outlet-member-input").addEventListener("input", renderOutletMembers);
+    $("outlet-member-input").addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const m = outletMatches();
+      if (e.target.value.trim() && m.length) addOutletMember(m[0]);
+      else if (!e.target.value.trim()) createOutlet();
     });
-
-    postButton.addEventListener("click", submitPost);
-
-    messageBox.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            submitPost();
-        }
+    $("outlet-name-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); $("outlet-desc-input").focus(); }
     });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeOutletModal(); });
+  }
+  function openOutletModal() {
+    if (!isAdmin()) return;
+    wireOutletModal();
+    outletMembers = [];
+    ["outlet-name-input", "outlet-desc-input", "outlet-member-input"].forEach(id => $(id).value = "");
+    $("outlet-restrict-input").checked = false;
+    $("outlet-search").style.display = "none"; $("outlet-members").style.display = "none";
+    document.querySelector("#outlet-modal .disclaimer-outlet-user").textContent = me();
+    outletStatus("Name your outlet and choose who can see it.");
+    renderOutletMembers();
+    $("outlet-modal-overlay").style.display = "flex";
+    setTimeout(() => $("outlet-name-input").focus(), 50);
+  }
 
-    postsContainer.addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-action]");
-        if (!btn) return;
-        const rowId = btn.dataset.row;
-        const author = btn.dataset.author;
-        if (btn.dataset.action === "quote") quotePost(author, rowId);
-        else if (btn.dataset.action === "edit") openOutletEditModal(rowId, author);
-        else if (btn.dataset.action === "delete") openOutletDeleteModal(rowId, author);
-    });
+  let rid = 0;
 
-    displayIdentity();
-    loadPosts();
-    setInterval(loadPosts, 1000);
-});
+  async function viewIndex(el, my) {
+    const gooseBody = h("div", {}, loading()), customBody = h("div", {}, loading());
+    const bar = h("div", { className: "ol-bar" }, h("h2", { className: "ol-title" }, "𓅬 The Gooseling Outlets"));
+    el.replaceChildren(bar, h("div", { className: "ol-cols" },
+      h("div", {}, h("h3", {}, "Goose"), gooseBody), h("div", {}, h("h3", {}, "Custom"), customBody)));
+    if (isAdmin()) bar.append(h("button", { type: "button", className: "ol-b ol-go", textContent: "✦ New outlet", onclick: openOutletModal }));
+    const forums = await api({ action: "getForums" });
+    if (my !== rid) return;
+    const card = f => h("div", { className: "post-card" },
+      link(f.name, "/" + f.slug, "ol-t"), f.restricted ? " 🔒" : "",
+      h("div", {}, f.description), h("div", { className: "ol-sub" }, f.wayouts + " wayout(s)"));
+    const fill = (body, list) => body.replaceChildren(...(list.length ? list.map(card) : [h("p", { className: "ol-sub" }, "Nothing here yet.")]));
+    fill(gooseBody, forums.filter(f => f.type === "goose"));
+    fill(customBody, forums.filter(f => f.type === "custom"));
+  }
+
+  async function viewForum(el, slug, pg, my) {
+    const head = h("h2", { className: "ol-title" }), desc = h("p", { className: "ol-sub" });
+    const list = h("div", {}, loading()), pages = h("div");
+    const title = h("input", { placeholder: "Wayout title", maxLength: 100 });
+    const msg = ta("Start the wayout...");
+    const composer = h("div", { className: "post-card" }, form([{ el: title }, { el: msg }], "Post wayout", async () => {
+      const r = await api({ action: "createWayout", forum: slug, title: title.value, message: msg.value });
+      go("/wayout/" + r.id);
+    }));
+    el.replaceChildren(link("← All outlets", ""),
+      h("div", { className: "ol-bar" }, head, toggler("+ New Wayout", composer)), desc, composer, list, pages);
+    const d = await api({ action: "getWayouts", forum: slug, page: pg || 1 });
+    if (my !== rid) return;
+    head.textContent = d.forum.name; desc.textContent = d.forum.description;
+    list.replaceChildren(...(d.wayouts.length ? d.wayouts.map(w => h("div", { className: "post-card" },
+      h("div", { className: "ol-ch" }, who(w.author), h("span", {}, "last activity " + when(w.lastActivity))),
+      h("div", { className: "ol-body" }, link(w.title, "/wayout/" + w.id, "ol-t")),
+      h("div", { className: "ol-sub" }, `wayout #${w.id} · ${w.plugins} plugins`)))
+      : [h("p", { className: "ol-sub" }, "No wayouts yet. Start one!")]));
+    pages.replaceChildren(pager(d, "/" + slug));
+  }
+
+  async function viewWayout(el, id, highlight, pg, my) {
+    const crumb = h("div", {}, link("← All outlets", "")), title = h("h2", { className: "ol-title" });
+    const count = h("div", { className: "ol-sub" }), posts = h("div", {}, loading()), pages = h("div");
+    const msg = ta("Write a plugin...");
+    const reply = h("div", { className: "post-card" }, h("h4", {}, "Write a holy plugin..."),
+      form([{ el: msg }], "Post plugin", async () => {
+        const r = await api({ action: "addPlugin", wayout: id, message: msg.value });
+        location.hash = "#/outlet/plugin/" + r.id;
+        render();
+      }));
+    el.replaceChildren(crumb, title, count, posts, pages, reply);
+    const d = await api({ action: "getWayout", id, page: pg || 1, plugin: highlight || "" });
+    if (my !== rid) return;
+    const post = (p, isOp) => {
+      const body = bodyEl(p.message);
+      return h("div", { className: "post-card" + (p.id === highlight ? " ol-hl" : ""), id: "p" + p.id },
+        h("div", { className: "ol-ch" }, who(p.author),
+          h("span", {}, isOp ? `wayout #${p.id} · ` : [link("plugin #" + p.id, "/plugin/" + p.id), " · "], when(p.created))),
+        body, tools(isOp ? "wayout" : "plugin", p.id, p.author, p.message, d.forum.slug, body, msg));
+    };
+    crumb.replaceChildren(link("← " + d.forum.name, "/" + d.forum.slug));
+    title.textContent = d.wayout.title;
+    count.textContent = d.total + " plugins";
+    posts.replaceChildren(post({ id: d.wayout.id, author: d.wayout.author, created: d.wayout.created, message: d.wayout.message }, true),
+      ...d.plugins.map(p => post(p, false)));
+    pages.replaceChildren(pager(d, "/wayout/" + id));
+    const t = highlight && document.getElementById("p" + highlight);
+    if (t) t.scrollIntoView({ block: "center" });
+  }
+
+  async function render() {
+  const parts = location.hash.replace(/^#\/?/, "").split("/");
+  if (parts[0].toLowerCase() !== "outlet") return;
+  const el = document.getElementById("outlet-root");
+  if (!el) return;
+  const my = ++rid;
+  const first = (parts[1] || "").toLowerCase(), second = parts[2] || "", third = parts[3];
+  try {
+    if (first === "wayout" && ID9.test(second)) await viewWayout(el, second, null, third, my);
+    else if (first === "plugin" && ID9.test(second)) {
+      el.replaceChildren(link("← All outlets", ""), loading());
+      const p = await api({ action: "getPlugin", id: second });
+      if (my === rid) await viewWayout(el, p.wayoutId, second, null, my);
+    } else if (first === "forum" && second) go("/" + second.toLowerCase());
+    else if (first) await viewForum(el, first, second, my);
+    else await viewIndex(el, my);
+  } catch (e) {
+    if (my === rid) el.replaceChildren(h("p", { className: "ol-err" }, e.message), link("← All outlets", ""));
+  }
+}
+
+  window.addEventListener("hashchange", render);
+  document.addEventListener("DOMContentLoaded", render);
+})();
 </script>
 </head>
 
@@ -5080,21 +5022,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </ul>
             </div>
             <div id="outlet" class="tabcontent">
-                <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Gooseling Outlet</h2>
-                <center><span class="clusterpaint" style="color:#222 !important;font-size:8.5px !important">The Gooseling Outlet runs on PowerBattery, a service that helps store and retrieve forum messages created by the gosedevs. The Gooseling Chatbox does not run on PowerBattery.</span></center>
-
-                <div class="current-user-info" id="user-display" style="display:none !important;">Loading identity...</div>
-                
-                <div class="form-group">
-                    <textarea id="message" rows="3" placeholder="Compose something extremely goose here..." required></textarea>
-                </div>
-                <button type="button" id="post-button">Post Message</button> <!--- I will yell at your ass if you tell me to use submit -->
-                <div id="status"></div>
-
-                <hr> <!--- Line spacer I fckin hate this-->
-
-                <h3>Recent Goose Plugins</h3>
-                <div id="forum-posts">Hold on a goose...</div>
+                <div id="outlet-root"></div>
             </div>
             <div id="chatbox" class="tabcontent">
                 <h2 style="text-shadow: 0 0 1px black !important; margin-bottom:4px !important; padding-bottom:2px !important;">The Gooseling Chatbox</h2>
@@ -5103,10 +5031,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <br>
                     <span class="fine-print-admin admin-only-feature" style="opacity:0;">You currently have admin mode <span class="admin-feature-status"></span>. To toggle it <span class="admin-feature-status-opp">off</span>, please click <a href = "javascript:document.querySelector('#show-admin-features').click()">here</a>. </span>
                 </center>
-                <div class="chatbox-tabs-safety">
-                    <p>The Goose Chatbox has been shut down for seasonal maintenance, effective 1 November 2026 at 11:30 AM PST. The main catalyst for the sudden downtime is the minor use of ASPX and PHP software, which are outdated and were breached in mid-October 2026. As changes and migration are underway, we recommend using other messaging platforms or messaging by email until the chatbox comes back online on 4 November 2026 at 8:20 PM PST. Thank you for your cooperation, and any inquiries should be electronically mailed to <a href="mailto:worshiptheholygoose@gmail.com">worshiptheholygoose@gmail.com</a>.</p>
-                </div>
-                <div class="chatbox-tabs-layout" style="display:none !important;">
+                <div class="chatbox-tabs-layout">
                     <div class="chatbox-tab-buttons" style="scrollbar-width: none;">
                         <button type="button" class="chatbox-tab-button admin-only-feature" data-tab="chatbox-main" onclick="openChatboxTab(event, 'chatbox-main')" style="display:none;">✦ Cats & Gooses</button>
                         <button type="button" class="chatbox-tab-button" data-tab="chatbox-goose" onclick="openChatboxTab(event, 'chatbox-goose')">Goose Chat</button>
@@ -5255,6 +5180,26 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
     </div>
 
+    <div id="outlet-modal-overlay" class="edit-modal-overlay" style="display:none;">
+        <div id="outlet-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="outlet-modal-title">
+            <span class="modal-disclaimer-fine newchat-disclaimer"><span class="modal-disclaimer-fine">Administrator Control</span><br>You are creating this outlet as @<span class="disclaimer-outlet-user"></span>.</span>
+            <h2 style="margin:7px;margin-bottom:7px !important" id="outlet-modal-title">New Outlet</h2>
+            <p class="outlet-modal-status newchat-modal-status">Name your outlet and choose who can see it.</p>
+            <input maxlength="40" type="text" id="outlet-name-input" placeholder="Outlet name..." autocomplete="off">
+            <input maxlength="120" type="text" id="outlet-desc-input" placeholder="Description..." autocomplete="off">
+            <label class="outlet-restrict"><input type="checkbox" id="outlet-restrict-input"> Restrict to listed users</label>
+            <div id="outlet-search" class="newchat-search" style="display:none;">
+                <input maxlength="60" type="text" id="outlet-member-input" placeholder="Search gooselings to allow..." autocomplete="off">
+                <div id="outlet-results" class="newchat-results"></div>
+            </div>
+            <div id="outlet-members" class="newchat-members" style="display:none;"></div>
+            <div class="edit-modal-buttons">
+                <button type="button" id="outlet-cancel-button">Cancel</button>
+                <button type="button" id="outlet-create-button">Create</button>
+            </div>
+        </div>
+    </div>
+
     <div id="image-modal-overlay" class="edit-modal-overlay" style="display:none;">
         <div id="image-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
             <p><span class="modal-disclaimer-fine">Administrator Control</span></p>
@@ -5275,30 +5220,6 @@ document.addEventListener("DOMContentLoaded", function () {
             <div id="image-viewer-filename" class="image-viewer-filename"></div>
             <div class="image-viewer-content">
                 <img style="overflow:hidden" id="image-viewer-image" src="" alt="">
-            </div>
-        </div>
-    </div>
-
-    <div id="outlet-edit-modal-overlay" class="edit-modal-overlay" style="display:none;">
-        <div id="outlet-edit-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="outlet-edit-modal-title">
-            <span class="modal-disclaimer-fine">Administrator Control<br>This post was authored by @<span class="outlet-modal-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="outlet-modal-admin"></span>.</span>
-            <h2 id="outlet-edit-modal-title">Edit Post</h2>
-            <textarea maxlength="5000" id="outlet-edit-input" rows="5" placeholder="Edit the post..."></textarea>
-            <div class="edit-modal-buttons">
-                <button type="button" id="outlet-edit-cancel-button">Cancel</button>
-                <button type="button" id="outlet-edit-push-button">Push</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="outlet-delete-modal-overlay" class="edit-modal-overlay" style="display:none;">
-        <div id="outlet-delete-modal" class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="outlet-delete-modal-title">
-            <span class="modal-disclaimer-fine">Administrator Control<br>This post was authored by @<span class="outlet-modal-author">placeholder</span>.<br>You are currently signed in as administrator @<span class="outlet-modal-admin"></span>.</span>
-            <h2 id="outlet-delete-modal-title">Delete Post</h2>
-            <p>Are you sure you want to delete this post?</p>
-            <div class="edit-modal-buttons">
-                <button type="button" id="outlet-delete-cancel-button">Cancel</button>
-                <button type="button" id="outlet-delete-confirm-button">Delete</button>
             </div>
         </div>
     </div>
