@@ -4680,7 +4680,7 @@
   const tools = (type, id, author, text, forum, body, replyBox) => {
     const bar = h("div", { className: "ol-tools" });
     if (canQuote()) bar.append(h("button", { type: "button", className: "ol-q", textContent: "Quote", onclick: () => {
-      replyBox.value = `"@${author} wrote: ${text.replace(SAFE, "")}"\n\n` + replyBox.value;
+      replyBox.value = `@${author} wrote: "${text.replace(SAFE, "")}"\n\n` + replyBox.value;
       grow(replyBox); replyBox.focus(); replyBox.scrollIntoView({ block: "center" });
     } }));
     if (isAdmin()) {
