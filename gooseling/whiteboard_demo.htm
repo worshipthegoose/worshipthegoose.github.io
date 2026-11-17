@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; font-family: sans-serif; background: #eee; }
+  #bar { display: flex; gap: 10px; align-items: center; padding: 8px; background: #333; color: #fff; flex-wrap: wrap; }
+  #bar button { padding: 4px 10px; }
+  canvas { display: block; margin: 8px auto; width: 96vw; max-width: 1200px; background: #fff;
+           touch-action: none; cursor: crosshair; box-shadow: 0 1px 6px #0004; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <label>Color <input type="color" id="color" value="#222222"></label>
+  <label>Size <input type="range" id="size" min="1" max="40" value="4"></label>
+  <button id="eraser">Eraser</button>
+  <button id="clear">Clear all</button>
+  <span id="status">connecting...</span>
+</div>
+<canvas id="c" width="1200" height="700"></canvas>
+ 
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzcgxvie5gBH7Se9ifbdF17ebXlfTe2TI0HpDER2swsXpi9xX1S-3ZK-lYuhYZNsSdR3w/exec';   // ends in /exec
+const W = 1200, H = 700;
+const me = Math.random().toString(36).slice(2);   // my client id
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+ 
+function wipe() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }
+wipe();
+ 
+function drawChunk(s) {
+  const p = s.p;
+  ctx.strokeStyle = s.c; ctx.lineWidth = s.w;
+  ctx.beginPath();
+  ctx.moveTo(p[0][0], p[0][1]);
+  if (p.length === 1) ctx.lineTo(p[0][0] + 0.01, p[0][1]);
+  for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+  ctx.stroke();
+}
+ 
+// ---------- drawing ----------
+let erasing = false, drawing = false, fresh = false, pts = [];
+const colorEl = document.getElementById('color');
+const sizeEl = document.getElementById('size');
+const penColor = () => erasing ? '#ffffff' : colorEl.value;
+ 
+document.getElementById('eraser').onclick = e => {
+  erasing = !erasing; e.target.textContent = erasing ? 'Pen' : 'Eraser';
+};
+colorEl.oninput = () => { erasing = false; document.getElementById('eraser').textContent = 'Eraser'; };
+ 
+function pos(e) {
+  const r = cv.getBoundingClientRect();
+  return [Math.round((e.clientX - r.left) * W / r.width), Math.round((e.clientY - r.top) * H / r.height)];
+}
+ 
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  drawing = true; fresh = true;
+  pts = [pos(e)];
+  drawChunk({ c: penColor(), w: +sizeEl.value, p: pts });
+});
+cv.addEventListener('pointermove', e => {
+  if (!drawing) return;
+  const p = pos(e);
+  drawChunk({ c: penColor(), w: +sizeEl.value, p: [pts[pts.length - 1], p] });
+  pts.push(p);
+});
+function stop() { if (drawing) { flush(); drawing = false; } }
+cv.addEventListener('pointerup', stop);
+cv.addEventListener('pointercancel', stop);
+ 
+// ---------- sending ----------
+let pending = [], sending = false;
+ 
+function flush() {
+  if (pts.length > 1 || fresh) {
+    pending.push({ cid: me, c: penColor(), w: +sizeEl.value, p: pts });
+    fresh = false;
+    pts = [pts[pts.length - 1]];   // keep last point so chunks connect
+  }
+}
+function send() {
+  if (sending || !pending.length) return;
+  const batch = pending.splice(0);
+  sending = true;
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // avoids CORS preflight
+    body: JSON.stringify(batch)
+  })
+    .then(r => { if (!r.ok) throw new Error(r.status); sending = false; send(); })
+    .catch(() => { pending.unshift(...batch); sending = false; });
+}
+setInterval(() => { if (drawing) flush(); send(); }, 300);
+ 
+document.getElementById('clear').onclick = () => {
+  if (!confirm('Clear the board for everyone?')) return;
+  wipe();
+  pending.push({ cid: me, t: 'clear' });
+  send();
+};
+ 
+// ---------- receiving ----------
+let n = 0;
+function poll() {
+  fetch(API_URL + '?n=' + n)
+    .then(r => r.json())
+    .then(r => {
+      n = r.n;
+      for (const raw of r.items) {
+        const it = JSON.parse(raw);
+        if (it.cid === me) continue;        // already drawn locally
+        if (it.t === 'clear') wipe(); else drawChunk(it);
+      }
+      document.getElementById('status').textContent = 'live';
+      setTimeout(poll, 1000);
+    })
+    .catch(() => {
+      document.getElementById('status').textContent = 'reconnecting...';
+      setTimeout(poll, 3000);
+    });
+}
+poll();
+</script>
+</body>
+</html>
+ 

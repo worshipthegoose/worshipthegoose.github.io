@@ -4878,6 +4878,447 @@
   document.addEventListener("DOMContentLoaded", render);
 })();
 </script>
+    <style>
+    .gw-open {
+        position: absolute !important; top: 8px; left: 12px; z-index: 5;
+        margin: 0 !important; padding: 2px 9px !important;
+        border: none !important; border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0) !important; box-shadow: none !important;
+        color: #222 !important; font: inherit !important; font-size: 13px !important; line-height: 1.5;
+        opacity: .22; cursor: url('/assets/cursors/pointer.png'), pointer;
+        transition: opacity .45s ease, transform .3s ease, background-color .3s ease,
+                    box-shadow .3s ease, text-shadow .3s ease !important;
+    }
+    .gw-open:hover, .gw-open:focus-visible {
+        opacity: 1; outline: none; transform: translateY(-1px) scale(1.06);
+        background: rgba(255, 255, 255, .75) !important;
+        box-shadow: 0 2px 6px rgba(51, 51, 51, .35) !important;
+        text-shadow: 0 0 1px #000;
+    }
+    .gw-open:active { transform: scale(.94); }
+
+    .gw-layer {
+        position: absolute; inset: 0; z-index: 50; min-height: 340px; box-sizing: border-box;
+        display: flex; flex-direction: column; background: #fff; color: #222; text-align: left;
+        opacity: 0; visibility: hidden; pointer-events: none; transform: scale(.97); filter: blur(4px);
+        transition: opacity .35s ease, transform .35s ease, filter .35s ease, visibility 0s linear .35s;
+    }
+    .gw-layer.gw-on {
+        opacity: 1; visibility: visible; pointer-events: auto; transform: none; filter: none;
+        transition: opacity .35s ease, transform .35s ease, filter .35s ease, visibility 0s;
+    }
+    .gw-layer button { font: inherit; margin: 0; box-sizing: border-box; cursor: url('/assets/cursors/pointer.png'), pointer; }
+
+    .gw-head { position: relative; flex: none; text-align: center; padding: 8px 90px 6px;
+               border-bottom: 4px double #111; user-select: none; }
+    .gw-head h2 { margin: 0 !important; padding: 0 !important; font-size: 21px !important; line-height: 1.15;
+                  color: #111 !important; text-shadow: 0 0 1px #000; }
+    .gw-head h4 { margin: 2px 0 0 !important; padding: 0 !important; font-size: 14px !important; line-height: 1.2;
+                  font-weight: normal !important; color: #444 !important; }
+
+    .gw-btn { padding: 6px 12px; border: none; border-radius: 7px; background: steelblue; color: #eee;
+              box-shadow: 0 4px 10px rgba(51, 51, 51, .5); font-size: 15px;
+              transition: background-color .3s ease, color .3s ease, transform .2s ease, box-shadow .3s ease; }
+    .gw-btn:hover { background: rgb(126, 179, 223); color: #222; }
+    .gw-btn:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(51, 51, 51, .5); }
+    .gw-back { position: absolute; left: 8px; top: calc(50% - 16px); }
+
+    .gw-tabsrow { flex: none; display: flex; align-items: stretch; background: #e2dddd; border-bottom: 1px solid #ccc; }
+    .gw-tabs { flex: 1; min-width: 0; display: flex; overflow-x: auto; scrollbar-width: none; }
+    .gw-tabs::-webkit-scrollbar { display: none; }
+    .gw-tab { flex: none; padding: 7px 16px; border: none; border-right: 1px solid #ccc; background: transparent;
+              color: #111; font-size: 14px; white-space: nowrap;
+              transition: background-color .35s ease, box-shadow .35s ease, text-shadow .3s ease; }
+    .gw-tab:hover { background: #ccc; }
+    .gw-tab.gw-sel { background: gainsboro; text-shadow: 0 0 1px #fff; box-shadow: inset 0 -4px 0 darkorange; }
+    .gw-mini { flex: none; width: 36px; border: none; background: rgb(181, 31, 14); color: whitesmoke !important; font-size: 16px;
+               transition: background-color .3s ease, color .3s ease; }
+    .gw-mini:hover { background: rgb(231, 52, 20); color: #ddd !important; }
+    .gw-mini + .gw-mini { border-left: 4px solid rgba(255, 255, 255, 0.1) !important }
+
+    .gw-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+                background: gainsboro; overflow: hidden; padding: 12px; box-sizing: border-box; }
+    .gw-stage canvas { display: block; background: #fff; touch-action: none; cursor: crosshair;
+                       box-shadow: 6px 6px rgba(51, 51, 51, .5); }
+
+    .gw-tools { flex: none; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+                padding: 6px 10px; background: #e2dddd; border-top: 1px solid #ccc; }
+    .gw-group { display: flex; align-items: center; gap: 6px; }
+    .gw-sep { width: 1px; height: 22px; background: #b5b0b0; }
+    .gw-layer .gw-sw, .gw-tools input[type=color] {
+        width: 24px !important; height: 24px !important; min-width: 24px !important; padding: 0 !important; margin: 0 !important;
+        flex: none; border: 2px solid #fff !important; border-radius: 50% !important; box-shadow: 0 0 0 1px #777;
+        line-height: 0; font-size: 0 !important; display: block !important;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .gw-tools input[type=color] { -webkit-appearance: none; appearance: none; background: none; cursor: pointer; overflow: hidden; }
+    .gw-tools input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+    .gw-tools input[type=color]::-webkit-color-swatch { border: none; border-radius: 50%; }
+    .gw-tools input[type=color]::-moz-color-swatch { border: none; border-radius: 50%; }
+    .gw-layer .gw-sw:hover, .gw-tools input[type=color]:hover { transform: scale(1.15); }
+    .gw-layer .gw-sw.gw-sel { transform: scale(1.12); box-shadow: 0 0 0 2px #e2dddd, 0 0 0 4px darkorange; }
+
+    .gw-layer .gw-pen { width: 30px !important; height: 30px !important; min-width: 30px !important; padding: 0 !important;
+                        flex: none; display: flex !important; align-items: center; justify-content: center;
+                        border: none; border-radius: 7px; background: #fff; box-shadow: 0 2px 5px rgba(51, 51, 51, .35);
+                        transition: background-color .3s ease, box-shadow .3s ease, transform .2s ease; }
+    .gw-layer .gw-pen:hover { background: #f1f1f1; }
+    .gw-layer .gw-pen.gw-sel { background: gainsboro; box-shadow: 0 0 0 2px darkorange; }
+    .gw-pen i { display: block; background: #222; border-radius: 50%; }
+
+    .gw-eraser, .gw-clear { padding: 6px 12px; border: none; border-radius: 7px; font-size: 15px;
+                            box-shadow: 0 4px 10px rgba(51, 51, 51, .5);
+                            transition: background-color .3s ease, color .3s ease, box-shadow .3s ease, transform .2s ease; }
+    .gw-eraser { background: rgb(231, 168, 179); color: #222; }
+    .gw-eraser:hover { background: palevioletred; }
+    .gw-eraser.gw-sel { box-shadow: 0 0 0 2px darkorange, 0 4px 10px rgba(51, 51, 51, .5); }
+    .gw-clear { margin-left: auto; background: #75baa1; color: #222; }
+    .gw-clear:hover { background: #498a72; color: #fff; }
+    .gw-eraser:active, .gw-clear:active { transform: translateY(1px); }
+    .gw-status { font-size: 11px; color: #444; user-select: none; }
+
+    /* live cursors with name tooltips */
+    .gw-cursors { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; }
+    .gw-cur { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
+              transition: transform .8s linear, opacity .3s ease; }
+    .gw-cur svg { display: block; filter: drop-shadow(0 1px 2px rgba(51, 51, 51, .5)); }
+    .gw-cur-name { position: absolute; left: 13px; top: 15px; white-space: nowrap; font-size: 12px; line-height: 1.5;
+                   padding: 0 8px; border-radius: 10px; color: #222; user-select: none;
+                   box-shadow: 0 2px 5px rgba(51, 51, 51, .4); }
+
+    /* naming / confirm dialog (reuses the site's .edit-modal look) */
+    .edit-modal.gw-modal { width: 380px; max-width: 90vw; }
+    .gw-modal p { margin: 0 0 8px; }
+    .gw-input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #aaa; border-radius: 6px;
+                font-family: inherit; font-size: 17px; transition: background-color .3s ease; }
+    .gw-input:hover, .gw-input:focus { background-color: #eee; }
+    .gw-m-cancel { background: #ccc; color: #444 !important; transition: background .3s ease, color .3s ease; }
+    .gw-m-cancel:hover { background: #bbb; color: #222 !important; }
+    .gw-m-ok { background: steelblue; color: #eee !important; transition: background .3s ease, color .3s ease; }
+    .gw-m-ok:hover { background: rgb(126, 179, 223); color: #222 !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .gw-layer, .gw-layer.gw-on, .gw-open { transition: none !important; }
+    }
+</style>
+
+<script>
+(function () {
+  const API_URL = 'https://script.google.com/macros/s/AKfycbz-DeI74L0yubvlkIidmD_Y8LB-8lpXU0ec9HjCZ5m0X_nUf9NSe5WsF8uMaunoi3NH2Q/exec';
+  const CHATBOX_SELECTOR = '.chatbox-tab-page';   // each chat's page = messages + input row
+  const chatIdOf = el => el.dataset.chatId || el.id || 'default';
+
+  const W = 1200, H = 700;
+  const COLORS = ['#222222', '#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#8d6e63'];
+  const SIZES = [2, 5, 12, 28];
+  const me = Math.random().toString(36).slice(2);
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const getName = () => {
+    const m = document.cookie.match(/(?:^|; )dev-username=([^;]*)/);
+    if (!m) return 'Anonymous';
+    try { return decodeURIComponent(m[1]) || 'Anonymous'; } catch (e) { return m[1] || 'Anonymous'; }
+  };
+  const hueOf = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h % 360; };
+
+  // ----- site-styled dialog (replaces prompt/confirm) -----
+  function modal(o) {
+    return new Promise(resolve => {
+      const ov = document.createElement('div');
+      ov.className = 'edit-modal-overlay';
+      ov.innerHTML =
+        '<div class="edit-modal gw-modal" role="dialog" aria-modal="true">' +
+        '<span class="modal-disclaimer-fine">Whiteboard</span>' +
+        '<h2></h2><p></p>' +
+        (o.input ? '<input class="gw-input" maxlength="40" type="text" autocomplete="off">' : '') +
+        '<div class="edit-modal-buttons"><button type="button" class="gw-m-cancel">Cancel</button>' +
+        '<button type="button" class="gw-m-ok"></button></div></div>';
+      ov.querySelector('h2').textContent = o.title;
+      ov.querySelector('p').textContent = o.text || '';
+      ov.querySelector('.gw-m-ok').textContent = o.ok || 'OK';
+      const input = ov.querySelector('input');
+      if (input) input.value = o.value || '';
+      const done = v => { document.removeEventListener('keydown', key, true); ov.remove(); resolve(v); };
+      const accept = () => done(input ? input.value : true);
+      const key = e => {
+        if (e.key === 'Escape') { e.stopPropagation(); done(null); }
+        else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); accept(); }
+      };
+      ov.querySelector('.gw-m-cancel').onclick = () => done(null);
+      ov.querySelector('.gw-m-ok').onclick = accept;
+      ov.addEventListener('mousedown', e => { if (e.target === ov) done(null); });
+      document.addEventListener('keydown', key, true);
+      document.body.appendChild(ov);
+      setTimeout(() => { if (input) { input.focus(); input.select(); } else ov.querySelector('.gw-m-ok').focus(); }, 50);
+    });
+  }
+
+  function attach(el) {
+    if (el.__gw) {   // re-attach pieces if the chat re-rendered and dropped them
+      if (!el.contains(el.__gw.layer)) { el.appendChild(el.__gw.layer); el.appendChild(el.__gw.btn); }
+      return;
+    }
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+
+    const chat = chatIdOf(el);
+    const boards = { main: { name: 'Board 1', strokes: [] } };
+    const order = ['main'];
+    let cur = 'main', n = 0, open = false, loop = 0;
+    let color = COLORS[0], size = SIZES[1], erasing = false;
+    let drawing = false, fresh = false, pts = [], pending = [], sending = false;
+
+    // ----- DOM -----
+    const btn = document.createElement('button');
+    btn.className = 'gw-open'; btn.type = 'button'; btn.textContent = '✎ draw'; btn.title = 'Open whiteboard';
+
+    const layer = document.createElement('div');
+    layer.className = 'gw-layer';
+    layer.innerHTML =
+      '<div class="gw-head"><button type="button" class="gw-btn gw-back">← Chat</button><h2></h2><h4></h4></div>' +
+      '<div class="gw-tabsrow"><div class="gw-tabs"></div>' +
+      '<button type="button" class="gw-mini gw-rename" title="Rename this whiteboard">✎</button>' +
+      '<button type="button" class="gw-mini gw-add" title="New whiteboard">+</button></div>' +
+      '<div class="gw-stage"><canvas width="' + W + '" height="' + H + '"></canvas><div class="gw-cursors"></div></div>' +
+      '<div class="gw-tools"><div class="gw-group gw-sws"></div><input type="color" value="#222222" title="Custom color">' +
+      '<div class="gw-sep"></div><div class="gw-group gw-pens"></div>' +
+      '<button type="button" class="gw-eraser">Eraser</button>' +
+      '<span class="gw-status">connecting...</span><button type="button" class="gw-clear">✦ Clear</button></div>';
+    el.appendChild(btn); el.appendChild(layer);
+    el.__gw = { layer, btn };
+
+    const $ = s => layer.querySelector(s);
+    const tabsEl = $('.gw-tabs'), stage = $('.gw-stage'), cv = $('canvas'), ctx = cv.getContext('2d');
+    const statusEl = $('.gw-status'), eraserEl = $('.gw-eraser'), customEl = $('input[type=color]');
+    const h2 = $('.gw-head h2'), h4 = $('.gw-head h4');
+    const curLayer = $('.gw-cursors'), curEls = {};
+    let lastCursors = {}, myCur = null;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+    const chatName = () => {
+      const b = document.querySelector('.chatbox-tab-button[data-tab="' + el.id + '"]');
+      return b ? b.textContent.trim() : 'Chatbox';
+    };
+    const renderHead = () => { h2.textContent = chatName(); h4.textContent = boards[cur].name; };
+
+    // ----- drawing helpers -----
+    const wipe = () => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); };
+    function drawChunk(s) {
+      const p = s.p;
+      ctx.strokeStyle = s.c; ctx.lineWidth = s.w;
+      ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+      if (p.length === 1) ctx.lineTo(p[0][0] + 0.01, p[0][1]);
+      for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+      ctx.stroke();
+    }
+    function redraw() { wipe(); boards[cur].strokes.forEach(drawChunk); renderCursors(lastCursors); }
+    function fit() {
+      const w = stage.clientWidth - 24, h = stage.clientHeight - 24;   // minus padding
+      if (w <= 0 || h <= 0) return;
+      const s = Math.min(w / W, h / H);
+      cv.style.width = W * s + 'px'; cv.style.height = H * s + 'px'; renderCursors(lastCursors);
+    }
+    new ResizeObserver(fit).observe(stage);
+
+    // ----- tabs -----
+    function renderTabs() {
+      tabsEl.innerHTML = '';
+      order.forEach(id => {
+        const t = document.createElement('button');
+        t.type = 'button'; t.className = 'gw-tab' + (id === cur ? ' gw-sel' : '');
+        t.textContent = boards[id].name;
+        t.onclick = () => { cur = id; renderTabs(); redraw(); };
+        tabsEl.appendChild(t);
+      });
+      const sel = tabsEl.querySelector('.gw-sel');
+      if (sel) sel.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+      renderHead();
+    }
+    const cleanName = (s, fallback) => (s || '').trim().slice(0, 40) || fallback;
+
+    $('.gw-add').onclick = async () => {
+      const def = 'Board ' + (order.length + 1);
+      const name = await modal({ title: 'New Whiteboard', text: 'What should this whiteboard be called?', input: true, value: def, ok: 'Create' });
+      if (name === null) return;
+      const id = uid(), nm = cleanName(name, def);
+      boards[id] = { name: nm, strokes: [] }; order.push(id); cur = id;
+      pending.push({ cid: me, t: 'board', id, name: nm });
+      renderTabs(); redraw(); send();
+    };
+    $('.gw-rename').onclick = async () => {
+      const name = await modal({ title: 'Rename Whiteboard', text: 'Give this whiteboard a new name.', input: true, value: boards[cur].name, ok: 'Save' });
+      if (name === null) return;
+      boards[cur].name = cleanName(name, boards[cur].name);
+      pending.push({ cid: me, t: 'rename', id: cur, name: boards[cur].name });
+      renderTabs(); send();
+    };
+
+    // ----- tools -----
+    const swsEl = $('.gw-sws'), pensEl = $('.gw-pens');
+    function renderTools() {
+      swsEl.innerHTML = ''; pensEl.innerHTML = '';
+      COLORS.forEach(c => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'gw-sw' + (!erasing && c === color ? ' gw-sel' : '');
+        b.style.background = c; b.title = c;
+        b.onclick = () => { color = c; erasing = false; customEl.value = c; renderTools(); };
+        swsEl.appendChild(b);
+      });
+      SIZES.forEach(s => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'gw-pen' + (!erasing && s === size ? ' gw-sel' : '');
+        b.innerHTML = '<i style="width:' + Math.min(s, 20) + 'px;height:' + Math.min(s, 20) + 'px"></i>';
+        b.title = 'Pen size ' + s;
+        b.onclick = () => { size = s; erasing = false; renderTools(); };
+        pensEl.appendChild(b);
+      });
+      eraserEl.classList.toggle('gw-sel', erasing);
+    }
+    customEl.oninput = () => { color = customEl.value; erasing = false; renderTools(); };
+    eraserEl.onclick = () => { erasing = !erasing; renderTools(); };
+    $('.gw-clear').onclick = async () => {
+      const yes = await modal({ title: 'Clear Board', text: 'Clear "' + boards[cur].name + '" for everyone?', ok: 'Clear it' });
+      if (!yes) return;
+      boards[cur].strokes = []; wipe();
+      pending.push({ cid: me, t: 'clear', b: cur }); send();
+    };
+    const penColor = () => erasing ? '#ffffff' : color;
+    const penWidth = () => erasing ? size * 2 + 6 : size;
+
+    // ----- pointer input -----
+    function pos(e) {
+      const r = cv.getBoundingClientRect();
+      return [Math.round((e.clientX - r.left) * W / r.width), Math.round((e.clientY - r.top) * H / r.height)];
+    }
+    cv.addEventListener('pointerdown', e => {
+      cv.setPointerCapture(e.pointerId);
+      drawing = true; fresh = true; pts = [pos(e)];
+      drawChunk({ c: penColor(), w: penWidth(), p: pts });
+    });
+    cv.addEventListener('pointermove', e => {
+      const q = pos(e);
+      myCur = [Math.max(0, Math.min(W, q[0])), Math.max(0, Math.min(H, q[1]))];
+      if (!drawing) return;
+      const p = pos(e);
+      drawChunk({ c: penColor(), w: penWidth(), p: [pts[pts.length - 1], p] });
+      pts.push(p);
+    });
+    const stop = () => { if (drawing) { flush(); drawing = false; } };
+    cv.addEventListener('pointerup', stop);
+    cv.addEventListener('pointercancel', stop);
+    cv.addEventListener('pointerleave', () => { myCur = null; });
+
+    // ----- sending -----
+    function flush() {
+      if (pts.length > 1 || fresh) {
+        const chunk = { cid: me, b: cur, c: penColor(), w: penWidth(), p: pts };
+        boards[cur].strokes.push(chunk); pending.push(chunk);
+        fresh = false; pts = [pts[pts.length - 1]];   // keep last point so chunks connect
+      }
+    }
+    function send() {
+      if (sending || !pending.length) return;
+      const batch = pending.splice(0);
+      sending = true;
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
+        body: JSON.stringify({ chat, items: batch })
+      })
+        .then(r => { if (!r.ok) throw new Error(r.status); sending = false; send(); })
+        .catch(() => { pending.unshift(...batch); sending = false; });
+    }
+    setInterval(() => { if (drawing) flush(); send(); }, 300);
+
+    // ----- receiving -----
+    function apply(it) {
+      const b = it.b || it.id || 'main';
+      if (it.t === 'board') {
+        if (!boards[it.id]) { boards[it.id] = { name: it.name, strokes: [] }; order.push(it.id); renderTabs(); }
+      } else if (it.t === 'rename') {
+        if (boards[it.id]) { boards[it.id].name = it.name; renderTabs(); }
+      } else if (it.t === 'clear') {
+        if (boards[b]) { boards[b].strokes = []; if (b === cur) redraw(); }
+      } else if (it.p && it.p.length) {
+        const key = it.b || 'main';
+        if (!boards[key]) { boards[key] = { name: 'Board', strokes: [] }; order.push(key); renderTabs(); }
+        boards[key].strokes.push(it);
+        if (key === cur) drawChunk(it);
+      }
+    }
+    function startPoll() {
+      const my = ++loop;
+      (function tick() {
+        if (!open || my !== loop) return;
+        fetch(API_URL + pollQuery())
+          .then(r => r.json())
+          .then(r => {
+            if (my !== loop) return;
+            n = r.n;
+            lastCursors = r.cursors || {}; renderCursors(lastCursors);
+            r.items.forEach(raw => { try { const it = JSON.parse(raw); if (it.cid !== me) apply(it); } catch (e) {} });
+            statusEl.textContent = 'live';
+            setTimeout(tick, 800);
+          })
+          .catch(() => { if (my !== loop) return; statusEl.textContent = 'reconnecting...'; setTimeout(tick, 3000); });
+      })();
+    }
+
+    // ----- open / close -----
+    // ----- live cursors -----
+    function pollQuery() {
+      return '?chat=' + encodeURIComponent(chat) + '&n=' + n + '&cid=' + me + '&u=' + encodeURIComponent(getName()) +
+        (myCur ? '&cx=' + myCur[0] + '&cy=' + myCur[1] + '&cb=' + encodeURIComponent(cur) : '&cx=-1');
+    }
+    function placeCursor(d, c) {
+      const x = cv.offsetLeft + c.x / W * cv.clientWidth, y = cv.offsetTop + c.y / H * cv.clientHeight;
+      d.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    }
+    function renderCursors(map) {
+      const seen = {};
+      Object.keys(map || {}).forEach(id => {
+        const c = map[id];
+        if (!c || c.b !== cur || !cv.clientWidth) return;   // only cursors on the board I'm looking at
+        seen[id] = 1;
+        let d = curEls[id];
+        if (!d) {
+          const hue = hueOf(c.u);
+          d = document.createElement('div'); d.className = 'gw-cur';
+          d.innerHTML = '<svg width="16" height="20" viewBox="0 0 16 20"><path d="M1.5 1.5v14l4-3.6 2.8 6.2 2.6-1.2-2.8-6.1h5.4z" fill="hsl(' + hue + ',55%,38%)" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/></svg><span class="gw-cur-name"></span>';
+          d.lastChild.style.background = 'hsl(' + hue + ',60%,76%)';
+          d.style.opacity = 0; d.style.transition = 'none';
+          curLayer.appendChild(d); curEls[id] = d;
+          placeCursor(d, c);
+          void d.offsetWidth;                                // so it appears in place, then fades in
+          d.style.transition = ''; d.style.opacity = 1;
+        } else placeCursor(d, c);
+        d.lastChild.textContent = c.u;
+      });
+      Object.keys(curEls).forEach(id => { if (!seen[id]) { curEls[id].remove(); delete curEls[id]; } });
+    }
+
+    btn.onclick = () => {
+      layer.classList.add('gw-on'); open = true;
+      renderTabs(); renderTools(); fit(); redraw(); startPoll();
+    };
+    $('.gw-back').onclick = () => {
+      stop(); open = false; loop++;
+      layer.classList.remove('gw-on');
+      lastCursors = {}; renderCursors({}); myCur = null;
+      fetch(API_URL + '?chat=' + encodeURIComponent(chat) + '&n=' + n + '&cid=' + me + '&cx=-1').catch(() => {});
+    };
+  }
+
+  function scan() { document.querySelectorAll(CHATBOX_SELECTOR).forEach(attach); }
+  function start() {
+    scan();
+    // custom chats get added later as new pages, so watch for those
+    const host = document.querySelector('.chatbox-tab-pages') || document.body;
+    new MutationObserver(scan).observe(host, { childList: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+
 </head>
 
 <body>
