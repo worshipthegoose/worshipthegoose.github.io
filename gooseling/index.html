@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <script src="/cookie-management.js"></script>
     <script type="module" src="/login.js"></script>
-    <link rel="stylesheet" href="/nav.css"> <!--- --->
+    <link rel="stylesheet" href="/nav.css">
     <link rel="stylesheet" href="/footer.css">
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="/gooseling/styles.css">
@@ -37,7 +37,7 @@
         const admins = ["thegoose", "thenumberonegooseling", "agooseworshipper", "laureline"];
         const deluxeUsers = ["goosercooper"]
         const usernames = ["thenumberonegooseling", "thegoose", "agooseworshipper", "thenumberonestandard", "antigooseling", "laureline", "robogoose", "goosercooper", "goseultimate", "eshigoose"];
-        const SAFEHTML_CUTOFF = new Date("2026-11-05T00:00:00-08:00").getTime(); // Release at least a day before EDIT mayday plan aborted
+        const SAFEHTML_CUTOFF = new Date("2026-11-05T00:00:00-08:00").getTime();
         function isGrandfathered(post) {
             const time = post && post.timestamp ? new Date(post.timestamp).getTime() : NaN;
             return Number.isFinite(time) && time < SAFEHTML_CUTOFF;
@@ -82,7 +82,7 @@
         }
 
         function registerChat(definition) {
-            chatRegistry[definition.key] = Object.assign({ lastData: "", lastCount: 0, loading: false }, definition);
+            chatRegistry[definition.key] = Object.assign({ lastData: "", lastCount: 0, loading: false, pending: [], silent: 0, lastItems: [], sendChain: Promise.resolve() }, definition);
             return chatRegistry[definition.key];
         }
 
@@ -218,6 +218,250 @@
             return isAdmin() && toggle && toggle.checked;
         }
 
+        let popupTimer = null;
+
+        function popupsEnabled() {
+            return getCookie("show-popups") === "true";
+        }
+
+        function removeAllPopups() {
+            document.querySelectorAll(".popups-window").forEach(win => win.remove());
+            newDelay = 18000;
+        }
+
+        function spawnPopup() {
+            if (!popupsEnabled()) return;
+            const fruits = ["/assets/images/gg1.png", "https://gifdb.com/images/branded/high/happy-early-morning-goose-dance-a12pur07637bj5go.gif", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOicWy7DGw5vYOpOFgPFxlRBg2SCvqi62J0eSVY7lImg&s"]
+            const win = document.createElement("div");
+            win.className = "popups-window";
+
+            const travel = 40 + Math.random() * 80;
+            const duration = 2 + Math.random() * 3;
+            const width = 180;
+            const height = 230;
+
+            const minLeft = travel + 10;
+            const maxLeft = Math.max(minLeft, window.innerWidth - width - travel - 10);
+            const minTop = 70;
+            const maxTop = Math.max(minTop, window.innerHeight - height - 20);
+
+            win.style.left = (minLeft + Math.random() * (maxLeft - minLeft)) + "px";
+            win.style.top = (minTop + Math.random() * (maxTop - minTop)) + "px";
+            win.style.width = width + "px";
+            win.style.setProperty("--popup-travel", travel + "px");
+            win.style.animationDuration = duration + "s";
+
+            const close = document.createElement("button");
+            close.type = "button";
+            close.className = "popups-close";
+            close.setAttribute("aria-label", "Close popup");
+            close.textContent = "x";
+            close.addEventListener("click", () => win.remove());
+
+            const image = document.createElement("img");
+            const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+            image.src = randomFruit;
+            image.alt = "Popup";
+            image.draggable = false;
+            image.className = "popups-image";
+
+            win.appendChild(close);
+            win.appendChild(image);
+            document.body.appendChild(win);
+        }
+
+        function scheduleNextPopup(delay) {
+            clearTimeout(popupTimer);
+            popupTimer = null;
+
+            if (!popupsEnabled()) return;
+            var newDelay = delay / 1.25;
+            popupTimer = setTimeout(() => {
+                spawnPopup();
+                scheduleNextPopup(newDelay);
+            }, delay);
+        }
+
+        function updatePopups() {
+            if (popupsEnabled()) {
+                if (!popupTimer) scheduleNextPopup(10000);
+            } else {
+                clearTimeout(popupTimer);
+                popupTimer = null;
+                removeAllPopups();
+            }
+        }
+
+        function initPopups() {
+            const toggle = document.getElementById("show-popups");
+            const container = document.getElementById("popups-toggle-container");
+
+            if (toggle) {
+                toggle.checked = popupsEnabled();
+
+                toggle.addEventListener("change", () => {
+                    document.cookie = `show-popups=${toggle.checked}; max-age=31536000; path=/`;
+                    updatePopups();
+                });
+            }
+
+            if (container && toggle) {
+                container.addEventListener("click", e => {
+                    if (!e.target.closest("label")) toggle.click();
+                });
+            }
+
+            updatePopups();
+
+            document.addEventListener("keydown", e => {
+                if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyI") {
+                    e.preventDefault();
+                    togglePopupControl();
+                }
+            });
+        }
+
+        let popupControl = null;
+        let popupControlFrame = null;
+
+        function popupControlBounds() {
+            const nav = document.querySelector("nav");
+            const footer = document.querySelector("footer");
+            const top = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+            const footerTop = footer ? footer.getBoundingClientRect().top : window.innerHeight;
+            const bottom = Math.min(window.innerHeight, footerTop);
+
+            return { top: top, bottom: Math.max(top, bottom), right: window.innerWidth };
+        }
+
+        function updatePopupControlCount() {
+            if (!popupControl) return;
+
+            const number = popupControl.querySelector(".popups-control-number");
+            const total = String(document.querySelectorAll(".popups-window").length);
+
+            if (number.textContent !== total) number.textContent = total;
+        }
+
+        function closePopupControl() {
+            if (!popupControl) return;
+
+            cancelAnimationFrame(popupControlFrame);
+            popupControlFrame = null;
+            popupControl.remove();
+            popupControl = null;
+        }
+
+        function openPopupControl() {
+            if (popupControl) return;
+
+            const box = document.createElement("div");
+            box.className = "popups-control";
+            box.setAttribute("role", "dialog");
+            box.setAttribute("aria-label", "Popup control");
+
+            const close = document.createElement("button");
+            close.type = "button";
+            close.className = "popups-control-close";
+            close.setAttribute("aria-label", "Close popup control");
+            close.textContent = "x";
+            close.addEventListener("click", closePopupControl);
+
+            const title = document.createElement("div");
+            title.className = "popups-control-title";
+            title.textContent = "Popup Control";
+
+            const count = document.createElement("div");
+            count.className = "popups-control-count";
+            count.appendChild(document.createTextNode("Popups: "));
+
+            const number = document.createElement("span");
+            number.className = "popups-control-number";
+            number.textContent = "0";
+            count.appendChild(number);
+
+            const kill = document.createElement("button");
+            kill.type = "button";
+            kill.className = "popups-control-kill";
+            kill.textContent = "Kill all popups";
+            kill.addEventListener("click", () => {
+                removeAllPopups();
+                updatePopupControlCount();
+                
+            });
+
+            box.appendChild(close);
+            box.appendChild(title);
+            box.appendChild(count);
+            box.appendChild(kill);
+            document.body.appendChild(box);
+
+            popupControl = box;
+
+            const state = {
+                x: 0,
+                y: 0,
+                vx: (Math.random() < 0.5 ? -1 : 1) * (50 + Math.random() * 50),
+                vy: (Math.random() < 0.5 ? -1 : 1) * (50 + Math.random() * 50),
+                hovered: false
+            };
+
+            const start = popupControlBounds();
+            state.x = Math.random() * Math.max(0, start.right - box.offsetWidth);
+            state.y = start.top + Math.random() * Math.max(0, start.bottom - start.top - box.offsetHeight);
+
+            box.addEventListener("mouseenter", () => { state.hovered = true; });
+            box.addEventListener("mouseleave", () => { state.hovered = false; });
+
+            let last = performance.now();
+
+            function frame(now) {
+                const dt = Math.min(0.05, (now - last) / 1000);
+                last = now;
+
+                const bounds = popupControlBounds();
+                const width = box.offsetWidth;
+                const height = box.offsetHeight;
+                const maxX = Math.max(0, bounds.right - width);
+                const maxY = Math.max(bounds.top, bounds.bottom - height);
+
+                if (!state.hovered) {
+                    state.x += state.vx * dt;
+                    state.y += state.vy * dt;
+                }
+
+                if (state.x < 0) {
+                    state.x = 0;
+                    state.vx = Math.abs(state.vx);
+                } else if (state.x > maxX) {
+                    state.x = maxX;
+                    state.vx = -Math.abs(state.vx);
+                }
+
+                if (state.y < bounds.top) {
+                    state.y = bounds.top;
+                    state.vy = Math.abs(state.vy);
+                } else if (state.y > maxY) {
+                    state.y = maxY;
+                    state.vy = -Math.abs(state.vy);
+                }
+
+                box.style.transform = `translate(${state.x}px, ${state.y}px)`;
+                updatePopupControlCount();
+
+                popupControlFrame = requestAnimationFrame(frame);
+            }
+
+            popupControlFrame = requestAnimationFrame(frame);
+        }
+
+        function togglePopupControl() {
+            if (popupControl) {
+                closePopupControl();
+            } else {
+                openPopupControl();
+            }
+        }
         function syncChatInput(chat, useTextarea) {
             const form = document.getElementById(chat.formId);
 
@@ -838,7 +1082,6 @@
             replyButton.textContent = "⤷";
             replyButton.title = `Reply to @${post.username}`;
             replyButton.className = "message-reply-button";
-            replyButton.style.marginRight = "6px";
 
             replyButton.addEventListener("click", () => {
                 insertReply(post, inputId);
@@ -887,6 +1130,36 @@
             input.setSelectionRange(input.value.length, input.value.length);
         }
 
+        function appendTextWithBoldNames(fragment, text) {
+            const names = usernames
+                .slice()
+                .sort((a, b) => b.length - a.length)
+                .map(name => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+            const nameRegex = new RegExp("@?\\b(?:" + names.join("|") + ")\\b", "gi");
+
+            let last = 0;
+            let found;
+
+            while ((found = nameRegex.exec(text)) !== null) {
+                if (found.index > last) {
+                    fragment.appendChild(document.createTextNode(text.slice(last, found.index)));
+                }
+
+                const nameSpan = document.createElement("span");
+                nameSpan.className = "message-name";
+                nameSpan.style.fontWeight = "bold";
+                nameSpan.textContent = found[0];
+                fragment.appendChild(nameSpan);
+
+                last = nameRegex.lastIndex;
+            }
+
+            if (last < text.length) {
+                fragment.appendChild(document.createTextNode(text.slice(last)));
+            }
+        }
+
         function renderChatMessage(message, username) {
             const fragment = document.createDocumentFragment();
             const regex = /\[image=([^\]]+)\]|\[reply=(@?[^\s\]]+)(?:\s+quote=([^\]]*))?\]|\[newline\]/gi;
@@ -898,26 +1171,39 @@
                 const textBefore = message.slice(lastIndex, match.index);
 
                 if (textBefore) {
-                    fragment.appendChild(document.createTextNode(textBefore));
+                    appendTextWithBoldNames(fragment, textBefore);
                 }
 
                 if (match[0].toLowerCase() === "[newline]") {
                     fragment.appendChild(document.createElement("br"));
                 } else if (match[2]) {
                     const replyTag = document.createElement("span");
+
+                    var saniTag = document.createElement("span");
+                    saniTag.textContent = `${match[2].trim().replace("@", "")}`;
+                    saniTag.className = "reply-user"
+                    saniTag.style.fontWeight = "bolder";
+                    // saniTag.style.textDecoration = "underline";
+
                     replyTag.className = "reply-tag";
-                    replyTag.textContent = `⤷ ${match[2].trim()}`;
+                    replyTag.textContent = `⤷ `;
+                    replyTag.appendChild(saniTag)
+                    replyTag.insertAdjacentHTML("beforeend", "<br>")
 
                     const quote = match[3] ? match[3].trim() : "";
 
                     if (quote && canUseHeaders(username)) {
                         const quoteElement = document.createElement("em");
                         quoteElement.className = "reply-quote";
-                        quoteElement.textContent = ` "${quote}"`;
+                        quoteElement.textContent = ` ${quote}`;
                         replyTag.appendChild(quoteElement);
+                        
                     }
 
                     fragment.appendChild(replyTag);
+
+                    let breakingSpace = document.createElement("br")
+                    fragment.appendChild(breakingSpace)
                 } else {
                     const filename = match[1].trim();
 
@@ -950,7 +1236,7 @@
             const remaining = message.slice(lastIndex);
 
             if (remaining) {
-                fragment.appendChild(document.createTextNode(remaining));
+                appendTextWithBoldNames(fragment, remaining);
             }
 
             return fragment;
@@ -1031,6 +1317,7 @@
             const killButton = document.createElement("button");
             killButton.type = "button";
             killButton.innerHTML = "🗑";
+            killButton.style.marginRight = "4px";
             killButton.className = "message-delete-button admin-only-feature";
 
             killButton.addEventListener("click", () => {
@@ -1076,6 +1363,7 @@
 
         function buildMessage(post, chat) {
             const msgDateObj = post.timestamp ? new Date(post.timestamp) : new Date();
+            const isOwn = post.username === getCookie("dev-username"); // checks if its your own
 
             const msgDiv = document.createElement("div");
             msgDiv.style.marginBottom = "8px";
@@ -1086,6 +1374,11 @@
             msgDiv.style.boxSizing = "border-box";
             msgDiv.className = "chatbox-message-parent";
 
+            if (isOwn) {
+                msgDiv.classList.add("own-message");
+                msgDiv.style.justifyContent = "flex-end";
+            }
+
             const fullTimeText = msgDateObj.toLocaleString("en-US", {
                 timeZone: "America/Los_Angeles"
             });
@@ -1094,21 +1387,19 @@
 
             const hyperTag = post.username === 'thegoose' ? "[OMNISCIENT] " : "";
 
-            msgDiv.appendChild(createReplyButton(post, chat.inputId));
-
-            if (showAdminFeatures()) {
-                msgDiv.appendChild(buildAdminButtons(post, msgDiv, chat));
-            }
-
             const textSpan = document.createElement("span");
-            textSpan.style.flex = "1 1 0";
+            textSpan.className = "chat-bubble";
+            if (isOwn) {
+                textSpan.classList.add("chat-bubble-own");
+            }
+            textSpan.style.flex = "0 1 auto";
             textSpan.style.minWidth = "0";
             textSpan.style.overflowWrap = "anywhere";
             textSpan.style.wordBreak = "break-all";
 
             let usernameStyle = "";
 
-            if (post.username === getCookie("dev-username")) {
+            if (isOwn) {
                 if (getCookie("canada_goose") === "true") {
                     usernameStyle = "border-bottom:1.7px solid white !important;";
                 } else {
@@ -1123,12 +1414,15 @@
 
             const usernameSpan = document.createElement("span");
             usernameSpan.setAttribute("style", usernameStyle);
+            usernameSpan.className = "name";
             usernameSpan.textContent = `${hyperTag}${post.username}`;
 
             usernameStrong.appendChild(usernameSpan);
             textSpan.appendChild(usernameStrong);
 
-            const messageSpan = document.createElement("span");
+            const messageSpan = document.createElement("div");
+            messageSpan.className = "message-span"
+
             const rawMsg = String(post.message || "");
             const safeHtmlMatch = rawMsg.match(/^\[safehtml\]\s*([\s\S]*)$/i);
 
@@ -1153,6 +1447,7 @@
             textSpan.appendChild(messageSpan);
 
             const timestampSpan = document.createElement("span");
+            timestampSpan.className = "chat-timestamp";
             timestampSpan.style.color = "#444";
             timestampSpan.style.setProperty('font-size', '10px', 'important');
             timestampSpan.style.marginLeft = "5px";
@@ -1164,7 +1459,29 @@
                 hour12: true
             });
 
-            textSpan.appendChild(timestampSpan);
+            const footer = document.createElement("div");
+            footer.className = "chat-bubble-footer";
+            if (!post.pendingId) {
+                footer.appendChild(createReplyButton(post, chat.inputId));
+
+                if (showAdminFeatures()) {
+                    footer.appendChild(buildAdminButtons(post, msgDiv, chat));
+                }
+            }
+
+            footer.appendChild(timestampSpan);
+
+            if (isOwn) {
+                const isSending = !!post.pendingId;
+                const statusSpan = document.createElement("span");
+
+                statusSpan.className = "chat-status " + (isSending ? "sent" : "delivered");
+                statusSpan.textContent = isSending ? "✓" : "✓✓";
+                statusSpan.title = isSending ? "Sent" : "Delivered";
+
+                footer.appendChild(statusSpan);
+            }
+            textSpan.appendChild(footer);
 
             msgDiv.appendChild(textSpan);
 
@@ -1174,11 +1491,24 @@
         function renderChat(chat, container, data) {
             container.innerHTML = "";
 
+            const nowTime = Date.now();
+            const pendingList = chat.pending || [];
+            const hiddenReal = new Set(
+                pendingList
+                    .filter(p => p.landed && nowTime < p.revealAt - 5)
+                    .map(p => p.realTimestamp + "|" + p.message)
+            );
+            const shownData = hiddenReal.size
+                ? data.filter(d => !hiddenReal.has(d.timestamp + "|" + String(d.message || "")))
+                : data;
+            const visiblePending = pendingList.filter(p => !p.landed && nowTime >= p.revealAt - 5);
+            const withPending = visiblePending.length ? shownData.concat(visiblePending) : shownData;
+
             const sections = [];
             const headers = [];
             let currentSection = null;
 
-            data.forEach(post => {
+            withPending.forEach(post => {
                 const rawMessage = String(post.message || "").trim();
                 const headerAllowed = canUseHeaders(post.username);
                 const headerMatch = headerAllowed ? rawMessage.match(/^\[header=([^\]]+)\]$/i) : null;
@@ -1299,6 +1629,7 @@
 
                 const headerDiv = document.createElement("div");
                 headerDiv.style.fontWeight = "bold";
+                headerDiv.className = "bubble-bubble";
                 headerDiv.style.textAlign = "center";
                 headerDiv.style.padding = "8px 0";
                 headerDiv.style.margin = "0 8px 8px 8px";
@@ -1357,9 +1688,12 @@
                 manualHeaderRow.style.margin = "8px 0 8px 0";
                 manualHeaderRow.style.borderBottom = "4px double #111";
                 manualHeaderRow.style.boxSizing = "border-box";
+                manualHeaderRow.style.paddingTop = "8px";
+                manualHeaderRow.style.paddingBottom = "3px";
                 manualHeaderRow.style.borderRadius = "5px";
                 manualHeaderRow.style.setProperty('corner-shape', 'round', 'important');
-                manualHeaderRow.style.minHeight = "31px";
+                manualHeaderRow.style.minHeight = "37px";
+                manualHeaderRow.className = "bubble-bubble";
 
                 if (showAdminFeatures()) {
                     const headerButtons = buildAdminButtons(section.header, manualHeaderRow, chat);
@@ -1370,6 +1704,7 @@
                 const manualHeader = document.createElement("div");
                 manualHeader.style.position = "absolute";
                 manualHeader.style.left = "50%";
+                
                 manualHeader.style.transform = "translateX(-50%)";
                 manualHeader.style.width = "max-content";
                 manualHeader.style.textAlign = "center";
@@ -1403,6 +1738,7 @@
                 });
 
                 const bottomSeparator = document.createElement("div");
+                bottomSeparator.className = "bubble-bubble"
                 bottomSeparator.style.display = "block";
                 bottomSeparator.style.borderBottom = "4px double #111";
                 bottomSeparator.style.borderRadius = "8px";
@@ -1432,11 +1768,12 @@
             if (isInitialLoad) {
                 let inlineStyles;
                 if (getCookie('canada_goose') === "true") {
-                    inlineStyles = 'color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                    inlineStyles = `color:white; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;`;
                 } else {
-                    inlineStyles = 'color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;';
+                    inlineStyles = `color:#111; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;text-shadow:
+    0 0 10px orangered;`;
                 }
-                container.innerHTML = `<center><span style="${inlineStyles}">Loading...</span></center>`;
+                container.innerHTML = `<center><div class="bubble-bubble" style="${inlineStyles}">Hold on a goose...</div></center>`;
             }
 
             if (getCookie('is-developer') !== 'true') {
@@ -1447,7 +1784,7 @@
             const username = getCookie("dev-username");
 
             if (username) {
-                document.querySelectorAll(".name").forEach((name) => {
+                document.querySelectorAll("#dashboard .name, #account .name").forEach((name) => {
                     name.textContent = decodeURIComponent(username);
                 });
             }
@@ -1490,6 +1827,33 @@
                     return;
                 }
 
+                if (chat.pending.length) {
+                    const pendingBefore = chat.pending.length;
+
+                    chat.pending = chat.pending.filter(p => {
+                        const matches = data.filter(d => d.username === p.username && String(d.message || "") === p.message);
+
+                        if (matches.length > p.baseCount) {
+                            p.landed = true;
+                            p.realTimestamp = matches[matches.length - 1].timestamp;
+
+                            return Date.now() < p.revealAt - 5;
+                        }
+
+                        if (!p.sent) return true;
+
+                        if (Date.now() - p.sentAt <= 15000) return true;
+
+                        chat.silent = Math.max(0, chat.silent - 1);
+
+                        return false;
+                    });
+
+                    if (chat.pending.length !== pendingBefore) {
+                        chat.lastData = "";
+                    }
+                }
+
                 const devUsername = getCookie("dev-username");
                 const currentMessageData = JSON.stringify(data);
 
@@ -1497,7 +1861,14 @@
                     const latestMessage = data[data.length - 1];
                     const currentTabHash = window.location.hash.toLowerCase();
                     const onChatbox = currentTabHash === "#chatbox" || currentTabHash === "#/chatbox";
-                    newMessageAux.play();
+                    const freshCount = data.length - chat.lastCount;
+                    const silenced = Math.min(freshCount, chat.silent);
+
+                    chat.silent -= silenced;
+
+                    if (freshCount > silenced) {
+                        newMessageAux.play();
+                    }
 
                     if (!onChatbox && latestMessage.username !== devUsername) {
                         setUnreadStatus(true);
@@ -1515,8 +1886,9 @@
                 }
 
                 chat.lastData = currentMessageData;
+                chat.lastItems = data;
 
-                if (data.length === 0) {
+                if (data.length === 0 && !chat.pending.some(p => !p.landed && Date.now() >= p.revealAt - 5)) {
                     container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
                     return;
                 }
@@ -1527,7 +1899,9 @@
 
             } catch (err) {
                 console.error("Fetch error:", err);
-                container.innerHTML = `<p style='color:red;'>Failed to load messages: ${escapeHtml(err.message)}</p>`;
+                if (true) {
+                    container.innerHTML = `<b class="bubble-bubble message-name">No internet. Hold on a goose...</b>`;
+                }
                     chat.retryCount = (chat.retryCount || 0) + 1;
                     var delay = Math.min(1000 * 2 ** chat.retryCount, 15000); 
                     setTimeout(() => loadChat(key, true), delay);
@@ -1964,21 +2338,36 @@
                 createButton.textContent = "Create";
             }
         }
-
         function formatOutgoingMessage(text) {
-            return text
+            return String(text)
                 .replace(/\r?\n/g, "[newline]")
                 .replace(/\[goose\]/g, "𓅬")
-                .replace(/\briker\b/gi, "@thenumberonegooseling")
-                .replace(/\bryker\b/gi, "@thenumberonegooseling")
-                .replace(/\baarya\b/gi, "@agooseworshipper")
-                .replace(/\bsaam\b/gi, "@antigooseling")
-                .replace(/\bcora\b/gi, "@laureline")
-                .replace(/\bcrow\b/gi, "@laureline")
-                .replace(/\brhodes\b/gi, "@robogoose")
-                .replace(/\bjohan\b/gi, "@goseultimate")
-                .replace(/\beshi\b/gi, "@eshigoose")
-                .replace(/\bcooper\b/gi, "@goosercooper");
+                .replace(/\briker\b/gi, "thenumberonegooseling")
+                .replace(/\bryker\b/gi, "thenumberonegooseling")
+                .replace(/\baarya\b/gi, "agooseworshipper")
+                .replace(/\bsaam\b/gi, "antigooseling")
+                .replace(/\bcora\b/gi, "laureline")
+                .replace(/\bcrow\b/gi, "laureline")
+                .replace(/\brhodes\b/gi, "robogoose")
+                .replace(/\bjohan\b/gi, "goseultimate")
+                .replace(/\beshi\b/gi, "eshigoose")
+                .replace(/\bcooper\b/gi, "goosercooper");
+        }
+
+        function rerenderChat(chat) {
+            const container = document.getElementById(chat.containerId);
+
+            if (!container || chatRegistry[chat.key] !== chat) return;
+
+            renderChat(chat, container, chat.lastItems || []);
+        }
+
+        function renderPending(chat) {
+            rerenderChat(chat);
+
+            const container = document.getElementById(chat.containerId);
+
+            if (container) container.scrollTop = 0;
         }
 
         function bindChatForm(chat) {
@@ -2000,17 +2389,19 @@
                 }
             });
 
-            form.addEventListener("submit", async (e) => {
+            form.addEventListener("submit", (e) => {
                 e.preventDefault();
                 if (pauseGooseChat && chat.custom) return;
 
-                const username = getCookie("dev-username");
+                const username = getCookie("dev-username") || "Anonymous";
                 const input = document.getElementById(chat.inputId);
                 const sendButton = form.querySelector("button[type='submit']");
 
                 if (!input || !input.value.trim() || !sendButton) return;
 
+                const rawText = input.value;
                 const messageText = formatOutgoingMessage(input.value.trim());
+                const isSame = d => d.username === username && String(d.message || "") === messageText;
 
                 input.value = "";
 
@@ -2021,28 +2412,26 @@
                 sendButton.textContent = "Sending...";
                 sendButton.classList.add("send-button-active");
 
-                try {
-                    const response = await chatPost(chat, {
-                        username: username || "Anonymous",
-                        message: messageText
-                    });
+                const createdAt = Date.now();
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error! Status: ${response.status}`);
-                    }
+                const pendingPost = {
+                    username: username,
+                    message: messageText,
+                    timestamp: new Date(createdAt).toISOString(),
+                    createdAt: createdAt,
+                    revealAt: createdAt + 800,
+                    likes: [],
+                    pendingId: createdAt + "-" + Math.random().toString(36).slice(2),
+                    sent: false,
+                    sentAt: 0,
+                    landed: false,
+                    baseCount: (chat.lastItems || []).filter(isSame).length + chat.pending.filter(isSame).length
+                };
 
-                    const result = await response.json();
+                chat.pending.push(pendingPost);
+                chat.silent++;
 
-                    if (result.status && result.status !== "success") {
-                        throw new Error(result.message || "Failed to send message.");
-                    }
-
-                    chat.lastData = "";
-                    await loadChat(chat.key, false);
-
-                } catch (err) {
-                    console.error("Failed to send message:", err);
-                } finally {
+                const unlock = () => {
                     const currentInput = document.getElementById(chat.inputId);
 
                     if (currentInput) {
@@ -2059,7 +2448,66 @@
                         currentInput.focus();
                         if (chat.custom) applyPauseState(chat);
                     }
-                }
+                };
+
+                const send = async () => {
+                    try {
+                        const response = await chatPost(chat, {
+                            username: username,
+                            message: messageText
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP Error! Status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.status && result.status !== "success") {
+                            throw new Error(result.message || "Failed to send message.");
+                        }
+
+                        pendingPost.sent = true;
+                        pendingPost.sentAt = Date.now();
+
+                        chat.lastData = "";
+                        await loadChat(chat.key, false);
+
+                    } catch (err) {
+                        console.error("Failed to send message:", err);
+
+                        chat.pending = chat.pending.filter(p => p !== pendingPost);
+
+                        if (!pendingPost.landed) {
+                            chat.silent = Math.max(0, chat.silent - 1);
+
+                            const currentInput = document.getElementById(chat.inputId);
+
+                            if (currentInput && !currentInput.value) {
+                                currentInput.value = rawText;
+                            }
+
+                            renderPending(chat);
+                        }
+                    } finally {
+                        if (chat.custom) applyPauseState(chat);
+                    }
+                };
+
+                chat.sendChain = chat.sendChain.then(send);
+
+                setTimeout(() => {
+                    const shown = pendingPost.landed || chat.pending.includes(pendingPost);
+
+                    chat.pending = chat.pending.filter(p => !(p.landed && Date.now() >= p.revealAt - 5));
+                    renderPending(chat);
+
+                    if (shown) {
+                        newMessageAux.play();
+                    }
+
+                    unlock();
+                }, 800);
             });
         }
 
@@ -2255,7 +2703,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-
+            if (!window.location.hash) openTab(null, 'Dashboard')
             let disclaimerTextContent;
 
             handleAccountType();
@@ -2283,7 +2731,7 @@
             const username = getCookie("dev-username");
 
             if (username) {
-                document.querySelectorAll(".name").forEach((name) => {
+                document.querySelectorAll("#dashboard .name, #account .name").forEach((name) => {
                     name.textContent = decodeURIComponent(username);
                 });
             }
@@ -2309,6 +2757,8 @@
                     adminFeatureToggle.checked = false;
                 }
             }
+
+            initPopups();
 
             updateAdminFeatures();
             selectDefaultChatbox();
@@ -2968,6 +3418,107 @@
         });
     </script>
     <style>
+        .name, .message-containers span strong, .reply-user, .message-name{
+            text-shadow:
+    0 0 10px orangered !important
+        }
+
+        .send-button-active,
+        .chat-input-active {
+            transition: none !important;
+        }
+
+        .chat-bubble, .bubble-bubble {
+            position: relative;
+            display: block;
+            max-width: 80%;
+            box-sizing: border-box; /* normally against this */
+            margin-left: 10px;
+            padding: 7px 12px 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 14px;
+            box-shadow: 0px 3px 6px #222;
+        }
+        .bubble-bubble {width:100% !important;text-align: center; margin: 0 auto !important;margin-bottom:7px !important;}
+
+        .chat-bubble {
+            --bubble-bg: #dcf8c6;
+            background-color: var(--bubble-bg);
+
+        }
+
+        .chat-bubble::before {
+            content: "";
+            position: absolute;
+            left: -9px;
+            top: 10px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 7px 9px 7px 0;
+            border-color: transparent var(--bubble-bg) transparent transparent;
+        }
+        .chat-bubble-own { /* ur own chat bubble */
+            margin-left: 0;
+            margin-right: 10px;
+            --bubble-bg: #f7f7f7; /* variable: makes your messages diff color */
+        }
+
+        .chat-bubble-own::before {
+            left: auto;
+            right: -9px;
+            border-width: 7px 0 7px 9px;
+            border-color: transparent transparent transparent var(--bubble-bg);
+        }
+
+        .chat-bubble > strong {
+            display: block;
+        }
+
+        .chat-bubble .message-span {
+            margin: 2px 0;
+        }
+
+        .chat-bubble-footer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+        }
+
+        .chat-bubble-footer .chat-timestamp {
+            margin-left: 0 !important;
+        }
+
+        .chat-bubble-footer .chat-status {
+            font-size: 10px;
+            font-family: 'Comic Sans MS', 'Chalkboard', sans-serif;
+            letter-spacing: -2px;
+            margin-right: 2px;
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+
+        .chat-bubble-footer .chat-status.sent {
+            color: #666;
+        }
+
+        .chat-bubble-footer .chat-status.delivered {
+            color: #1e88e5;
+        }
+
+        .chat-bubble-footer button {
+            padding: 0 5px !important;
+            font-size: 10px !important;
+            line-height: 1.5 !important;
+            font-family: 'Comic Sans MS', 'Chalkboard', sans-serif !important;
+            border-radius: 4px !important;
+            cursor: pointer;
+        }
+    </style>
+    <style>
         .custom-image-button {
             padding: 8px !important;
             border: none !important;
@@ -3043,24 +3594,26 @@
             overflow: hidden;
             border: none;
             background-color: #e2dddd;
+           
         }
 
-        .tab button {
+        .tablinks {
             background-color: inherit;
             float: left;
             border: none;
             outline: none;
             cursor: pointer;
             padding: 14px 16px;
-            transition: 0.3s;
+            transition: box-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out !important;
             font-size: 20px;
+            
         }
 
-        .tab button:hover {
+        .tablinks:hover {
             background-color: #ccc;
         }
 
-        .tab button.active {
+        .tablinks.active {
             background-color: gainsboro;
             position: relative;
             z-index: 12;
@@ -3323,8 +3876,8 @@
             font-style: normal !important;
         }
 
-        .message-containers { overflow-x:hidden !important }
-        .admin-feature-setting {
+        .message-containers, #loser-message-container { overflow-x:hidden !important; background-image: url('/assets/images/chatbox-texture.png') !important}
+        .admin-feature-setting, .toggle-feature-setting {
             margin: 20px auto;
             margin-top:0 !important;
             padding: 12px 16px;
@@ -3345,7 +3898,7 @@
             cursor: url('/assets/cursors/pointer.png'), pointer;
         }
 
-        .admin-feature-setting:hover{
+        .admin-feature-setting:hover, .toggle-feature-setting:hover{
             background-color: #b0a9a9;
         }
 
@@ -3385,6 +3938,125 @@
             transform: translateX(22px);
         }
 
+        .popups-window {
+            position: fixed;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            width:700px;
+            height:auto;
+            background-color: rgba(192, 192, 192, 0.688);
+            box-shadow: -5px 4px 10px rgba(51, 51, 51, 0.6333);
+            z-index: 60;
+            animation-name: popupsSway;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-duration: 0.5s;
+        }
+
+        .popups-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            user-select: none;
+        }
+
+        .popups-close {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background-color: orangered;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 26px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 2px 3px 6px rgba(51, 51, 51, 0.6);
+        }
+
+        .popups-close:hover {
+            background-color: darkred;
+        }
+
+        .popups-control {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            padding: 12px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background-color: rgba(192, 192, 192, 0.95);
+            color: black;
+            text-align: center;
+            box-shadow: -5px 4px 10px rgba(51, 51, 51, 0.6333);
+            user-select: none;
+            will-change: transform;
+            z-index: 70;
+        }
+
+        .popups-control-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .popups-control-count {
+            margin: 8px 0;
+            font-size: 18px;
+        }
+
+        .popups-control-kill {
+            width: 100%;
+            padding: 6px 8px;
+            border: none;
+            border-radius: 8px;
+            background-color: orangered;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .popups-control-kill:hover {
+            background-color: darkred;
+        }
+
+        .popups-control-close {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            border: none;
+            background: none;
+            color: black;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 20px;
+            cursor: pointer;
+        }
+
+                @keyframes popupsSway {
+            from {
+                transform: translateX(calc(var(--popup-travel) * -1));
+            }
+
+            to {
+                transform: translateX(var(--popup-travel));
+            }
+        }
         @keyframes editModalAppear {
             from {
                 opacity: 0;
@@ -4132,7 +4804,7 @@
             margin-right: 0px;
             border-radius: 4px;
             background-color: #b971da75;
-            font-weight: bold;
+            font-weight: normal;
             font-size: 0.9em;
         }
 
@@ -4476,7 +5148,10 @@
         }
         .tablinks {
             font-weight:500 !important;
-            transition:box-shadow 0.3s ease !important
+            transition:box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+        .tablinks:hover{
+
         }
         #manage-delete-button:hover {
             background: #8c232d;
@@ -4787,7 +5462,7 @@
 
   async function viewIndex(el, my) {
     const gooseBody = h("div", {}, loading()), customBody = h("div", {}, loading());
-    const bar = h("div", { className: "ol-bar" }, h("h2", { className: "ol-title" }, "𓅬 The Gooseling Outlets"));
+    const bar = h("div", { className: "ol-bar" }, h("h2", { className: "ol-title" }, "𓅬 The Gooseling Outlet"));
     el.replaceChildren(bar, h("div", { className: "ol-cols" },
       h("div", {}, h("h3", {}, "Goose"), gooseBody), h("div", {}, h("h3", {}, "Custom"), customBody)));
     if (isAdmin()) bar.append(h("button", { type: "button", className: "ol-b ol-go", textContent: "✦ New outlet", onclick: openOutletModal }));
@@ -4884,7 +5559,7 @@
         margin: 0 !important; padding: 2px 9px !important;
         border: none !important; border-radius: 10px !important;
         background: rgba(255, 255, 255, 0) !important; box-shadow: none !important;
-        color: #222 !important; font: inherit !important; font-size: 13px !important; line-height: 1.5;
+        color: #222 !important; font: inherit !important; font-size: 10px !important; line-height: 1.5;
         opacity: .22; cursor: url('/assets/cursors/pointer.png'), pointer;
         transition: opacity .45s ease, transform .3s ease, background-color .3s ease,
                     box-shadow .3s ease, text-shadow .3s ease !important;
@@ -4975,18 +5650,19 @@
     .gw-clear { margin-left: auto; background: #75baa1; color: #222; }
     .gw-clear:hover { background: #498a72; color: #fff; }
     .gw-eraser:active, .gw-clear:active { transform: translateY(1px); }
-    .gw-status { font-size: 11px; color: #444; user-select: none; }
+    .gw-status { font-size: 11px; color: #444; user-select: none; background: gainsboro; padding:3px; text-align:center;}
 
-    /* live cursors with name tooltips */
     .gw-cursors { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; }
-    .gw-cur { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
-              transition: transform .8s linear, opacity .3s ease; }
-    .gw-cur svg { display: block; filter: drop-shadow(0 1px 2px rgba(51, 51, 51, .5)); }
-    .gw-cur-name { position: absolute; left: 13px; top: 15px; white-space: nowrap; font-size: 12px; line-height: 1.5;
+    .gw-tip { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease; }
+    .gw-tip.gw-on { opacity: 1; }
+    .gw-tip-name { position: relative; display: block; width: max-content; white-space: nowrap; font-size: 12px; line-height: 1.5;
                    padding: 0 8px; border-radius: 10px; color: #222; user-select: none;
-                   box-shadow: 0 2px 5px rgba(51, 51, 51, .4); }
+                   transform: translate(-50%, calc(-100% - 9px)); box-shadow: 0 2px 5px rgba(51, 51, 51, .4); }
+    .gw-tip-name::after { content: ''; position: absolute; top: 100%; left: calc(50% + var(--ax, 0px)); margin-left: -5px;
+                          border: 5px solid transparent; border-bottom: 0; border-top-color: var(--tip-bg); }
+    .gw-tip.gw-below .gw-tip-name { transform: translate(-50%, 9px); }
+    .gw-tip.gw-below .gw-tip-name::after { top: auto; bottom: 100%; border-top: 0; border-bottom: 5px solid var(--tip-bg); border-top-color: transparent; }
 
-    /* naming / confirm dialog (reuses the site's .edit-modal look) */
     .edit-modal.gw-modal { width: 380px; max-width: 90vw; }
     .gw-modal p { margin: 0 0 8px; }
     .gw-input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #aaa; border-radius: 6px;
@@ -4998,14 +5674,14 @@
     .gw-m-ok:hover { background: rgb(126, 179, 223); color: #222 !important; }
 
     @media (prefers-reduced-motion: reduce) {
-        .gw-layer, .gw-layer.gw-on, .gw-open { transition: none !important; }
+        .gw-layer, .gw-layer.gw-on, .gw-open, .gw-tip { transition: none !important; }
     }
 </style>
 
 <script>
 (function () {
   const API_URL = 'https://script.google.com/macros/s/AKfycbz-DeI74L0yubvlkIidmD_Y8LB-8lpXU0ec9HjCZ5m0X_nUf9NSe5WsF8uMaunoi3NH2Q/exec';
-  const CHATBOX_SELECTOR = '.chatbox-tab-page';   // each chat's page = messages + input row
+  const CHATBOX_SELECTOR = '.chatbox-tab-page';
   const chatIdOf = el => el.dataset.chatId || el.id || 'default';
 
   const W = 1200, H = 700;
@@ -5020,7 +5696,6 @@
   };
   const hueOf = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h % 360; };
 
-  // ----- site-styled dialog (replaces prompt/confirm) -----
   function modal(o) {
     return new Promise(resolve => {
       const ov = document.createElement('div');
@@ -5053,7 +5728,7 @@
   }
 
   function attach(el) {
-    if (el.__gw) {   // re-attach pieces if the chat re-rendered and dropped them
+    if (el.__gw) {
       if (!el.contains(el.__gw.layer)) { el.appendChild(el.__gw.layer); el.appendChild(el.__gw.btn); }
       return;
     }
@@ -5066,14 +5741,13 @@
     let color = COLORS[0], size = SIZES[1], erasing = false;
     let drawing = false, fresh = false, pts = [], pending = [], sending = false;
 
-    // ----- DOM -----
     const btn = document.createElement('button');
-    btn.className = 'gw-open'; btn.type = 'button'; btn.textContent = '✎ draw'; btn.title = 'Open whiteboard';
+    btn.className = 'gw-open'; btn.type = 'button'; btn.textContent = '✎ draw'; btn.title = 'Open whiteboard...'; 
 
     const layer = document.createElement('div');
     layer.className = 'gw-layer';
     layer.innerHTML =
-      '<div class="gw-head"><button type="button" class="gw-btn gw-back">← Chat</button><h2></h2><h4></h4></div>' +
+      '<div class="gw-head"><button type="button" class="gw-btn gw-back">← Back to Chatbox</button><h2></h2><h4></h4></div>' +
       '<div class="gw-tabsrow"><div class="gw-tabs"></div>' +
       '<button type="button" class="gw-mini gw-rename" title="Rename this whiteboard">✎</button>' +
       '<button type="button" class="gw-mini gw-add" title="New whiteboard">+</button></div>' +
@@ -5081,7 +5755,7 @@
       '<div class="gw-tools"><div class="gw-group gw-sws"></div><input type="color" value="#222222" title="Custom color">' +
       '<div class="gw-sep"></div><div class="gw-group gw-pens"></div>' +
       '<button type="button" class="gw-eraser">Eraser</button>' +
-      '<span class="gw-status">connecting...</span><button type="button" class="gw-clear">✦ Clear</button></div>';
+      '<button type="button" class="gw-clear">Clear</button></div><span class="gw-status">Hold on a goose...</span>';
     el.appendChild(btn); el.appendChild(layer);
     el.__gw = { layer, btn };
 
@@ -5089,8 +5763,8 @@
     const tabsEl = $('.gw-tabs'), stage = $('.gw-stage'), cv = $('canvas'), ctx = cv.getContext('2d');
     const statusEl = $('.gw-status'), eraserEl = $('.gw-eraser'), customEl = $('input[type=color]');
     const h2 = $('.gw-head h2'), h4 = $('.gw-head h4');
-    const curLayer = $('.gw-cursors'), curEls = {};
-    let lastCursors = {}, myCur = null;
+    const curLayer = $('.gw-cursors'), tips = {};
+    let primed = false;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     const chatName = () => {
@@ -5099,7 +5773,6 @@
     };
     const renderHead = () => { h2.textContent = chatName(); h4.textContent = boards[cur].name; };
 
-    // ----- drawing helpers -----
     const wipe = () => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); };
     function drawChunk(s) {
       const p = s.p;
@@ -5109,16 +5782,15 @@
       for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
       ctx.stroke();
     }
-    function redraw() { wipe(); boards[cur].strokes.forEach(drawChunk); renderCursors(lastCursors); }
+    function redraw() { wipe(); boards[cur].strokes.forEach(drawChunk); renderTips(); }
     function fit() {
-      const w = stage.clientWidth - 24, h = stage.clientHeight - 24;   // minus padding
+      const w = stage.clientWidth - 24, h = stage.clientHeight - 24;
       if (w <= 0 || h <= 0) return;
       const s = Math.min(w / W, h / H);
-      cv.style.width = W * s + 'px'; cv.style.height = H * s + 'px'; renderCursors(lastCursors);
+      cv.style.width = W * s + 'px'; cv.style.height = H * s + 'px'; renderTips();
     }
     new ResizeObserver(fit).observe(stage);
 
-    // ----- tabs -----
     function renderTabs() {
       tabsEl.innerHTML = '';
       order.forEach(id => {
@@ -5151,7 +5823,6 @@
       renderTabs(); send();
     };
 
-    // ----- tools -----
     const swsEl = $('.gw-sws'), pensEl = $('.gw-pens');
     function renderTools() {
       swsEl.innerHTML = ''; pensEl.innerHTML = '';
@@ -5183,7 +5854,6 @@
     const penColor = () => erasing ? '#ffffff' : color;
     const penWidth = () => erasing ? size * 2 + 6 : size;
 
-    // ----- pointer input -----
     function pos(e) {
       const r = cv.getBoundingClientRect();
       return [Math.round((e.clientX - r.left) * W / r.width), Math.round((e.clientY - r.top) * H / r.height)];
@@ -5194,24 +5864,26 @@
       drawChunk({ c: penColor(), w: penWidth(), p: pts });
     });
     cv.addEventListener('pointermove', e => {
-      const q = pos(e);
-      myCur = [Math.max(0, Math.min(W, q[0])), Math.max(0, Math.min(H, q[1]))];
       if (!drawing) return;
       const p = pos(e);
       drawChunk({ c: penColor(), w: penWidth(), p: [pts[pts.length - 1], p] });
       pts.push(p);
     });
-    const stop = () => { if (drawing) { flush(); drawing = false; } };
+    const stop = () => {
+      if (!drawing) return;
+      flush(); drawing = false;
+      const last = pts[pts.length - 1];
+      if (last) pending.push({ cid: me, t: 'end', b: cur, u: getName(), x: last[0], y: last[1] });
+      send();
+    };
     cv.addEventListener('pointerup', stop);
     cv.addEventListener('pointercancel', stop);
-    cv.addEventListener('pointerleave', () => { myCur = null; });
 
-    // ----- sending -----
     function flush() {
       if (pts.length > 1 || fresh) {
         const chunk = { cid: me, b: cur, c: penColor(), w: penWidth(), p: pts };
         boards[cur].strokes.push(chunk); pending.push(chunk);
-        fresh = false; pts = [pts[pts.length - 1]];   // keep last point so chunks connect
+        fresh = false; pts = [pts[pts.length - 1]];
       }
     }
     function send() {
@@ -5220,7 +5892,7 @@
       sending = true;
       fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ chat, items: batch })
       })
         .then(r => { if (!r.ok) throw new Error(r.status); sending = false; send(); })
@@ -5228,13 +5900,14 @@
     }
     setInterval(() => { if (drawing) flush(); send(); }, 300);
 
-    // ----- receiving -----
-    function apply(it) {
+    function apply(it, live) {
       const b = it.b || it.id || 'main';
       if (it.t === 'board') {
         if (!boards[it.id]) { boards[it.id] = { name: it.name, strokes: [] }; order.push(it.id); renderTabs(); }
       } else if (it.t === 'rename') {
         if (boards[it.id]) { boards[it.id].name = it.name; renderTabs(); }
+      } else if (it.t === 'end') {
+        if (live) showTip(it);
       } else if (it.t === 'clear') {
         if (boards[b]) { boards[b].strokes = []; if (b === cur) redraw(); }
       } else if (it.p && it.p.length) {
@@ -5253,46 +5926,53 @@
           .then(r => {
             if (my !== loop) return;
             n = r.n;
-            lastCursors = r.cursors || {}; renderCursors(lastCursors);
-            r.items.forEach(raw => { try { const it = JSON.parse(raw); if (it.cid !== me) apply(it); } catch (e) {} });
-            statusEl.textContent = 'live';
+            const live = primed; primed = true;
+            r.items.forEach(raw => { try { const it = JSON.parse(raw); if (it.cid !== me) apply(it, live); } catch (e) {} });
+            statusEl.textContent = 'Live';
             setTimeout(tick, 800);
           })
-          .catch(() => { if (my !== loop) return; statusEl.textContent = 'reconnecting...'; setTimeout(tick, 3000); });
+          .catch(() => { if (my !== loop) return; statusEl.textContent = 'No internet. Hold on a goose...'; setTimeout(tick, 3000); });
       })();
     }
 
-    // ----- open / close -----
-    // ----- live cursors -----
     function pollQuery() {
-      return '?chat=' + encodeURIComponent(chat) + '&n=' + n + '&cid=' + me + '&u=' + encodeURIComponent(getName()) +
-        (myCur ? '&cx=' + myCur[0] + '&cy=' + myCur[1] + '&cb=' + encodeURIComponent(cur) : '&cx=-1');
+      return '?chat=' + encodeURIComponent(chat) + '&n=' + n + '&cid=' + me + '&u=' + encodeURIComponent(getName()) + '&cx=-1';
     }
-    function placeCursor(d, c) {
-      const x = cv.offsetLeft + c.x / W * cv.clientWidth, y = cv.offsetTop + c.y / H * cv.clientHeight;
-      d.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    function placeTip(t) {
+      const on = t.b === cur && cv.clientWidth > 0;
+      t.el.style.display = on ? '' : 'none';
+      if (!on) return;
+      const x = cv.offsetLeft + t.x / W * cv.clientWidth, y = cv.offsetTop + t.y / H * cv.clientHeight;
+      const half = t.el.firstChild.offsetWidth / 2;
+      const lo = cv.offsetLeft + half + 2, hi = cv.offsetLeft + cv.clientWidth - half - 2;
+      const cx = lo > hi ? x : Math.max(lo, Math.min(hi, x));
+      t.el.firstChild.style.setProperty('--ax', (x - cx) + 'px');
+      t.el.classList.toggle('gw-below', y < 40);
+      t.el.style.transform = 'translate(' + cx + 'px,' + y + 'px)';
     }
-    function renderCursors(map) {
-      const seen = {};
-      Object.keys(map || {}).forEach(id => {
-        const c = map[id];
-        if (!c || c.b !== cur || !cv.clientWidth) return;   // only cursors on the board I'm looking at
-        seen[id] = 1;
-        let d = curEls[id];
-        if (!d) {
-          const hue = hueOf(c.u);
-          d = document.createElement('div'); d.className = 'gw-cur';
-          d.innerHTML = '<svg width="16" height="20" viewBox="0 0 16 20"><path d="M1.5 1.5v14l4-3.6 2.8 6.2 2.6-1.2-2.8-6.1h5.4z" fill="hsl(' + hue + ',55%,38%)" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/></svg><span class="gw-cur-name"></span>';
-          d.lastChild.style.background = 'hsl(' + hue + ',60%,76%)';
-          d.style.opacity = 0; d.style.transition = 'none';
-          curLayer.appendChild(d); curEls[id] = d;
-          placeCursor(d, c);
-          void d.offsetWidth;                                // so it appears in place, then fades in
-          d.style.transition = ''; d.style.opacity = 1;
-        } else placeCursor(d, c);
-        d.lastChild.textContent = c.u;
-      });
-      Object.keys(curEls).forEach(id => { if (!seen[id]) { curEls[id].remove(); delete curEls[id]; } });
+    function renderTips() { Object.keys(tips).forEach(id => placeTip(tips[id])); }
+    function dropTip(id) {
+      const t = tips[id]; if (!t) return;
+      clearTimeout(t.timer); t.el.remove(); delete tips[id];
+    }
+    function showTip(it) {
+      const x = Number(it.x), y = Number(it.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+      dropTip(it.cid);
+      const name = String(it.u || 'Anonymous').slice(0, 40), hue = hueOf(name);
+      const d = document.createElement('div'); d.className = 'gw-tip';
+      d.innerHTML = '<span class="gw-tip-name"></span>';
+      d.firstChild.textContent = name;
+      d.firstChild.style.background = 'hsl(' + hue + ',60%,76%)';
+      d.firstChild.style.setProperty('--tip-bg', 'hsl(' + hue + ',60%,76%)');
+      curLayer.appendChild(d);
+      const t = tips[it.cid] = { el: d, x: Math.max(0, Math.min(W, x)), y: Math.max(0, Math.min(H, y)), b: it.b || 'main' };
+      placeTip(t);
+      requestAnimationFrame(() => d.classList.add('gw-on'));
+      t.timer = setTimeout(() => {
+        d.classList.remove('gw-on');
+        t.timer = setTimeout(() => { if (tips[it.cid] === t) dropTip(it.cid); }, 300);
+      }, 2500);
     }
 
     btn.onclick = () => {
@@ -5302,7 +5982,7 @@
     $('.gw-back').onclick = () => {
       stop(); open = false; loop++;
       layer.classList.remove('gw-on');
-      lastCursors = {}; renderCursors({}); myCur = null;
+      Object.keys(tips).forEach(dropTip);
       fetch(API_URL + '?chat=' + encodeURIComponent(chat) + '&n=' + n + '&cid=' + me + '&cx=-1').catch(() => {});
     };
   }
@@ -5310,7 +5990,6 @@
   function scan() { document.querySelectorAll(CHATBOX_SELECTOR).forEach(attach); }
   function start() {
     scan();
-    // custom chats get added later as new pages, so watch for those
     const host = document.querySelector('.chatbox-tab-pages') || document.body;
     new MutationObserver(scan).observe(host, { childList: true });
   }
@@ -5318,7 +5997,72 @@
   else start();
 })();
 </script>
+    <style class="testing-stylesheet">
 
+        div.testing-table {
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2px auto;
+            height:auto;
+        }
+        .testing-table-info {
+            width:300px !important;
+            max-height:500px !important;
+            color:#111 !important;
+            background-color:rgb(217, 199, 199) !important;
+            padding:8px;
+            border-radius:14px;
+            box-shadow: 0px 4px 10px #111;
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .testing-table-info:hover, .testing-table-info:active {
+            background-color:rgb(185, 171, 171) !important;
+            color:black;
+            box-shadow: 0px 2px 6px #333 !important;
+        }
+        .testing-table-info:active {
+            background-color:rgb(171, 138, 138) !important;
+            cursor:wait !important;
+        }
+    </style>
+    <style>
+        #chatbox-sidebar-toggle {
+            flex: 0 0 18px;
+            width: 18px;
+            padding: 0;
+            border: none;
+            border-right: 1px solid #ccc;
+            background-color: #e2dddd;
+            color: #111;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #chatbox-sidebar-toggle:hover {
+            background-color: #ccc;
+        }
+
+        .chatbox-tab-buttons {
+            transition: width 0.3s ease, flex-basis 0.3s ease, border-right-width 0.3s ease;
+        }
+
+        .chatbox-tabs-layout.sidebar-collapsed .chatbox-tab-buttons {
+            width: 0 !important;
+            flex: 0 0 0 !important;
+            border-right-width: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .chatbox-tabs-layout.sidebar-collapsed:has(.chatbox-tab-button.unread) #chatbox-sidebar-toggle {
+            box-shadow: inset 3px 0 0 darkorange;
+        }
+    </style>
 </head>
 
 <body>
@@ -5360,62 +6104,39 @@
                 <button class="tablinks" onclick="openTab(event, 'Chatbox')">Chatbox</button>
                 <button class="tablinks" onclick="openTab(event, 'Outlet')">Outlet</button>
                 <button class="tablinks" onclick="openTab(event, 'Account')">Account</button>
-
             </div>
 
             <div id="dashboard" class="tabcontent">
-                <h2>Welcome to The Gooseling Panel, @<span class="name">PIRATED</span>!</h2>
+                <h2>Welcome to The Gooseling Panel, <span class="name">loading...</span>!</h2>
                 <p>This is The Gooseling Panel where you can test new features, use the chatbox, and recieve notifications. <br/> Extra GOOSE content may appear soon.</p>
-                <h2>Test: Goose Latin Book</h2>
-                <center><div class="idiv"><iframe src="/assets/github/book.html" allowfullscreen></iframe></div></center>
-                <center><h2>Test: Goose Latin to English Translator</h2>
-                <div class="udiv"><iframe style="margin:0 auto;display:inline-block" src="/assets/github/translate-technological.html" allowfullscreen></iframe></div></center>
+                <center>
+                    <h3>Available Tests</h3>
+                    <table class="testing-table" rowspan="2">
+                        <tr>
+                            <td>
+                                <div class="testing-table-info" onclick="setTimeout(()=>{window.location.href='/assets/github/book.html'}, 0);">
+                                    <h4>Goose Latin Book</h4>
+                                    <span>A fun way for your fellow gooselings or yourself to learn Goose Latin...</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="testing-table-info" onclick="window.location.href='/assets/github/translate-technological.html'">
+                                    <h4>Translation Service</h4>
+                                    <span>Translate between Goose Latin and English with more support coming soon...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </center>
             </div>
 
             <div id="notifications" class="tabcontent">
                 <h2>Notifications</h2>
-                <div id="notifbox" style="display:flex;gap:15px;flex-direction: column;">
+                <div id="notifbox" style="display:flex; gap:15px; flex-direction: column;">
                     <div>
-                        <p><strong>[Highlighted by @thegoose] Try GooseGum - Goosism's Leading Chewing Gum & Breath Mint Brand • @goosegum-worshippromotions</strong></p>
-                        <p>Attention gooselings, this is the moment all of you have been waiting for! GooseGum is out now! We are starting out with five types: GooseGum Saver, (cheap vanilla) GooseGum Standard, (fresh mint) GooseGum Deluxe, (fresh herbal oils, mint, and real digestable gold) GooseGum Opal, (features an apple-like mint refreshing taste with gold) and GooseGum Premium. (contains real gold, diamond, sapphire, ruby, and emerald while offering the herbal taste) Get them in packs of 24 while they last!</p>
-                    </div>
-                    <div>
-                        <p><strong>[SPONSORED] Enjoy 20% off at Saint Duck's Restaurant and Gastropub • @officialsaintduck</strong></p>
-                        <p>Calling all gooselings! You can enjoy 20% off on any entree at St. Duck's! Scan you gooseling ID found on the account tab of the panel and show it to apply your discount.</p>
-                    </div>
-                    <div>
-                        <p><strong>Your first notification • @thegoose</strong></p>
-                        <p>Hello there. It's The Goose typing. This is a test.</p>
+                        <h3>The Notifications Centre is actively being worked on at this second. Stay tuned, as it will be really fun when it gets released! - The Gosedevs</h3>
                     </div>
                 </div>
-            </div>
-
-            <div id="administrator" class="tabcontent">
-                <h2>Administrators: What are they?</h2>
-                <p>Administrators, commonly shortened to admins and also known as goosadmins, are moderators who run, manage, and moderate The Goose Chatbox. These select gooselings can delete and comments, go anonymous under aliases, and gain a lot more perks compared to standard-level gooselings. This status is given by @thegoose, and it's estimated that only ten or so gooselings have administrator access.<br>
-                A star icon (✦) next to a feature indicates that it is an admin perk. Star icons do not appear for standard-tier individuals.<br>
-                Messages from admin accounts do not have the star icon next to their name to avoid unnecessary harassment.</p>
-                <p>
-                    <b>Perks</b>
-                    <p>Some, but not all, perks include:</p>
-                    <ul>
-                        <li>
-                            <p>Faster servers for faster messaging.</p>
-                        </li>
-                        <li>
-                            <p>Twice the encryption compared to a normal gooseling account</p>
-                        </li>
-                        <li>
-                            <p>The abillity to delete, edit, and clear all messages</p>
-                        </li>
-                        <li>
-                            <p>Alias mode (going under an alias which cannot be an existing account)</p>
-                        </li>
-                        <li>
-                            <p>Admin-only messaging</p>
-                        </li>
-                    </ul>
-                </p>
             </div>
 
             <div id="guidelines" class="tabcontent">
@@ -5479,6 +6200,8 @@
                         <button type="button" class="chatbox-tab-button admin-only-feature" id="new-chat-button" title="Create a new chat..." style="display:none;">+ New Chat</button>
                     </div>
 
+                    <button type="button" id="chatbox-sidebar-toggle" title="Collapse sidebar" aria-expanded="true">‹</button>
+
                     <div class="chatbox-tab-pages">
                         <div id="chatbox-main" class="chatbox-tab-page">
                             <div id="message-container" class="message-containers"></div>
@@ -5525,6 +6248,13 @@
                     </label>
                 </div>
 
+                <div id="popups-toggle-container" class="toggle-feature-setting">
+                    <label title="Show POPUPS!!" class="admin-toggle">
+                        <span>Show popups</span>
+                        <input type="checkbox" id="show-popups">
+                        <span class="admin-toggle-slider"></span>
+                    </label>
+                </div>
                 <center>
                     <button title="Sign out of your gooseling account..." onclick="
                         document.cookie = 'is-developer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -5668,5 +6398,38 @@
     <footer>
         <h1 class="f1">The Goose Site Legacy</h1>
     </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const layout = document.querySelector(".chatbox-tabs-layout");
+            const toggle = document.getElementById("chatbox-sidebar-toggle");
+
+            if (!layout || !toggle) {
+                return;
+            }
+
+            function setCollapsed(collapsed) {
+                layout.classList.toggle("sidebar-collapsed", collapsed);
+                toggle.textContent = collapsed ? "›" : "‹";
+                toggle.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
+                toggle.setAttribute("aria-expanded", String(!collapsed));
+
+                try {
+                    localStorage.setItem("chatbox-sidebar-collapsed", collapsed ? "1" : "0");
+                } catch (e) {}
+            }
+
+            let saved = false;
+
+            try {
+                saved = localStorage.getItem("chatbox-sidebar-collapsed") === "1";
+            } catch (e) {}
+
+            setCollapsed(saved);
+
+            toggle.addEventListener("click", function () {
+                setCollapsed(!layout.classList.contains("sidebar-collapsed"));
+            });
+        });
+    </script>
 </body>
 </html>
