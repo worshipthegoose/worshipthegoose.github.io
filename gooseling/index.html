@@ -1889,7 +1889,7 @@
                 chat.lastItems = data;
 
                 if (data.length === 0 && !chat.pending.some(p => !p.landed && Date.now() >= p.revealAt - 5)) {
-                    container.innerHTML = "<center><span style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>";
+                    container.innerHTML = `<center><span class = "bubble-bubble" style='color:#333; font-size:20px; font-weight:bold; text-align:center; margin:0 auto;'>No messages yet. Type something to get the conversation started!</span></center>`;
                     return;
                 }
 
@@ -3439,7 +3439,7 @@
             border-radius: 14px;
             box-shadow: 0px 3px 6px #222;
         }
-        .bubble-bubble {width:100% !important;text-align: center; margin: 0 auto !important;margin-bottom:7px !important;}
+        .bubble-bubble {background: #f7f7f7 !important; width:100% !important;text-align: center; margin: 0 auto !important;margin-bottom:7px !important;}
 
         .chat-bubble {
             --bubble-bg: #f2f0f0;
