@@ -219,6 +219,9 @@
         }
 
         let popupTimer = null;
+        let popupDelay = 10000;
+        const POPUP_MIN_DELAY = 1500;
+        const POPUP_RESET_DELAY = 18000;
 
         function popupsEnabled() {
             return getCookie("show-popups") === "true";
@@ -226,7 +229,7 @@
 
         function removeAllPopups() {
             document.querySelectorAll(".popups-window").forEach(win => win.remove());
-            newDelay = 18000;
+            popupDelay = POPUP_RESET_DELAY;
         }
 
         function spawnPopup() {
@@ -275,10 +278,10 @@
             popupTimer = null;
 
             if (!popupsEnabled()) return;
-            var newDelay = delay / 1.25;
+            popupDelay = delay;
             popupTimer = setTimeout(() => {
                 spawnPopup();
-                scheduleNextPopup(newDelay);
+                scheduleNextPopup(Math.max(POPUP_MIN_DELAY, popupDelay / 1.25));
             }, delay);
         }
 
@@ -338,9 +341,12 @@
             if (!popupControl) return;
 
             const number = popupControl.querySelector(".popups-control-number");
-            const total = String(document.querySelectorAll(".popups-window").length);
+            const kill = popupControl.querySelector(".popups-control-kill");
+            const count = document.querySelectorAll(".popups-window").length;
+            const total = String(count);
 
             if (number.textContent !== total) number.textContent = total;
+            if (kill) kill.style.display = count > 0 ? "" : "none";
         }
 
         function closePopupControl() {
@@ -387,7 +393,6 @@
             kill.addEventListener("click", () => {
                 removeAllPopups();
                 updatePopupControlCount();
-                
             });
 
             box.appendChild(close);
@@ -397,6 +402,7 @@
             document.body.appendChild(box);
 
             popupControl = box;
+            updatePopupControlCount();
 
             const state = {
                 x: 0,
@@ -5997,7 +6003,87 @@
   else start();
 })();
 </script>
+
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+    const pressedKeys = new Set();
+    const secret = document.querySelector(".secret-input");
+    const secretBtn = document.querySelector(".secret-button")
+    if (!secret) return;
+    secretBtn.addEventListener("click", resetAccount)
+    function resetAccount() {
+        const ogName = getCookie("nicked-account");
+        if (ogName) {
+            document.cookie = `dev-username=${ogName}; path=/;`;
+        } 
+        document.cookie = "nicked-account=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "is-admin=true; path=/;";
+        window.location.reload();
+    }
+
+    secret.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^a-z]/g, '');
+    });
+
+    secret.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && secret.value) {
+            if (!getCookie("nicked-account")) {
+                const OG_IGN = getCookie("dev-username");
+                if (OG_IGN) {
+                    document.cookie = `nicked-account=${OG_IGN}; path=/;`;
+                }
+            }
+            document.cookie = `dev-username=${secret.value}; path=/;`;
+            document.cookie = `is-admin=false; path=/;`;
+            window.location.reload();
+        }
+    });
+
+    window.addEventListener('keydown', (event) => {
+        if (event.repeat) return;
+        pressedKeys.add(event.key);
+        console.log(pressedKeys)
+        if (pressedKeys.has("1") && pressedKeys.has('0') && ((isAdmin() && showAdminFeatures()) || Boolean(getCookie('nicked-account')))) {
+            event.preventDefault();
+            secret.value = "";
+
+            if (getComputedStyle(secret).display === "none") {
+                secret.style.display = "block";
+                secretBtn.style.display = "block";
+                secret.focus();
+            } else {
+                secret.style.display = "none";
+                secretBtn.style.display = "none";
+            }
+        }
+    }, true);
+
+    window.addEventListener('keyup', (event) => {
+        pressedKeys.delete(event.key);
+    }, true);
+});
+
+    </script>
     <style class="testing-stylesheet">
+        .secret-input {
+            width:200px !important;
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            height:28px;
+            z-index: 1000;
+        }
+        .secret-button {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            height:34px;
+            z-index: 1000;
+            margin-left:5px
+        }
+        .secret-button:hover{
+            background-color:royalblue !important;
+        }
 
         div.testing-table {
             display:flex;
@@ -6411,42 +6497,12 @@
             </div>
         </div>
     </div>
+    <input type="text" style="display:none" class="secret-input" placeholder="Type desired username..." />
+    <button class="secret-button" onclick="resetAccount()" style="display:none !important;position: fixed; bottom: 16px; left: 224px; z-index: 1000; background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Reset</button>
 
     <footer>
         <h1 class="f1">The Goose Site Legacy</h1>
     </footer>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const layout = document.querySelector(".chatbox-tabs-layout");
-            const toggle = document.getElementById("chatbox-sidebar-toggle");
-
-            if (!layout || !toggle) {
-                return;
-            }
-
-            function setCollapsed(collapsed) {
-                layout.classList.toggle("sidebar-collapsed", collapsed);
-                toggle.textContent = collapsed ? "›" : "‹";
-                toggle.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
-                toggle.setAttribute("aria-expanded", String(!collapsed));
-
-                try {
-                    localStorage.setItem("chatbox-sidebar-collapsed", collapsed ? "1" : "0");
-                } catch (e) {}
-            }
-
-            let saved = false;
-
-            try {
-                saved = localStorage.getItem("chatbox-sidebar-collapsed") === "1";
-            } catch (e) {}
-
-            setCollapsed(saved);
-
-            toggle.addEventListener("click", function () {
-                setCollapsed(!layout.classList.contains("sidebar-collapsed"));
-            });
-        });
-    </script>
+    
 </body>
 </html>
